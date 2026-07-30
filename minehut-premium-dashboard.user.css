@@ -1,27 +1,29 @@
 /* ==UserStyle==
 @name           Minehut Premium Dashboard
 @namespace      github.com/DaisyCatTs/minehut-premium-dashboard
-@version        1.0.0
+@version        1.0.1
 @description    A premium dark theme for the Minehut dashboard. OLED surfaces, surface-driven elevation, a single desaturated accent, and contrast-verified text.
 @author         Daisy
 @license        MIT
 @homepageURL    https://github.com/DaisyCatTs/minehut-premium-dashboard
 @supportURL     https://github.com/DaisyCatTs/minehut-premium-dashboard/issues
 @updateURL      https://raw.githubusercontent.com/DaisyCatTs/minehut-premium-dashboard/main/minehut-premium-dashboard.user.css
-@preprocessor   default
-
-@var color accent "Accent colour"      #5A97E2
-@var color page   "Page background"    #0A0A0C
-@var range speed  "Motion speed"       [150, 0, 300, 10, "ms"]
-@var range radius "Card corner radius" [16, 0, 24, 2, "px"]
 ==/UserStyle== */
+
+/*  CUSTOMISE — the only four values worth changing.  ───────────────────
+    accent   #5A97E2   every blue: borders, rails, focus, buttons, prompt
+    page     #0A0A0C   page background; below #050505 flattens elevation
+    speed    150ms     0 disables transitions; past ~220ms feels sluggish
+    radius   16px      cards only; buttons/inputs stay 12px
+    Edit them in the :root block directly below.
+    ─────────────────────────────────────────────────────────────────── */
 
 @-moz-document domain("dashboard.minehut.com") {
 
 /* ── Primitives ─────────────────────────────────────────────────────── */
 :root {
   /* Surface ladder, ~4-5 L* per step. Elevation is lightness, not shadow. */
-  --og-bg: /*[[page]]*/;
+  --og-bg: #0A0A0C;
   --og-s1: #15171A;
   --og-s2: #1D2025;
   --og-s3: #252930;
@@ -44,11 +46,11 @@
   --og-ink-4: #7E8792;
 
   --og-ease: cubic-bezier(.2,.8,.2,1);
-  --og-fast: calc(/*[[speed]]*/ * 0.8);
-  --og-base: /*[[speed]]*/;
-  --og-slow: calc(/*[[speed]]*/ * 1.2);
+  --og-fast: 120ms;
+  --og-base: 150ms;
+  --og-slow: 180ms;
 
-  --og-r-card:  /*[[radius]]*/;
+  --og-r-card:  16px;
   --og-r-btn:   12px;
   --og-r-drop:  14px;
   --og-r-modal: 20px;
@@ -87,7 +89,7 @@ html.dark, .dark, [data-theme="dark"] {
 
 /* ── Raw --mh-* ladder, consumed directly as bg-[var(--mh-bg-3)] ────── */
 html.dark, .dark, [data-theme="dark"] {
-  --mh-bg:   /*[[page]]*/ !important;
+  --mh-bg:   #0A0A0C !important;
   --mh-bg-1: #15171A !important;
   --mh-bg-2: #1D2025 !important;
   --mh-bg-3: #252930 !important;
@@ -113,7 +115,7 @@ html.dark, .dark, [data-theme="dark"] {
 
 /* ── Palette. Hues kept, saturation cut ~30%. ───────────────────────── */
 :root {
-  --mh-brand:       /*[[accent]]*/ !important;
+  --mh-brand:       #5A97E2 !important;
   --mh-brand-hover: color-mix(in oklab, var(--mh-brand) 82%, white) !important;
   --mh-brand-press: color-mix(in oklab, var(--mh-brand) 82%, black) !important;
   --mh-brand-soft:  color-mix(in oklab, var(--mh-brand) 10%, transparent) !important;
