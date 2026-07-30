@@ -1,0 +1,703 @@
+/* ==UserStyle==
+@name           Minehut Premium Dashboard
+@namespace      github.com/DAISY-GH/minehut-premium-dashboard
+@version        1.0.0
+@description    A premium dark theme for the Minehut dashboard. OLED surfaces, surface-driven elevation, a single desaturated accent, and contrast-verified text.
+@author         Daisy
+@license        MIT
+@homepageURL    https://github.com/DAISY-GH/minehut-premium-dashboard
+@supportURL     https://github.com/DAISY-GH/minehut-premium-dashboard/issues
+@updateURL      https://raw.githubusercontent.com/DAISY-GH/minehut-premium-dashboard/main/minehut-premium-dashboard.user.css
+@preprocessor   default
+
+@var color accent "Accent colour"      #5A97E2
+@var color page   "Page background"    #0A0A0C
+@var range speed  "Motion speed"       [150, 0, 300, 10, "ms"]
+@var range radius "Card corner radius" [16, 0, 24, 2, "px"]
+==/UserStyle== */
+
+@-moz-document domain("dashboard.minehut.com") {
+
+/* ── Primitives ─────────────────────────────────────────────────────── */
+:root {
+  /* Surface ladder, ~4-5 L* per step. Elevation is lightness, not shadow. */
+  --og-bg: /*[[page]]*/;
+  --og-s1: #15171A;
+  --og-s2: #1D2025;
+  --og-s3: #252930;
+  --og-s4: #2A2E36;
+
+  --og-line:       rgba(255,255,255,.10);
+  --og-line-soft:  rgba(255,255,255,.06);
+  --og-line-hover: color-mix(in oklab, var(--mh-brand) 18%, transparent);
+  --og-line-focus: color-mix(in oklab, var(--mh-brand) 85%, transparent);
+
+  --og-glass:     rgba(21,23,26,.84);
+  --og-glass-nav: rgba(18,20,23,.80);
+  --og-lift:      inset 0 1px 0 rgba(255,255,255,.055);
+  --og-lift-2:    inset 0 1px 0 rgba(255,255,255,.075);
+
+  /* Contrast vs --og-s1: 17.0 / 11.6 / 7.1 / 5.2 : 1 */
+  --og-ink:   #F2F4F7;
+  --og-ink-2: #C7CCD4;
+  --og-ink-3: #98A0AB;
+  --og-ink-4: #7E8792;
+
+  --og-ease: cubic-bezier(.2,.8,.2,1);
+  --og-fast: calc(/*[[speed]]*/ * 0.8);
+  --og-base: /*[[speed]]*/;
+  --og-slow: calc(/*[[speed]]*/ * 1.2);
+
+  --og-r-card:  /*[[radius]]*/;
+  --og-r-btn:   12px;
+  --og-r-drop:  14px;
+  --og-r-modal: 20px;
+}
+
+/* ── shadcn tokens ──────────────────────────────────────────────────────
+   These are read as hsl(var(--x)) and hsl(var(--x)/0.5), so values must be
+   bare "H S% L%" triplets. A hex here yields hsl(#15171a) and is dropped. */
+html.dark, .dark, [data-theme="dark"] {
+  --background:           240 9%  4.3%  !important;
+  --card:                 216 11% 9.2%  !important;
+  --muted:                218 12% 12.9% !important;
+  --secondary:            218 13% 16.7% !important;
+  --popover:              220 12% 18.8% !important;
+
+  --foreground:           220 12% 96%   !important;
+  --card-foreground:      220 12% 96%   !important;
+  --popover-foreground:   220 12% 96%   !important;
+  --secondary-foreground: 220 10% 82%   !important;
+  --muted-foreground:     214 9%  62%   !important;
+
+  --border:               216 6%  18%   !important;
+  --input:                216 7%  22%   !important;
+
+  --primary:              213 70% 62%   !important;
+  --primary-foreground:   213 45% 94%   !important;
+  --ring:                 213 70% 62%   !important;
+  --accent:               213 30% 18%   !important;
+  --accent-foreground:    213 80% 84%   !important;
+  --accent-sky:           213 35% 20%   !important;
+  --destructive:          356 63% 64%   !important;
+
+  --radius:               0.75rem       !important;
+  --surface-grain:        220 12% 92%/0.010 !important;
+}
+
+/* ── Raw --mh-* ladder, consumed directly as bg-[var(--mh-bg-3)] ────── */
+html.dark, .dark, [data-theme="dark"] {
+  --mh-bg:   /*[[page]]*/ !important;
+  --mh-bg-1: #15171A !important;
+  --mh-bg-2: #1D2025 !important;
+  --mh-bg-3: #252930 !important;
+  --mh-bg-4: #2A2E36 !important;
+
+  --mh-line:        rgba(255,255,255,.10) !important;
+  --mh-line-soft:   rgba(255,255,255,.06) !important;
+  --mh-line-strong: rgba(255,255,255,.18) !important;
+
+  --mh-ink:   #F2F4F7 !important;
+  --mh-ink-2: #C7CCD4 !important;
+  --mh-ink-3: #98A0AB !important;
+  --mh-ink-4: #7E8792 !important;
+
+  --mh-shadow-1: 0 1px 2px rgba(0,0,0,.35)  !important;
+  --mh-shadow-2: 0 2px 8px rgba(0,0,0,.40)  !important;
+  --mh-shadow-3: 0 8px 24px rgba(0,0,0,.50) !important;
+  --mh-glow-brand: 0 0 16px color-mix(in oklab, var(--mh-brand) 22%, transparent) !important;
+
+  /* Light ink: the primary fill is a dark blue gradient (~#223143). */
+  --mh-on-brand: #DCE9F8 !important;
+}
+
+/* ── Palette. Hues kept, saturation cut ~30%. ───────────────────────── */
+:root {
+  --mh-brand:       /*[[accent]]*/ !important;
+  --mh-brand-hover: color-mix(in oklab, var(--mh-brand) 82%, white) !important;
+  --mh-brand-press: color-mix(in oklab, var(--mh-brand) 82%, black) !important;
+  --mh-brand-soft:  color-mix(in oklab, var(--mh-brand) 10%, transparent) !important;
+
+  --mh-emerald:  #43AB81 !important;
+  --mh-redstone: #DD6B72 !important;
+  --mh-gold:     #DCAC59 !important;
+  --mh-diamond:  #71C9C6 !important;
+  --mh-amethyst: #9AA5E0 !important;
+  --mh-lapis:    #3A5A9E !important;
+  --mh-copper:   #C98A67 !important;
+}
+
+/* ── Typography ─────────────────────────────────────────────────────────
+   No webfont import: a site CSP can block third-party hosts. Inter and
+   Geist are used only if installed locally. */
+html, body, button, input, select, textarea {
+  font-family: 'Inter var','Inter','Geist','Geist Sans',
+               ui-sans-serif, system-ui, -apple-system,
+               'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
+  font-feature-settings: 'cv02','cv03','cv04','ss01','tnum' !important;
+  -webkit-font-smoothing: antialiased !important;
+  -moz-osx-font-smoothing: grayscale !important;
+}
+
+.font-display { font-weight: 800 !important; letter-spacing: -.03em !important; }
+h1            { font-weight: 700 !important; letter-spacing: -.025em !important; }
+h2            { font-weight: 700 !important; letter-spacing: -.02em !important; }
+h3, h4        { font-weight: 600 !important; letter-spacing: -.012em !important; }
+body          { font-weight: 450 !important; }
+
+h1, h2, h3, h4, h5, h6,
+a h1, a h2, a h3, a h4 { color: var(--og-ink) !important; }
+.text-foreground       { color: var(--og-ink) !important; }
+.text-muted-foreground { color: var(--og-ink-3) !important; font-weight: 450 !important; }
+
+article h3,
+article [class*="font-semibold"]:not([class*="text-\[10px\]"]) {
+  color: var(--og-ink) !important;
+  font-weight: 600 !important;
+}
+article [class*="font-mono"]:not(.uppercase) { color: var(--og-ink-3) !important; }
+
+/* Micro labels stay neutral; they repeat 4x per card across the grid. */
+.font-mono.uppercase.tracking-wider,
+[class*="text-\[10px\]"].uppercase,
+[class*="tracking-\[0\.08em\]"] {
+  color: var(--og-ink-4) !important;
+  font-weight: 500 !important;
+  letter-spacing: .08em !important;
+  text-transform: uppercase !important;
+}
+
+.ds-label {
+  color: var(--mh-brand) !important;
+  font-weight: 700 !important;
+  letter-spacing: .09em !important;
+  text-transform: uppercase !important;
+}
+
+aside a:not(.mh-nav-item):not([class*="mh-brand"]),
+nav a:not(.mh-nav-item):not([class*="mh-brand"]) { color: #8FB4E0 !important; }
+aside a:not(.mh-nav-item):hover,
+nav a:not(.mh-nav-item):hover { color: #B5CFEF !important; }
+
+/* Pending deletion: neutral text, red strike. Blue would imply a link. */
+[class*="line-through"] {
+  color: var(--og-ink-4) !important;
+  text-decoration-color: rgba(221,107,114,.60) !important;
+}
+
+/* ── Motion ─────────────────────────────────────────────────────────── */
+a, button, article, input, select, textarea,
+.mh-nav-item, [role="tab"], [class*="rounded-\[10px\]"] {
+  transition:
+    background-color var(--og-base) var(--og-ease),
+    border-color     var(--og-base) var(--og-ease),
+    color            var(--og-fast) var(--og-ease),
+    box-shadow       var(--og-base) var(--og-ease),
+    transform        var(--og-base) var(--og-ease),
+    opacity          var(--og-fast) var(--og-ease) !important;
+}
+
+@keyframes og-page-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: none; }
+}
+/* On the page container, not `main`: a transform on the scroll container
+   becomes a containing block for fixed/sticky descendants. */
+main > div[class*="p-6"], main > div[class*="p-8"] {
+  animation: og-page-in var(--og-slow) var(--og-ease);
+}
+
+/* ── Radii ──────────────────────────────────────────────────────────── */
+article[class*="rounded-\[10px\]"], .rounded-lg { border-radius: var(--og-r-card) !important; }
+.rounded-md                                     { border-radius: var(--og-r-btn) !important; }
+input, select, textarea                         { border-radius: var(--og-r-btn) !important; }
+.rounded-\[14px\]                               { border-radius: var(--og-r-drop) !important; }
+[role="menu"], [class*="popover"],
+[data-radix-popper-content-wrapper] > *          { border-radius: var(--og-r-drop) !important; }
+[role="dialog"]                                  { border-radius: var(--og-r-modal) !important; }
+
+/* ── Borders ────────────────────────────────────────────────────────────
+   `border-transparent` is deliberate on inactive tabs and the Back link:
+   they occupy a bordered box without drawing an edge. */
+.border:not([class*="border-transparent"]),
+.border-t:not([class*="border-transparent"]),
+.border-b:not([class*="border-transparent"]),
+.border-l:not([class*="border-transparent"]),
+.border-r:not([class*="border-transparent"]),
+[class*="border-border"], [class*="border-input"] {
+  border-color: var(--og-line) !important;
+}
+[class*="border-transparent"] { border-color: transparent !important; }
+
+/* Must be :hover-scoped. `[class*="border-foreground/"]` matches the class
+   string `hover:border-foreground/30`, which is present at all times. */
+[class*="hover\:border-foreground\/"]:hover { border-color: var(--og-line-hover) !important; }
+
+[class*="shadow-\[0_1px_0_hsl\(var\(--foreground\)"] {
+  box-shadow: 0 1px 0 var(--og-line) !important;
+}
+
+[class*="border-dashed"], [class*="border-dotted"] {
+  border-style: solid !important;
+  border-color: var(--og-line) !important;
+}
+
+hr, [class*="divider"] {
+  border-color: var(--og-line-soft) !important;
+  background-color: var(--og-line-soft) !important;
+}
+
+/* ── Surfaces ───────────────────────────────────────────────────────── */
+html, body, main, [class*="layout"], [class*="wrapper"] {
+  background-color: var(--og-bg) !important;
+  color: var(--og-ink) !important;
+}
+.bg-background { background-color: var(--og-bg) !important; }
+.bg-card       { background-color: var(--og-s1) !important; }
+.bg-muted      { background-color: var(--og-s2) !important; }
+.bg-secondary  { background-color: var(--og-s2) !important; }
+.bg-popover    { background-color: var(--og-s3) !important; }
+
+/* ── Sidebar ────────────────────────────────────────────────────────── */
+aside {
+  background: var(--og-glass-nav) !important;
+  backdrop-filter: blur(18px) saturate(140%) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(140%) !important;
+  border-right: 1px solid var(--og-line) !important;
+}
+
+.mh-nav-item { color: var(--og-ink-3) !important; border-radius: 10px !important; }
+.mh-nav-item svg { color: var(--og-ink-4) !important; opacity: 1 !important; }
+
+.mh-nav-item:hover {
+  background: var(--og-s2) !important;
+  color: var(--og-ink) !important;
+  transform: translateX(1px) !important;
+}
+.mh-nav-item:hover svg { color: var(--og-ink-2) !important; }
+
+.mh-nav-item[data-active="true"] {
+  background: linear-gradient(90deg,
+    color-mix(in oklab, var(--mh-brand) 14%, transparent),
+    color-mix(in oklab, var(--mh-brand) 5%, transparent)) !important;
+  color: #DCE9F8 !important;
+  font-weight: 600 !important;
+  box-shadow:
+    inset 2px 0 0 var(--mh-brand),
+    -1px 0 12px -2px color-mix(in oklab, var(--mh-brand) 45%, transparent) !important;
+}
+.mh-nav-item[data-active="true"] svg { color: var(--mh-brand-hover) !important; }
+
+div[role="radiogroup"] {
+  background: var(--og-s2) !important;
+  border-color: var(--og-line) !important;
+}
+div[role="radiogroup"] button.bg-muted {
+  background: var(--og-s3) !important;
+  color: var(--og-ink) !important;
+}
+
+/* ── Server cards ───────────────────────────────────────────────────── */
+article[class*="rounded-\[10px\]"] {
+  background: var(--og-s1) !important;
+  border: 1px solid var(--og-line) !important;
+  box-shadow: var(--og-lift) !important;
+  transition: border-color var(--og-base) var(--og-ease),
+              background-color var(--og-base) var(--og-ease),
+              transform var(--og-base) var(--og-ease),
+              box-shadow var(--og-base) var(--og-ease) !important;
+  will-change: transform !important;
+}
+article[class*="rounded-\[10px\]"]:hover {
+  background: var(--og-s2) !important;
+  border-color: var(--og-line-hover) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: var(--og-lift-2),
+              0 8px 24px rgba(0,0,0,.32),
+              0 0 0 1px color-mix(in oklab, var(--mh-brand) 12%, transparent) !important;
+}
+
+/* State rail. A pseudo-element rather than border-left, so it keeps the
+   corner radius and its glow animates independently of the card shadow.
+   Alphas sit above the 10% border or the rail reads as nothing. */
+article[class*="rounded-\[10px\]"]::before {
+  content: '' !important;
+  position: absolute !important;
+  left: 0 !important; top: 0 !important; bottom: 0 !important;
+  width: 2px !important;
+  border-radius: 2px 0 0 2px !important;
+  background: color-mix(in oklab, var(--mh-brand) 55%, transparent) !important;
+  pointer-events: none !important;
+  z-index: 1 !important;
+  transition: background var(--og-base) var(--og-ease),
+              box-shadow var(--og-base) var(--og-ease) !important;
+}
+article[class*="rounded-\[10px\]"]:has([class*="mh-redstone"])::before {
+  background: rgba(221,107,114,.60) !important;
+}
+article[class*="rounded-\[10px\]"]:has([class*="mh-gold"])::before {
+  background: rgba(220,172,89,.60) !important;
+}
+/* Emerald last: a running card also contains a red Stop button. */
+article[class*="rounded-\[10px\]"]:has([class*="mh-emerald"])::before {
+  background: rgba(67,171,129,.65) !important;
+}
+
+article[class*="rounded-\[10px\]"]:hover::before {
+  box-shadow: 0 0 10px color-mix(in oklab, var(--mh-brand) 35%, transparent) !important;
+}
+article[class*="rounded-\[10px\]"]:has([class*="mh-emerald"]):hover::before {
+  box-shadow: 0 0 10px rgba(67,171,129,.40) !important;
+}
+article[class*="rounded-\[10px\]"]:has([class*="mh-redstone"]):hover::before {
+  box-shadow: 0 0 10px rgba(221,107,114,.35) !important;
+}
+
+/* Minehut paints its own gradient bar inside each card; the rail already
+   carries state, and two accent edges on one card is one too many. */
+article .absolute.inset-x-0.top-0.h-\[2px\],
+article .absolute.inset-x-0.top-0.h-\[3px\] {
+  opacity: 0 !important;
+  background: none !important;
+}
+
+/* ── Header accent bar (chrome, not state) ──────────────────────────── */
+.absolute.inset-x-0.top-0.h-\[3px\] {
+  height: 2px !important;
+  opacity: 1 !important;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    color-mix(in oklab, var(--mh-brand) 50%, transparent) 22%,
+    var(--mh-brand) 50%,
+    color-mix(in oklab, var(--mh-brand) 50%, transparent) 78%,
+    transparent 100%) !important;
+}
+
+/* ── Buttons ────────────────────────────────────────────────────────────
+   Primary: dark tinted gradient, Δ~4 L* between stops so it reads as one
+   lit surface rather than two bands. */
+[class*="bg-\[var\(--mh-brand\)\]"] {
+  background: linear-gradient(180deg,
+    color-mix(in oklab, var(--mh-brand) 26%, transparent),
+    color-mix(in oklab, var(--mh-brand) 18%, transparent)) !important;
+  border: 1px solid color-mix(in oklab, var(--mh-brand) 34%, transparent) !important;
+  color: #DCE9F8 !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.07) !important;
+  font-weight: 550 !important;
+}
+[class*="bg-\[var\(--mh-brand\)\]"]:hover {
+  background: linear-gradient(180deg,
+    color-mix(in oklab, var(--mh-brand) 38%, transparent),
+    color-mix(in oklab, var(--mh-brand) 28%, transparent)) !important;
+  border-color: var(--og-line-focus) !important;
+  color: #EEF5FF !important;
+  transform: translateY(-1px) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.10),
+              0 4px 16px color-mix(in oklab, var(--mh-brand) 18%, transparent) !important;
+}
+[class*="bg-\[var\(--mh-brand\)\]"]:active { transform: translateY(0) !important; }
+[class*="bg-\[var\(--mh-brand\)\]"] svg { color: var(--mh-brand-hover) !important; }
+
+/* Secondary. Controls sit a step ABOVE the card they rest on, or they
+   read as part of it. */
+button.border-border.bg-card.text-foreground,
+a.border-border.bg-card.text-foreground,
+button.border-input.bg-card,
+a.border-input.bg-card {
+  background: var(--og-s3) !important;
+  border: 1px solid var(--og-line) !important;
+  color: var(--og-ink) !important;
+  box-shadow: var(--og-lift) !important;
+}
+button.border-border.bg-card.text-foreground:hover,
+a.border-border.bg-card.text-foreground:hover,
+button.border-input.bg-card:hover:not(:disabled),
+a.border-input.bg-card:hover {
+  background: var(--og-s4) !important;
+  border-color: var(--og-line-hover) !important;
+  transform: translateY(-1px) !important;
+}
+button.border-input.bg-card svg { color: var(--og-ink-3) !important; }
+
+/* Danger: muted, never bright. */
+button[class*="destructive"],
+button[class*="bg-\[color-mix"][class*="mh-redstone"] {
+  background: rgba(221,107,114,.10) !important;
+  border: 1px solid rgba(221,107,114,.28) !important;
+  color: #E8969B !important;
+}
+button[class*="destructive"]:hover,
+button[class*="bg-\[color-mix"][class*="mh-redstone"]:hover {
+  background: rgba(221,107,114,.16) !important;
+  border-color: rgba(221,107,114,.45) !important;
+  color: #F0AFB3 !important;
+}
+
+/* ── Tabs ───────────────────────────────────────────────────────────────
+   `.border-input.bg-card` is shared with secondary buttons, so everything
+   tab-specific is scoped to the tab row. */
+[class*="shadow-\[0_1px_0_hsl\(var\(--foreground\)"] > button.border-input.bg-card {
+  background: rgba(255,255,255,.035) !important;
+  border: 1px solid var(--og-line) !important;
+  border-bottom-color: transparent !important;
+  color: var(--og-ink) !important;
+  font-weight: 600 !important;
+  position: relative !important;
+  box-shadow: 0 2px 12px -6px color-mix(in oklab, var(--mh-brand) 55%, transparent) !important;
+}
+[class*="shadow-\[0_1px_0_hsl\(var\(--foreground\)"] > button.border-input.bg-card svg {
+  color: var(--mh-brand-hover) !important;
+}
+
+@keyframes og-underline {
+  from { transform: scaleX(0); opacity: 0; }
+  to   { transform: scaleX(1); opacity: 1; }
+}
+[class*="shadow-\[0_1px_0_hsl\(var\(--foreground\)"] > button.border-input.bg-card::after {
+  content: '' !important;
+  position: absolute !important;
+  left: 0; right: 0; bottom: -2px;
+  height: 2px !important;
+  background: var(--mh-brand) !important;
+  border-radius: 2px !important;
+  animation: og-underline var(--og-slow) var(--og-ease) both !important;
+}
+
+a.border-transparent.text-muted-foreground { color: var(--og-ink-3) !important; }
+a.border-transparent.text-muted-foreground:hover {
+  background: var(--og-s2) !important;
+  color: var(--og-ink) !important;
+}
+
+/* ── Status pills. Glass, neutral text, coloured dot. ────────────────────
+   The dot uses bg-current, so muting the pill's text would grey it out;
+   each state re-declares the dot's background. */
+[class*="bg-\[color-mix"][class*="mh-emerald"],
+[class*="bg-\[color-mix"][class*="mh-redstone"],
+[class*="bg-\[color-mix"][class*="mh-gold"],
+[class*="bg-\[color-mix"][class*="mh-diamond"] {
+  background: var(--og-s2) !important;
+  border: 1px solid var(--og-line) !important;
+  color: var(--og-ink-3) !important;
+}
+
+span.bg-current { opacity: 1 !important; box-shadow: none !important; }
+[class*="mh-emerald"]  span.bg-current { background: var(--mh-emerald)  !important; box-shadow: 0 0 8px rgba(67,171,129,.65) !important; }
+[class*="mh-redstone"] span.bg-current { background: var(--mh-redstone) !important; box-shadow: 0 0 8px rgba(221,107,114,.60) !important; }
+[class*="mh-gold"]     span.bg-current { background: var(--mh-gold)     !important; box-shadow: 0 0 8px rgba(220,172,89,.60) !important; }
+[class*="mh-diamond"]  span.bg-current { background: var(--mh-diamond)  !important; box-shadow: 0 0 8px rgba(113,201,198,.60) !important; }
+
+@keyframes og-pulse {
+  0%,100% { box-shadow: 0 0 5px rgba(67,171,129,.55); }
+  50%     { box-shadow: 0 0 12px rgba(67,171,129,.85); }
+}
+[class*="mh-emerald"] span.bg-current {
+  animation: og-pulse 2.4s var(--og-ease) infinite !important;
+}
+
+/* ── Glass overlays. The only place blur and a real shadow appear. ───── */
+[role="dialog"], [role="menu"], [role="listbox"],
+[class*="popover"], [data-radix-popper-content-wrapper] > * {
+  background: var(--og-glass) !important;
+  backdrop-filter: blur(20px) saturate(160%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(160%) !important;
+  border: 1px solid var(--og-line) !important;
+  box-shadow: 0 16px 40px rgba(0,0,0,.35) !important;
+}
+[class*="backdrop"], [data-state="open"][class*="overlay"] {
+  background: rgba(4,4,5,.62) !important;
+  backdrop-filter: blur(3px) !important;
+  -webkit-backdrop-filter: blur(3px) !important;
+}
+
+/* ── Inputs ─────────────────────────────────────────────────────────── */
+input:not([class*="bg-transparent"]), select, textarea {
+  background: var(--og-s2) !important;
+  border: 1px solid var(--og-line) !important;
+  color: var(--og-ink) !important;
+}
+input::placeholder, textarea::placeholder {
+  color: var(--og-ink-4) !important;
+  transition: color var(--og-base) var(--og-ease) !important;
+}
+input:focus::placeholder { color: rgba(126,135,146,.45) !important; }
+
+input[placeholder*="Search"], input[type="search"] {
+  height: 44px !important;
+  padding-left: 2.75rem !important;
+  padding-right: 1rem !important;
+  font-size: 14px !important;
+}
+input[placeholder*="Search"]:focus-visible {
+  box-shadow: 0 0 0 4px color-mix(in oklab, var(--mh-brand) 10%, transparent),
+              0 8px 28px -8px color-mix(in oklab, var(--mh-brand) 45%, transparent) !important;
+}
+
+/* Focus ring at 85% alpha measures 3.7-5.0:1 on every surface (WCAG 2.4.11). */
+:focus-visible {
+  outline: 2px solid var(--og-line-focus) !important;
+  outline-offset: 2px !important;
+}
+input:focus-visible, select:focus-visible, textarea:focus-visible {
+  border-color: var(--og-line-focus) !important;
+  background: var(--og-s3) !important;
+  outline-offset: 0 !important;
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--mh-brand) 12%, transparent),
+              0 0 20px -6px color-mix(in oklab, var(--mh-brand) 35%, transparent) !important;
+}
+
+/* ── Console ──────────────────────────────────────────────────────────── */
+html.dark, .dark, [data-theme="dark"] {
+  --console-bg: #0D0E10 !important;
+  --console-fg: #D6DCE4 !important;
+
+  --console-ansi-0:  #1D2025 !important;
+  --console-ansi-1:  #DD6B72 !important;
+  --console-ansi-2:  #43AB81 !important;
+  --console-ansi-3:  #DCAC59 !important;
+  --console-ansi-4:  #5A97E2 !important;
+  --console-ansi-5:  #9AA5E0 !important;
+  --console-ansi-6:  #71C9C6 !important;
+  --console-ansi-7:  #D6DCE4 !important;
+  --console-ansi-8:  #6B7787 !important;
+  --console-ansi-9:  #E8969B !important;
+  --console-ansi-10: #6BC79C !important;
+  --console-ansi-11: #E8C17F !important;
+  --console-ansi-12: #86B0E8 !important;
+  --console-ansi-13: #B3BCE8 !important;
+  --console-ansi-14: #96D9D6 !important;
+  --console-ansi-15: #FFFFFF !important;
+}
+
+[class*="var\(--console-bg\)"] {
+  border: 1px solid var(--og-line) !important;
+  border-radius: var(--og-r-card) !important;
+  box-shadow: var(--og-lift) !important;
+}
+[class*="var\(--console-bg\)"] > div,
+[class*="var\(--console-bg\)"] > form { background: transparent !important; }
+[class*="var\(--console-bg\)"] ::selection {
+  background: color-mix(in oklab, var(--mh-brand) 28%, transparent);
+  color: #fff;
+}
+
+/* The prompt, caret, placeholder and form border are still hardcoded
+   Monokai behind dark: variants. Order matters: the <input> carries
+   caret-[#F92672], placeholder:text-[#75715E] AND text-[#F8F8F2], and
+   [class*=] matches the whole attribute, so all three hit it. */
+[class*="3e3d32"] { border-color: var(--og-line) !important; }
+[class*="F92672"] { color: var(--mh-brand) !important; }
+[class*="75715E"] { color: #7D9AB8 !important; }
+[class*="75715E"]::placeholder,
+[class*="placeholder\:text-\[\#75715E\]"]::placeholder {
+  color: #8AA8C6 !important;
+  opacity: 1 !important;
+}
+[class*="F8F8F2"] { color: var(--console-fg) !important; }
+[class*="caret-\[\#F92672\]"] { caret-color: #FFFFFF !important; }
+
+/* ── Icons ──────────────────────────────────────────────────────────── */
+svg[class*="lucide"] {
+  stroke-width: 1.75 !important;
+  transition: color var(--og-fast) var(--og-ease) !important;
+}
+a:hover > svg[class*="lucide"],
+button:hover > svg[class*="lucide"] { color: var(--og-ink) !important; }
+
+/* ── Spacing. 8pt grid; internal <= external. ───────────────────────── */
+article[class*="rounded-\[10px\]"] > [class*="px-6"] {
+  padding-left: 24px !important; padding-right: 24px !important;
+}
+article[class*="rounded-\[10px\]"] > [class*="pt-6"] { padding-top: 24px !important; }
+article[class*="rounded-\[10px\]"] > [class*="pb-4"] { padding-bottom: 24px !important; }
+article[class*="rounded-\[10px\]"] [class*="p-4"]    { padding: 24px !important; }
+[class*="grid"][class*="gap-4"] { gap: 24px !important; }
+main [class*="mt-6"] { margin-top: 32px !important; }
+
+main > div[class*="p-6"], main > div[class*="p-8"] { padding: 32px !important; }
+@media (min-width: 1536px) {
+  main > div[class*="p-6"], main > div[class*="p-8"] { padding: 40px !important; }
+}
+@media (max-width: 640px) {
+  main > div[class*="p-6"], main > div[class*="p-8"] { padding: 24px !important; }
+}
+main { scroll-padding-top: 24px !important; }
+
+/* ── Target size ────────────────────────────────────────────────────────
+   WCAG 2.5.8 (AA) wants 24x24. Minehut's controls already clear it
+   (h-7 = 28, size-8 = 32, h-9 = 36), so this only floors elements that
+   declare no height — forcing a taller box onto h-7 clips it. Never set
+   `display` here: Tailwind hides responsive elements with display:none,
+   and overriding it resurrects mobile-only controls. */
+button:not([class*="h-"]):not([class*="size-"]):not([class*="hidden"]),
+a[role="button"]:not([class*="h-"]):not([class*="size-"]):not([class*="hidden"]) {
+  min-height: 24px !important;
+  min-width: 24px !important;
+}
+
+/* ── Disabled ───────────────────────────────────────────────────────────
+   Stock uses disabled:opacity-50, which drops the label under 4.5:1 and
+   reads as loading rather than unavailable. #868F9A measures 4.99:1. */
+button:disabled, [aria-disabled="true"], [data-disabled] {
+  opacity: 1 !important;
+  background: var(--og-s2) !important;
+  border-color: var(--og-line-soft) !important;
+  color: #868F9A !important;
+  box-shadow: none !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+}
+button:disabled svg, [aria-disabled="true"] svg { color: #868F9A !important; }
+button:disabled:hover, [aria-disabled="true"]:hover {
+  background: var(--og-s2) !important;
+  border-color: var(--og-line-soft) !important;
+  transform: none !important;
+}
+button:disabled::after, button:disabled::before,
+[aria-disabled="true"]::after { content: none !important; }
+
+/* ── Scrollbars ─────────────────────────────────────────────────────── */
+* { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,.12) transparent; }
+*::-webkit-scrollbar       { width: 6px; height: 6px; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,.06);
+  border-radius: 999px;
+  transition: background var(--og-base) var(--og-ease) !important;
+}
+*:hover::-webkit-scrollbar-thumb { background: rgba(255,255,255,.12); }
+*::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in oklab, var(--mh-brand) 35%, transparent) !important;
+}
+
+::selection { background: color-mix(in oklab, var(--mh-brand) 35%, transparent); color: #fff; }
+
+/* ── Fallbacks ──────────────────────────────────────────────────────── */
+@supports not (backdrop-filter: blur(1px)) {
+  aside { background: #0E0F11 !important; }
+  [role="dialog"], [role="menu"], [class*="popover"] { background: #14161A !important; }
+}
+@media (prefers-reduced-transparency: reduce) {
+  aside {
+    background: #0E0F11 !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+  [role="dialog"], [role="menu"], [class*="popover"] {
+    background: #14161A !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .001ms !important;
+  }
+  article[class*="rounded-\[10px\]"]:hover,
+  [class*="bg-\[var\(--mh-brand\)\]"]:hover,
+  .mh-nav-item:hover { transform: none !important; }
+}
+
+}
