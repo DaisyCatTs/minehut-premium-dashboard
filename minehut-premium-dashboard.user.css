@@ -1,13 +1,13 @@
 /* ==UserStyle==
 @name           Minehut Premium Dashboard
-@namespace      github.com/DAISY-GH/minehut-premium-dashboard
+@namespace      github.com/DaisyCatTs/minehut-premium-dashboard
 @version        1.0.0
 @description    A premium dark theme for the Minehut dashboard. OLED surfaces, surface-driven elevation, a single desaturated accent, and contrast-verified text.
 @author         Daisy
 @license        MIT
-@homepageURL    https://github.com/DAISY-GH/minehut-premium-dashboard
-@supportURL     https://github.com/DAISY-GH/minehut-premium-dashboard/issues
-@updateURL      https://raw.githubusercontent.com/DAISY-GH/minehut-premium-dashboard/main/minehut-premium-dashboard.user.css
+@homepageURL    https://github.com/DaisyCatTs/minehut-premium-dashboard
+@supportURL     https://github.com/DaisyCatTs/minehut-premium-dashboard/issues
+@updateURL      https://raw.githubusercontent.com/DaisyCatTs/minehut-premium-dashboard/main/minehut-premium-dashboard.user.css
 @preprocessor   default
 
 @var color accent "Accent colour"      #5A97E2
