@@ -31,6 +31,18 @@
 
 ---
 
+<p align="center">
+  <img alt="My Servers — server grid with status rails and glass status pills"
+       src="docs/screenshots/Server.png" width="100%">
+</p>
+
+<p align="center">
+  <img alt="Server console — modernised ANSI colours on a near-black panel"
+       src="docs/screenshots/Console.png" width="100%">
+</p>
+
+---
+
 ## Install
 
 **1 · Get Stylus**
@@ -43,7 +55,9 @@
 | Edge | Install the [Chrome Web Store](https://chromewebstore.google.com/detail/stylus/clngdbkpkpeebahjckkjfobafhncgmne) version — Edge accepts Chrome extensions |
 | Safari | Stylus is unavailable; use **Cascadea** or **Userscripts** |
 
-Install *Stylus*, not *Stylish*
+Install *Stylus*, not *Stylish* — [Stylish was pulled from both stores in 2018
+for harvesting browsing history](https://en.wikipedia.org/wiki/Stylish_(software)).
+Stylus is the GPL fork made in response, and collects nothing.
 
 **2 · Add the theme**
 
