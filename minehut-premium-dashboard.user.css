@@ -67,21 +67,13 @@
     --og-r-pill: 999px;
   }
 
-  /* ──────────────────────────────────────────────────────────────────────────
-   ATMOSPHERIC LIGHTING – three light sources
-   ────────────────────────────────────────────────────────────────────────── */
-
-  body::before {
-    content: "";
-    position: fixed;
-    inset: -200px;
-    background:
-      radial-gradient(circle at 15% 0%, rgba(106, 168, 255, 0.06), transparent 35%),
-      radial-gradient(circle at 85% 80%, rgba(180, 140, 255, 0.04), transparent 30%),
-      radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.015), transparent 60%);
-    pointer-events: none;
-    z-index: -1;
-  }
+  /* ATMOSPHERIC LIGHTING — removed in 1.6.0.
+     `body::before { z-index:-1 }` painted in the root stacking context's negative-z
+     step, i.e. BEFORE body's own background box — and SURFACES sets that box opaque.
+     The three light sources were provably invisible: full-viewport paint, zero output.
+     Atmosphere returns in 2.0.0 folded into body's own background stack, alongside
+     Minehut's `repeating-conic-gradient` grain (which is also a body background-image
+     and must be preserved). */
 
   /* ──────────────────────────────────────────────────────────────────────────
    shadcn HSL TOKENS – required for shadcn/ui
@@ -109,8 +101,34 @@
     --accent-foreground: 213 80% 84% !important;
     --accent-sky: 213 35% 20% !important;
     --destructive: 356 63% 64% !important;
-    --radius: 0.75rem !important;
     --surface-grain: 220 12% 92% / 0.01 !important;
+  }
+
+  /* ──────────────────────────────────────────────────────────────────────────
+   GEOMETRY – theme-independent, so :root not .dark
+   ────────────────────────────────────────────────────────────────────────── */
+
+  :root {
+    /* Minehut declares --radius in :root ONLY, never in .dark. Declaring it inside
+       .dark (as this theme did until 1.6.0) left light mode on Minehut's 0.625rem
+       while dark got 0.75rem. Mirror Minehut: one declaration, both themes.
+       Drives .rounded-sm/md/lg/xl AND .mh-nav-item / .mh-sc-icon via calc(). */
+    --radius: 0.75rem !important;
+
+    /* Minehut ships `.rounded-[var(--mh-r-md)]{border-radius:var(--mh-r-md)}` but
+       declares --mh-r-md nowhere, so it resolves invalid and those corners are
+       square today. Declaring it fixes a Minehut bug for free. */
+    --mh-r-md: 10px !important;
+  }
+
+  /* Minehut never sets color-scheme. Without it the UA renders native controls light
+     on a black page: <select> popups, date/time pickers, <input type=color>, number
+     spinners, and the default canvas. One declaration, gated so light mode is
+     unaffected. Highest value-per-byte in the file. */
+  html.dark,
+  .dark,
+  [data-theme="dark"] {
+    color-scheme: dark;
   }
 
   /* ──────────────────────────────────────────────────────────────────────────
@@ -343,9 +361,8 @@
   [role="dialog"] {
     border-radius: var(--og-r-modal) !important;
   }
-  [class*="rounded-full"] {
-    border-radius: var(--og-r-pill) !important;
-  }
+  /* `[class*="rounded-full"]` removed in 1.6.0 — Tailwind's rounded-full is already
+     9999px, so forcing 999px was a no-op on a universal-ish substring match. */
 
   /* ──────────────────────────────────────────────────────────────────────────
    BORDERS – tinted, never pure grey
@@ -372,14 +389,15 @@
     box-shadow: 0 1px 0 var(--og-line) !important;
   }
 
-  [class*="border-dashed"],
-  [class*="border-dotted"] {
+  /* `border-dotted` dropped in 1.6.0 — 0 hits in Minehut's bundle. */
+  [class*="border-dashed"] {
     border-style: solid !important;
     border-color: var(--og-line-soft) !important;
   }
 
-  hr,
-  [class*="divider"] {
+  /* `[class*="divider"]` dropped in 1.6.0 — 0 hits. Minehut is Tailwind plus 11
+     hand-written .mh-* classes; the word "divider" does not exist in the bundle. */
+  hr {
     border-color: var(--og-line-soft) !important;
     background-color: var(--og-line-soft) !important;
   }
@@ -388,11 +406,10 @@
    SURFACES – physical layers
    ────────────────────────────────────────────────────────────────────────── */
 
+  /* `[class*="layout"]` / `[class*="wrapper"]` dropped in 1.6.0 — 0 hits each. */
   html,
   body,
-  main,
-  [class*="layout"],
-  [class*="wrapper"] {
+  main {
     background-color: var(--og-bg) !important;
     color: var(--og-ink) !important;
   }
@@ -481,7 +498,10 @@
       background 150ms var(--og-ease),
       border-color 150ms var(--og-ease),
       box-shadow 150ms var(--og-ease) !important;
-    will-change: transform !important;
+    /* `will-change: transform` removed in 1.6.0 — it was permanent, so a 12-server
+       grid held 12 compositor layers and 12 layer-sized textures for the whole
+       session, and it was never cleared under prefers-reduced-motion. Both Blink and
+       Gecko promote on demand when a transform transition actually starts. */
   }
   article[class*="rounded-\[10px\]"]:hover {
     transform: translateY(-2px) scale(1.002) !important;
@@ -765,8 +785,13 @@
     border: 1px solid var(--og-line) !important;
     box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35) !important;
   }
-  [class*="backdrop"],
-  [data-state="open"][class*="overlay"] {
+  /* Modal scrim. Was `[class*="backdrop"], [data-state="open"][class*="overlay"]`,
+     which matched Minehut's `.backdrop-blur` / `.backdrop-blur-sm` UTILITIES — so any
+     element merely using backdrop-blur got an opaque 62% black slab behind it — while
+     "overlay" matched nothing at all. Minehut's real scrim classes are these two.
+     @risk S  hook:.bg-black\/60 .bg-black\/80  hits:2  verify: audit "bg-black" */
+  .fixed.inset-0.bg-black\/60,
+  .fixed.inset-0.bg-black\/80 {
     background: rgba(4, 4, 5, 0.62) !important;
     backdrop-filter: blur(3px) !important;
     -webkit-backdrop-filter: blur(3px) !important;
@@ -938,12 +963,16 @@
    ICONS – Lucide optimisation
    ────────────────────────────────────────────────────────────────────────── */
 
-  svg[class*="lucide"] {
+  /* lucide-react injects `class="lucide lucide-x"` in the DOM; the string never
+     appears in Minehut's CSS bundle, so the audit reports 0 — that is expected, not a
+     dead rule. Whole-class `svg.lucide` beats an unanchored substring scan.
+     @risk D  hook:lucide-react DOM class  verify: document.querySelector('svg.lucide') */
+  svg.lucide {
     stroke-width: 1.75 !important;
     transition: color var(--og-fast) var(--og-ease) !important;
   }
-  a:hover > svg[class*="lucide"],
-  button:hover > svg[class*="lucide"] {
+  a:hover > svg.lucide,
+  button:hover > svg.lucide {
     color: var(--og-ink) !important;
   }
 
@@ -995,8 +1024,15 @@
    TARGET SIZE – WCAG 2.5.8 AA (24px)
    ────────────────────────────────────────────────────────────────────────── */
 
-  button:not([class*="h-"]):not([class*="size-"]):not([class*="hidden"]),
-  a[role="button"]:not([class*="h-"]):not([class*="size-"]):not([class*="hidden"]) {
+  /* The guards must be anchored to a class-token boundary. Unanchored, `h-` matched
+     200 of Minehut's 1096 class tokens — every `bg-[var(--mh-brand)]`,
+     `text-[var(--mh-emerald)]`, `border-[var(--mh-gold)]` contains "h-" inside "mh-",
+     so this rule was dead on most buttons. `hidden` likewise matched overflow-hidden.
+     `[class~=]` is whole-token; `[class^=]` + `[class*=" …"]` covers first vs. later
+     position in the attribute. Intent is unchanged: don't fight Tailwind's own sizing
+     and don't inflate hidden elements. */
+  button:not([class~="hidden"]):not([class^="h-"]):not([class*=" h-"]):not([class^="size-"]):not([class*=" size-"]),
+  a[role="button"]:not([class~="hidden"]):not([class^="h-"]):not([class*=" h-"]):not([class^="size-"]):not([class*=" size-"]) {
     min-height: 24px !important;
     min-width: 24px !important;
   }
@@ -1036,27 +1072,30 @@
    SCROLLBARS – minimal, matches theme
    ────────────────────────────────────────────────────────────────────────── */
 
-  * {
+  /* scrollbar-width and scrollbar-color INHERIT, so hosting them on `*` was a
+     1000+ element style recalc for nothing. Host once on html.
+     Also removed in 1.6.0:
+       · `*:hover::-webkit-scrollbar-thumb` — forced :hover style invalidation on
+         every element in the tree to recolour a scrollbar on 2–3 scroll containers.
+       · `transition` on ::-webkit-scrollbar-thumb — WebKit scrollbar pseudo-elements
+         do not support transitions. Dead declaration on a universal selector. */
+  html {
     scrollbar-width: thin;
     scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
   }
-  *::-webkit-scrollbar {
+  ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
   }
-  *::-webkit-scrollbar-track {
+  ::-webkit-scrollbar-track {
     background: transparent;
   }
-  *::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.06);
+  ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.08);
     border-radius: 999px;
-    transition: background var(--og-base) var(--og-ease) !important;
   }
-  *:hover::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.12);
-  }
-  *::-webkit-scrollbar-thumb:hover {
-    background: color-mix(in oklab, var(--mh-brand) 35%, transparent) !important;
+  ::-webkit-scrollbar-thumb:hover {
+    background: color-mix(in oklab, var(--mh-brand) 35%, transparent);
   }
 
   ::selection {
