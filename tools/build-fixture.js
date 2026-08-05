@@ -156,6 +156,104 @@ const pill = (label, hue) =>
     ? `<span class="inline-flex items-center gap-2 rounded-full border border-border bg-muted px-2.5 py-1 text-xs text-muted-foreground"><span class="size-[7px] rounded-full bg-current"></span>${label}</span>`
     : `<span class="inline-flex items-center gap-2 rounded-full px-2.5 py-1 text-xs border-[color-mix(in_oklab,var(--mh-${hue})_30%,transparent)] bg-[color-mix(in_oklab,var(--mh-${hue})_15%,transparent)] text-[var(--mh-${hue})]" style="border-width:1px"><span class="size-[7px] rounded-full bg-current"></span>${label}</span>`;
 
+// ── Components that exist in Minehut's bundle but live on routes nobody has
+//    opened. Every class string below is a real token from the shipped CSS
+//    (verified via `audit-selectors.py --tokens`), assembled into the shapes
+//    shadcn/Radix produce. This is not a mock of Minehut's markup — it is a
+//    harness that forces each component family to RENDER so audit-page.js can
+//    check it, instead of it being styled blind forever.
+const components = `
+<h2 class="mt-10">Components — routes not yet opened</h2>
+
+<div class="mt-4 rounded-[10px] border border-border bg-card p-6">
+  <p class="ds-label">Data grid (File Manager / Backups / Sub users)</p>
+  <div class="mt-3 overflow-x-auto">
+    <table class="min-w-[760px] table-fixed">
+      <thead><tr class="sticky top-0">
+        <th class="px-4 py-2 text-left ds-label">Name</th>
+        <th class="px-4 py-2 text-left ds-label">Size</th>
+        <th class="px-4 py-2 text-left ds-label">Modified</th>
+      </tr></thead>
+      <tbody class="divide-y divide-border">
+        <tr><td class="px-4 py-2">server.properties</td><td class="px-4 py-2 font-mono">1,024</td><td class="px-4 py-2 font-mono">00:28:02</td></tr>
+        <tr><td class="px-4 py-2">plugins/</td><td class="px-4 py-2 font-mono">10,240</td><td class="px-4 py-2 font-mono">01:07:44</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="mt-4 rounded-[10px] border border-border bg-card p-6">
+  <p class="ds-label">Form controls (Settings)</p>
+  <div class="mt-3 flex flex-wrap items-center gap-4">
+    <label class="flex items-center gap-2 text-[13px]"><input type="checkbox" checked> Enabled</label>
+    <label class="flex items-center gap-2 text-[13px]"><input type="radio" checked> Option</label>
+    <input type="range" min="0" max="100" value="63">
+    <input type="file" class="file:bg-transparent file:border-0 file:text-sm file:font-medium text-[13px]">
+    <textarea class="rounded-md border border-input bg-muted px-3 py-2 text-[13px]" rows="2">MOTD line</textarea>
+  </div>
+  <div class="mt-4 flex flex-wrap gap-2">
+    <span role="checkbox" data-state="checked" class="inline-block size-4 rounded border border-input"></span>
+    <span role="switch" data-state="checked" class="inline-block h-5 w-9 rounded-full border border-input"></span>
+    <span role="switch" class="inline-block h-5 w-9 rounded-full border border-input"></span>
+  </div>
+</div>
+
+<div class="mt-4 rounded-[10px] border border-border bg-card p-6">
+  <p class="ds-label">Overlays (dialog, menu, tooltip, toast)</p>
+  <div class="mt-3 flex flex-wrap items-start gap-4">
+    <div role="dialog" class="w-[min(92vw,460px)] rounded-lg border border-border bg-popover p-5">
+      <h2 class="text-[17px]">Delete server?</h2>
+      <p class="mt-1 text-muted-foreground max-w-[46ch]">This cannot be undone. Your world and plugins are removed permanently.</p>
+      <div class="mt-4 flex justify-end gap-2">
+        <button class="inline-flex h-9 items-center rounded-md border border-input bg-card px-3.5 text-[13px]">Cancel</button>
+        <button class="inline-flex h-9 items-center rounded-md bg-destructive px-3.5 text-[13px]">Delete</button>
+      </div>
+    </div>
+    <div role="menu" class="min-w-[8rem] rounded-md border border-border bg-popover p-1">
+      <div role="menuitem" class="px-2 py-1.5 text-[13px]">Restart</div>
+      <div role="menuitem" data-highlighted class="px-2 py-1.5 text-[13px]">Duplicate</div>
+      <div role="separator" class="my-1 h-px"></div>
+      <div role="menuitem" data-disabled class="px-2 py-1.5 text-[13px]">Archive</div>
+    </div>
+    <div role="tooltip" data-side="top" class="rounded-md border border-border bg-popover px-2 py-1">Copy domain</div>
+    <div class="fixed bottom-4 right-4 z-50" style="position:static">
+      <div class="max-w-[360px] rounded-md border border-border bg-popover p-3 text-[13px]">Server stopped.</div>
+    </div>
+  </div>
+</div>
+
+<div class="mt-4 rounded-[10px] border border-border bg-card p-6">
+  <p class="ds-label">Banners &amp; stock palette (warnings across the app)</p>
+  <div class="mt-3 space-y-2">
+    <div class="rounded-md border border-yellow-500/40 bg-yellow-500/10 px-3 py-2 text-[13px] text-amber-500">Console is only available while the server is online.</div>
+    <div class="rounded-md border border-emerald-500/40 bg-emerald-500/10 px-3 py-2 text-[13px] text-emerald-500">Backup completed.</div>
+    <div class="rounded-md border border-destructive/40 bg-red-500/20 px-3 py-2 text-[13px] text-red-400">Failed to start.</div>
+    <p class="text-[13px] max-w-[60ch]">Read the <a href="#">documentation</a> for details, or see <a href="#" class="underline">the wiki</a>.</p>
+    <ul class="list-disc pl-4 text-[13px] text-muted-foreground"><li>One</li><li>Two</li></ul>
+  </div>
+</div>
+
+<div class="mt-4 rounded-[10px] border border-border bg-card p-6">
+  <p class="ds-label">Loading &amp; charts (Stats)</p>
+  <div class="mt-3 flex flex-wrap items-center gap-4">
+    <div class="animate-pulse bg-muted h-4 w-40 rounded"></div>
+    <div class="animate-pulse bg-muted h-4 w-24 rounded"></div>
+    <div class="animate-spin size-4 rounded-full border-2 border-input"></div>
+    <div class="rounded-[var(--mh-r-md)] bg-muted size-10"></div>
+  </div>
+  <div class="mt-4 aspect-[16/9] max-w-md">
+    <svg class="recharts-surface" width="100%" height="160">
+      <g class="recharts-cartesian-grid"><line x1="0" y1="40" x2="400" y2="40"></line><line x1="0" y1="90" x2="400" y2="90"></line></g>
+      <g class="recharts-cartesian-axis"><line x1="0" y1="140" x2="400" y2="140"></line>
+        <g class="recharts-cartesian-axis-tick"><text x="10" y="155">00:00</text></g>
+        <g class="recharts-cartesian-axis-tick"><text x="190" y="155">12:00</text></g></g>
+      <path class="recharts-curve" d="M0,120 L100,60 L200,90 L300,40 L400,70" fill="none" stroke="#22c55e" stroke-width="2"></path>
+      <circle class="recharts-dot" cx="300" cy="40" r="3" fill="#22c55e"></circle>
+    </svg>
+  </div>
+</div>
+`;
+
 const html = `<!doctype html>
 <html lang="en" class="dark">
 <head>
@@ -189,6 +287,8 @@ ${theme}
     </div>
 
     ${tabBar}
+
+    ${components}
 
     <div class="mt-6 rounded-[10px] border border-border bg-card p-6">
       <h2>Typography scale</h2>

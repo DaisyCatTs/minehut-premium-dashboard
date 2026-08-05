@@ -69,6 +69,20 @@ so it applies to a local file, and rebuilds the exact markup `recon.js` captured
 from the live DOM — every class string in it was copied from the real page, not
 invented. Open the result and toggle `class="dark"` on `<html>` to check light mode.
 
+It also carries a **component harness** for families that live on routes nobody
+has opened: data grids, form controls, dialogs, menus, tooltips, toasts, warning
+banners, skeletons and a recharts-shaped SVG. Those class strings come from the
+bundle's own token list rather than from observed markup, so the harness proves a
+component _renders and passes contrast_ — not that Minehut assembles it that way.
+It is the difference between styled-blind and styled-unverified, and it is what
+`audit-page.js` runs against.
+
+Preview another accent without touching the stylesheet:
+
+```sh
+node tools/build-fixture.js --accent Purple
+```
+
 One divergence: next/font serves Geist, Unbounded and Silkscreen from Minehut's
 origin, so letterforms fall back locally. Colour, spacing, elevation, borders and
 state all render faithfully; type does not.
