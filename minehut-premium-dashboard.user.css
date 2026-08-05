@@ -1,8 +1,8 @@
 /* ==UserStyle==
 @name           Minehut Premium Dashboard
 @namespace      github.com/DaisyCatTs/minehut-premium-dashboard
-@version        1.5.0
-@description    A premium dark theme for the Minehut dashboard. OLED surfaces, surface-driven elevation, a single desaturated accent, and contrast-verified text.
+@version        2.0.0
+@description    A premium dark theme for the Minehut dashboard. Warm-neutral OLED surfaces, one restrained accent, Geist typography, and contrast-verified text.
 @author         Daisy
 @license        MIT
 @homepageURL    https://github.com/DaisyCatTs/minehut-premium-dashboard
@@ -10,1116 +10,1571 @@
 @updateURL      https://raw.githubusercontent.com/DaisyCatTs/minehut-premium-dashboard/main/minehut-premium-dashboard.user.css
 ==/UserStyle== */
 
-/*  CUSTOMISE — the only four values worth changing.  ───────────────────
-    accent   #6AA8FF   every blue: borders, rails, focus, buttons, prompt
-    page     #050508   page background; below #050508 flattens elevation
-    speed    150ms     0 disables transitions; past ~220ms feels sluggish
-    radius   16px      cards only; buttons/inputs stay 12px
-    Edit them in the :root block directly below.
-    ─────────────────────────────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════════════════════
+   §01  CONTRACT — read this before editing
+   ═══════════════════════════════════════════════════════════════════════════
+
+   TARGET BUILD
+   Verified against Minehut's shipped bundle `6bca1f8fe22edf72.css`
+   (Tailwind 3.4.19, shadcn/ui pre-`data-slot`, 1096 distinct class tokens).
+   @note bundle sha256:d2dc2e74c44459e1  (`python tools/audit-selectors.py --hash`)
+   Refreshing that bundle invalidates every `@risk F` line in §99. Re-audit with
+   `tools/`, which is the whole verification story — there is no build step.
+
+   WHAT MINEHUT GIVES US
+   Three token families we can claim without writing a single selector:
+     · shadcn HSL triplets   `--card`, `--border`, …  consumed as hsl(var(--x))
+     · raw `--mh-*`          brand + material hues, motion, shadows
+     · `--console-*`         16 ANSI slots + bg/fg
+   Plus eleven hand-written classes — `.mh-nav-item`, `.mh-meter-track`,
+   `.mh-meter-fill`, `.mh-sc-icon`, `.mh-nav-count`, `.mh-tabs`, `.mh-tab-in`,
+   `.ds-label`, `.font-display`, `.mh-gs-lockup`, `.mh-cloud-cluster-*` — which
+   are the only component hooks that survive a Tailwind rebuild.
+
+   PREFER A TOKEN OVER A SELECTOR. Always. A token override reaches every
+   consumer, costs no specificity, and cannot over-match.
+
+   ── THE DARK GATE ──────────────────────────────────────────────────────────
+   Everything from §10 to §71 lives inside one nested block:
+
+       .dark, [data-theme="dark"] { & .bg-card { … } }
+
+   `&` resolves to :is(.dark, [data-theme="dark"]) = (0,1,0), so a gated
+   `.bg-card` is (0,2,0) and beats both Minehut's `.bg-card` (0,1,0) and
+   `.mh-nav-item` (0,1,0) with NO `!important`. That is why this file has ~90
+   `!important` instead of the 339 it had in 1.5.0.
+
+   It also means light mode is genuinely untouched. Before 2.0.0 the palette
+   block was `:root` and ~200 component rules were ungated, so Minehut's own
+   light theme rendered dark cards on light tokens.
+
+   Requires CSS nesting: Chrome 112+ / Firefox 117+. `&` is always written
+   explicitly — relaxed nesting (a bare element selector as a nested rule) is
+   newer and fails silently on older builds.
+
+   ── THE !important POLICY ──────────────────────────────────────────────────
+   Permitted in exactly four cases, each carrying a trailing tag.
+   AN UNTAGGED `!important` IS A BUG.
+
+     /* !imp:token *​/      overriding a custom property Minehut also declares.
+                           Next.js appends route CSS chunks on client-side
+                           navigation, so source order is not safe for tokens.
+     /* !imp:dark-util *​/  beating a `dark:` variant utility. Those compile to
+                           `.dark\:x:is(.dark *)` = (0,2,0), which TIES our
+                           gated (0,2,0) — a tie resolves on source order, and
+                           we do not control injection order.
+     /* !imp:bang *​/       beating a utility that itself ships `!important`.
+                           Only `.mh-tabs > button.\!active` does.
+     /* !imp:a11y *​/       §80 and §90 must beat the whole file by construction.
+
+   Enforceable with no tooling — these two counts must be equal:
+     grep -o '!important' theme.css | wc -l
+     grep -oE '!imp:(token|dark-util|bang|a11y)' theme.css | wc -l
+
+   ── FRAGILITY MARKERS ──────────────────────────────────────────────────────
+     @risk D   hand-written class, element, ARIA role or data-attribute.
+               Survives a Tailwind rebuild.
+     @risk S   stock Tailwind utility name. Survives a rebuild, not a redesign.
+     @risk F   arbitrary/generated value. Breaks when that value changes.
+   `grep '@risk F' theme.css` is the breakage inventory. §99 lists them with
+   the audit string that verifies each one.
+
+   NEVER ship a new `[class*=]` without running the audit first. Substring
+   matching over-matches silently: `p-6` also matches `gap-6`, and `h-` matches
+   200 of 1096 tokens because every `--mh-*` utility contains "mh-".
+
+   ── CONTENTS ───────────────────────────────────────────────────────────────
+   §02 KNOBS          §03 LADDER        §04 DERIVED      §05 HUES
+   §06 GEOMETRY       §07 MOTION        §08 GLOBAL
+   §10 TYPOGRAPHY     §11 SURFACES      §12 BORDERS      §13 RADII
+   §20 SIDEBAR        §21 NAV ITEM      §30 CARD         §31 METER
+   §32 TABS           §33 BUTTONS       §40 FORMS        §41 OVERLAYS
+   §42 MENU ITEMS     §43 CONTROLS      §50 DATA GRIDS   §51 CHARTS
+   §52 STATUS         §53 SKELETONS     §60 CONSOLE      §61 QUARANTINE
+   §70 ICONS          §80 A11Y          §90 DEGRADATION  §99 RISK REGISTER
+   ═══════════════════════════════════════════════════════════════════════════ */
 
 @-moz-document domain("dashboard.minehut.com") {
-  /* ──────────────────────────────────────────────────────────────────────────
-   PRIMITIVES – The Foundation (warm greys, strong contrast)
-   ────────────────────────────────────────────────────────────────────────── */
+  /* ═════════════════════════════════════════════════════════════════════════
+     §02  KNOBS — the only four values worth editing. Seeds only, nothing derived.
+     ═════════════════════════════════════════════════════════════════════════ */
 
   :root {
-    /* Surface Ladder – consistent 7–7.5% luminance steps */
-    --og-bg: #050508;
-    --og-s1: #0b0d14;
-    --og-s2: #111720;
-    --og-s3: #171d2a;
-    --og-s4: #1f2635;
+    /* Accent. Every blue: focus ring, active nav, primary action, rail, tab
+       underline, selection, console keyword. Around 70–75% saturation stays
+       calm; a heavily saturated blue on near-black reads as though it emits
+       light. Minehut's own is #4B9EFF, so this sits deliberately close. */
+    --og-accent: #5b93e8;
 
-    /* Tinted Borders – warm‑tinted, strong for definition */
-    --og-line: rgba(160, 180, 210, 0.18);
-    --og-line-soft: rgba(160, 180, 210, 0.07);
-    --og-line-strong: rgba(160, 180, 210, 0.25);
-    --og-line-hover: color-mix(in oklab, var(--mh-brand) 28%, transparent);
-    --og-line-focus: color-mix(in oklab, var(--mh-brand) 85%, transparent);
+    /* Motion multiplier, unitless. 0 disables every transition and animation
+       in the theme; 1.5 lands the base step at 270ms, which starts to drag.
+       This is honest now — in 1.5.0 the cards, rail and primary button
+       hard-coded 150ms/120ms literals and ignored the setting entirely. */
+    --og-speed: 1;
 
-    /* Glass Surfaces */
-    --og-glass: rgba(11, 13, 20, 0.84);
-    --og-glass-nav: rgba(8, 9, 12, 0.8);
-
-    /* Inner Highlights – aluminium “top‑lit” feel */
-    --og-lift: inset 0 1px 0 rgba(255, 255, 255, 0.055);
-    --og-lift-2: inset 0 1px 0 rgba(255, 255, 255, 0.085);
-    --og-lift-3: inset 0 1px 0 rgba(255, 255, 255, 0.12);
-
-    /* Text Hierarchy – warm greys for a premium, Apple-like feel */
-    --og-ink: #f2f4f7; /* 17.0:1 – Titles */
-    --og-ink-2: #c7ccd4; /* 11.6:1 – Body */
-    --og-ink-3: #b8b3ab; /*  8.5:1 – Metadata (warm) */
-    --og-ink-4: #9c9a95; /*  6.5:1 – Micro labels (warm) */
-
-    /* Motion Physics */
-    --og-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
-    --og-fast: 120ms;
-    --og-base: 150ms;
-    --og-slow: 180ms;
-
-    /* Radii */
-    --og-r-card: 16px;
-    --og-r-btn: 12px;
-    --og-r-drop: 14px;
-    --og-r-modal: 20px;
-    --og-r-pill: 999px;
+    /* Control radius. Drives Minehut's .rounded-sm/md/lg/xl AND .mh-nav-item /
+       .mh-sc-icon through calc(). Card radius is separate — see §06. */
+    --og-radius: 0.625rem;
   }
 
-  /* ──────────────────────────────────────────────────────────────────────────
-   ATMOSPHERIC LIGHTING – three light sources
-   ────────────────────────────────────────────────────────────────────────── */
+  /* ═════════════════════════════════════════════════════════════════════════
+     §03  LADDER — AUTHORED. The only place surface numbers live.
 
-  body::before {
-    content: "";
-    position: fixed;
-    inset: -200px;
-    background:
-      radial-gradient(circle at 15% 0%, rgba(106, 168, 255, 0.06), transparent 35%),
-      radial-gradient(circle at 85% 80%, rgba(180, 140, 255, 0.04), transparent 30%),
-      radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.015), transparent 60%);
-    pointer-events: none;
-    z-index: -1;
-  }
+     shadcn consumes `hsl(var(--card))`, which requires a bare component
+     triplet (H S% L%). No CSS feature can derive a bare triplet from a colour
+     — not color-mix(), not relative colour syntax. So this layer cannot be
+     derived and must therefore be the SOURCE; §04 derives --mh-* from it.
 
-  /* ──────────────────────────────────────────────────────────────────────────
-   shadcn HSL TOKENS – required for shadcn/ui
-   ────────────────────────────────────────────────────────────────────────── */
+     In 1.5.0 both layers were authored independently and drifted: --card sat
+     3.2pp lighter than its --og-s1 twin, --popover 5.8pp lighter than --og-s3.
+     Nothing here can drift, because there is nothing to keep in sync.
 
-  html.dark,
+     Warm-neutral, matching Minehut's own oklch(.. .005–.012 55–60) family.
+     Stepped by MEASURED CIE L*, not nominal HSL L% — HSL lightness is not
+     perceptually uniform, so equal L% steps give unequal perceived steps.
+     ═════════════════════════════════════════════════════════════════════════ */
+
   .dark,
   [data-theme="dark"] {
-    --background: 240 9% 4.3% !important;
-    --card: 216 11% 9.2% !important;
-    --muted: 218 12% 12.9% !important;
-    --secondary: 218 13% 16.7% !important;
-    --popover: 220 12% 18.8% !important;
-    --foreground: 220 12% 96% !important;
-    --card-foreground: 220 12% 96% !important;
-    --popover-foreground: 220 12% 96% !important;
-    --secondary-foreground: 220 10% 82% !important;
-    --muted-foreground: 214 9% 65% !important;
-    --border: 216 6% 18% !important;
-    --input: 216 7% 22% !important;
-    --primary: 213 70% 62% !important;
-    --primary-foreground: 213 45% 94% !important;
-    --ring: 213 70% 62% !important;
-    --accent: 213 30% 18% !important;
-    --accent-foreground: 213 80% 84% !important;
-    --accent-sky: 213 35% 20% !important;
-    --destructive: 356 63% 64% !important;
-    --radius: 0.75rem !important;
-    --surface-grain: 220 12% 92% / 0.01 !important;
+    /* surface                        hex       Y        L*     step */
+    --background: 60 5% 3.7% !important; /* #0A0A09  0.0030    2.7        */ /* !imp:token */
+    --card: 30 6% 6.7% !important; /* #121110  0.0057    5.1   +2.4 */ /* !imp:token */
+    --muted: 40 6% 9.6% !important; /* #1A1917  0.0098    8.8   +3.7 */ /* !imp:token */
+    --secondary: 40 6% 9.6% !important; /* #1A1917  — same rung as muted   */ /* !imp:token */
+    --popover: 0 2% 12.7% !important; /* #212020  0.0146   12.4   +3.6 */ /* !imp:token */
+    --accent: 45 5% 15.7% !important; /* #2A2926  0.0222   16.6   +4.2 */ /* !imp:token */
+
+    /* Lines. Minehut ships `*{border-color:hsl(var(--border))}`, so claiming
+       --border alone recolours every bordered element in the app — which is
+       why §12 has almost no colour rules left. */
+    --border: 36 6% 17.1% !important; /* #2E2C29  1.35:1 on --card */ /* !imp:token */
+    --input: 34 6% 21.4% !important; /* #3A3733  1.59:1 on --card */ /* !imp:token */
+
+    /* Ink. Four tiers, each measured against --card (where most text sits).
+       All four clear 4.5:1, and adjacent tiers are separated by 1.4–1.7x so
+       the hierarchy is visible rather than nominal. */
+    --foreground: 40 13% 95.5% !important; /* #F5F4F2  17.16:1 on --card  titles   */ /* !imp:token */
+    --muted-foreground: 38 5% 59.8% !important; /* #9E9A93   6.73:1 on --card  metadata */ /* !imp:token */
+
+    --card-foreground: 40 13% 95.5% !important; /* !imp:token */
+    --popover-foreground: 40 13% 95.5% !important; /* !imp:token */
+    --secondary-foreground: 40 8% 77.8% !important; /* #CBC8C2  11.30:1  body    */ /* !imp:token */
+    --accent-foreground: 40 13% 95.5% !important; /* !imp:token */
+
+    /* Accent + danger. Focus ring measures 6.40 / 6.09 / 5.67 / 5.25 / 4.70:1
+       across the five surfaces above — WCAG 2.4.11 needs 3:1, so it passes
+       everywhere it can appear. */
+    --primary: 216 75% 63.3% !important; /* #5B93E8  6.09:1 on --card */ /* !imp:token */
+    --ring: 216 75% 63.3% !important; /* !imp:token */
+    --destructive: 2 58% 64.3% !important; /* #D9736F  5.96:1 on --card */ /* !imp:token */
+
+    /* Ink that sits ON the accent. Dark, not white: white on #5B93E8 is only
+       3.10:1 and fails, while #06121F measures 6.09:1. Minehut's own dark
+       value (#0a1628) makes the same choice. */
+    --primary-foreground: 210 70% 7% !important; /* #06121F  6.09:1 on --primary */ /* !imp:token */
+    --destructive-foreground: 0 60% 8% !important; /* !imp:token */
+
+    /* The alpha slash is load-bearing. This feeds
+       `repeating-conic-gradient(hsl(var(--surface-grain)) …)` on body; drop
+       the `/ A` and you paint an opaque 4px checkerboard over the whole page. */
+    --surface-grain: 45 6% 90% / 0.015 !important; /* !imp:token */
+
+    /* Charts. Minehut ships these identical in light and dark at 68–100%
+       saturation — the loudest colour on the page, and 1.5.0 never touched
+       them. Pulled into the palette; chart-1 is the accent.
+       NOTE: 0 var() consumers in the CSS bundle, so recharts is coloured from
+       JS. These may be inert; §51 styles the .recharts-* hooks directly, which
+       definitely works. Cheap to set either way. */
+    --chart-1: 216 75% 63.3% !important; /* !imp:token */
+    --chart-2: 152 48% 52.5% !important; /* !imp:token */
+    --chart-3: 39 64% 58% !important; /* !imp:token */
+    --chart-4: 247 45% 70.8% !important; /* !imp:token */
+    --chart-5: 177 42% 60.2% !important; /* !imp:token */
   }
 
-  /* ──────────────────────────────────────────────────────────────────────────
-   RAW --mh-* LADDER – consumed by bg-[var(--mh-*)]
-   ────────────────────────────────────────────────────────────────────────── */
+  /* ═════════════════════════════════════════════════════════════════════════
+     §04  DERIVED — --mh-* aliased off §03. Drift is structurally impossible.
+     Only tokens Minehut actually reads are listed; --mh-bg-1/-2 and --mh-ink
+     have zero var() consumers in the bundle and are omitted deliberately.
+     ═════════════════════════════════════════════════════════════════════════ */
 
-  html.dark,
   .dark,
   [data-theme="dark"] {
-    --mh-bg: #050508 !important;
-    --mh-bg-1: #0b0d14 !important;
-    --mh-bg-2: #111720 !important;
-    --mh-bg-3: #171d2a !important;
-    --mh-bg-4: #1f2635 !important;
-    --mh-line: rgba(160, 180, 210, 0.18) !important;
-    --mh-line-soft: rgba(160, 180, 210, 0.07) !important;
-    --mh-line-strong: rgba(160, 180, 210, 0.25) !important;
-    --mh-ink: #f2f4f7 !important;
-    --mh-ink-2: #c7ccd4 !important;
-    --mh-ink-3: #b8b3ab !important;
-    --mh-ink-4: #9c9a95 !important;
-    --mh-shadow-1: 0 1px 2px rgba(0, 0, 0, 0.35) !important;
-    --mh-shadow-2: 0 2px 8px rgba(0, 0, 0, 0.4) !important;
-    --mh-shadow-3: 0 8px 24px rgba(0, 0, 0, 0.5) !important;
-    --mh-glow-brand: 0 0 16px color-mix(in oklab, var(--mh-brand) 22%, transparent) !important;
-    --mh-on-brand: #dce9f8 !important;
+    --mh-bg: hsl(var(--background)) !important; /* !imp:token */
+    --mh-bg-3: hsl(var(--popover)) !important; /* !imp:token */
+    --mh-bg-4: hsl(var(--accent)) !important; /* !imp:token */
+
+    --mh-line: hsl(var(--border)) !important; /* !imp:token */
+    --mh-line-soft: hsl(var(--border) / 0.55) !important; /* !imp:token */
+    --mh-line-strong: hsl(var(--input)) !important; /* !imp:token */
+
+    --mh-ink-2: hsl(var(--secondary-foreground)) !important; /* !imp:token */
+    --mh-ink-3: hsl(var(--muted-foreground)) !important; /* !imp:token */
+    --mh-ink-4: #8a857d !important; /* 5.15:1 on --card — no shadcn twin */ /* !imp:token */
+    --mh-on-brand: hsl(var(--primary-foreground)) !important; /* !imp:token */
+
+    /* Shadows. Free reach: .shadow-mh-1/2/3, .data-[state=active]:shadow-mh-1
+       and .mh-sc-icon's box-shadow all consume these — zero selectors needed.
+       On a near-black ground a cast shadow is nearly invisible, so depth comes
+       from the surface ladder and these carry only a hairline + contact. */
+    --mh-shadow-1: 0 1px 2px rgb(0 0 0 / 0.5), 0 0 0 1px rgb(255 255 255 / 0.03) !important; /* !imp:token */
+    --mh-shadow-2: 0 4px 14px rgb(0 0 0 / 0.45), 0 0 0 1px rgb(255 255 255 / 0.04) !important; /* !imp:token */
+    --mh-shadow-3: 0 16px 40px rgb(0 0 0 / 0.55), 0 0 0 1px rgb(255 255 255 / 0.05) !important; /* !imp:token */
+    --mh-glow-brand: 0 0 0 1px hsl(var(--primary) / 0.45) !important; /* !imp:token */
   }
 
-  /* ──────────────────────────────────────────────────────────────────────────
-   PALETTE – vivid but controlled
-   ────────────────────────────────────────────────────────────────────────── */
+  /* ═════════════════════════════════════════════════════════════════════════
+     §04a  CONSOLE TOKENS — Minehut ships Monokai in dark mode. These 18 slots
+     replace it wholesale with a calmer IDE palette in the theme's own
+     temperature. Declared here rather than beside §60 because a bare
+     declaration placed after a nested rule is silently dropped by Chrome
+     112–129, and §60 sits deep inside the gate.
+     ═════════════════════════════════════════════════════════════════════════ */
+
+  .dark,
+  [data-theme="dark"] {
+    --console-bg: #0d0c0b !important; /* !imp:token */
+    --console-fg: #d6d3ce !important; /* !imp:token */
+    --console-ansi-0: #2e2c29 !important; /* black         */ /* !imp:token */
+    --console-ansi-1: #d9736f !important; /* red           */ /* !imp:token */
+    --console-ansi-2: #4cc08a !important; /* green         */ /* !imp:token */
+    --console-ansi-3: #d9a94f !important; /* yellow        */ /* !imp:token */
+    --console-ansi-4: #5b93e8 !important; /* blue          */ /* !imp:token */
+    --console-ansi-5: #9b93d6 !important; /* magenta       */ /* !imp:token */
+    --console-ansi-6: #6fc4c0 !important; /* cyan          */ /* !imp:token */
+    --console-ansi-7: #d6d3ce !important; /* white         */ /* !imp:token */
+    --console-ansi-8: #736f69 !important; /* bright black  */ /* !imp:token */
+    --console-ansi-9: #e8918d !important; /* !imp:token */
+    --console-ansi-10: #6ed3a3 !important; /* !imp:token */
+    --console-ansi-11: #e8c176 !important; /* !imp:token */
+    --console-ansi-12: #83aeef !important; /* !imp:token */
+    --console-ansi-13: #b3ace4 !important; /* !imp:token */
+    --console-ansi-14: #8fd7d3 !important; /* !imp:token */
+    --console-ansi-15: #f5f4f2 !important; /* !imp:token */
+  }
+
+  /* ═════════════════════════════════════════════════════════════════════════
+     §05  HUES — theme-independent, so :root.
+
+     The accent is spent in TIERS and spent rarely. In 1.5.0 one blue appeared
+     38 times at one saturation, alongside 16 glow declarations up to 28px —
+     against a brief that bans excessive glow. Blue now means interaction,
+     focus, navigation and selection. Data, labels and domains stay neutral.
+
+     The seven material hues belong to Minehut and carry state, not decoration.
+     Each is measured on --card: emerald 8.28, gold 8.75, diamond 9.28,
+     amethyst 6.77, copper 6.57, redstone 5.96, lapis 4.73 : 1.
+     ═════════════════════════════════════════════════════════════════════════ */
 
   :root {
-    --mh-brand: #6aa8ff !important;
-    --mh-brand-hover: color-mix(in oklab, var(--mh-brand) 82%, white) !important;
-    --mh-brand-press: color-mix(in oklab, var(--mh-brand) 82%, black) !important;
-    --mh-brand-soft: color-mix(in oklab, var(--mh-brand) 10%, transparent) !important;
-    --mh-emerald: #42d392 !important;
-    --mh-redstone: #e07077 !important;
-    --mh-gold: #e4b860 !important;
-    --mh-diamond: #7ed4d1 !important;
-    --mh-amethyst: #a5b0e6 !important;
-    --mh-lapis: #4068b0 !important;
-    --mh-copper: #d49574 !important;
+    --mh-brand: var(--og-accent) !important; /* !imp:token */
+    --mh-brand-hover: color-mix(in oklab, var(--og-accent) 82%, white) !important; /* !imp:token */
+    --mh-brand-press: color-mix(in oklab, var(--og-accent) 82%, black) !important; /* !imp:token */
+    --mh-brand-soft: color-mix(in oklab, var(--og-accent) 12%, transparent) !important; /* !imp:token */
+
+    --mh-emerald: #4cc08a !important; /* running    */ /* !imp:token */
+    --mh-redstone: #d9736f !important; /* danger     */ /* !imp:token */
+    --mh-gold: #d9a94f !important; /* warning    */ /* !imp:token */
+    --mh-diamond: #6fc4c0 !important; /* version    */ /* !imp:token */
+    --mh-amethyst: #9b93d6 !important; /* 11 consumers in the bundle */ /* !imp:token */
+    --mh-copper: #c98a66 !important; /*  5 consumers */ /* !imp:token */
+    --mh-lapis: #5a7fc4 !important; /*  2 consumers */ /* !imp:token */
+
+    /* Theme-private. Kept only because Minehut has no equivalent: the inner
+       top-edge highlight that makes a surface read as a lit material rather
+       than a filled rectangle, and the two glass fills. */
+    --og-lift: inset 0 1px 0 rgb(255 255 255 / 0.05);
+    --og-lift-2: inset 0 1px 0 rgb(255 255 255 / 0.08);
+    --og-glass: hsl(var(--popover) / 0.82);
+    --og-glass-nav: hsl(var(--background) / 0.72);
   }
 
-  /* ──────────────────────────────────────────────────────────────────────────
-   TYPOGRAPHY – hierarchy by weight + tracking
-   ────────────────────────────────────────────────────────────────────────── */
+  /* ═════════════════════════════════════════════════════════════════════════
+     §06  GEOMETRY — :root, not .dark. Minehut declares --radius in :root only;
+     1.5.0 declared it inside .dark, silently leaving light mode on 0.625rem.
 
-  html,
-  body,
-  button,
-  input,
-  select,
-  textarea {
-    font-family:
-      "Inter var",
-      "Inter",
-      "Geist",
-      "Geist Sans",
-      ui-sans-serif,
-      system-ui,
-      -apple-system,
-      "Segoe UI",
-      Roboto,
-      "Helvetica Neue",
-      Arial,
-      sans-serif !important;
-    font-feature-settings: "cv02", "cv03", "cv04", "ss01", "tnum" !important;
-    -webkit-font-smoothing: antialiased !important;
-    -moz-osx-font-smoothing: grayscale !important;
+     A real scale: 8 / 10 / 12 / 14 / 16 / pill. In 1.5.0 substring matches
+     mapped everything to 16px or 12px, so a 24px chip and a 900px panel got
+     the identical corner — the clearest "template" tell in the old file.
+     ═════════════════════════════════════════════════════════════════════════ */
+
+  :root {
+    --radius: var(--og-radius) !important; /* 10px → sm 6 / md 8 / lg 10 / xl 16 */ /* !imp:token */
+
+    /* Minehut ships `.rounded-[var(--mh-r-md)]{border-radius:var(--mh-r-md)}`
+       but declares --mh-r-md nowhere, so it resolves invalid and those corners
+       are square today. Declaring it fixes a Minehut bug for free. */
+    --mh-r-md: 10px !important; /* !imp:token */
+
+    --og-r-card: 14px;
+    --og-r-drop: 12px;
+    --og-r-modal: 16px;
   }
 
-  .font-display {
-    font-weight: 600 !important;
-    letter-spacing: -0.025em !important;
-    font-size: 28px !important;
-  }
-  h1 {
-    font-weight: 600 !important;
-    letter-spacing: -0.02em !important;
-    font-size: 24px !important;
-  }
-  h2 {
-    font-weight: 600 !important;
-    letter-spacing: -0.015em !important;
-    font-size: 20px !important;
-  }
-  h3 {
-    font-weight: 550 !important;
-    letter-spacing: -0.01em !important;
-    font-size: 17px !important;
-  }
-  h4,
-  h5,
-  h6 {
-    font-weight: 550 !important;
-    letter-spacing: -0.005em !important;
-  }
-  body {
-    font-weight: 450 !important;
-    font-size: 14px !important;
-    line-height: 1.6 !important;
+  /* ═════════════════════════════════════════════════════════════════════════
+     §07  MOTION — before every component, because no component below is
+     allowed to write a duration literal. That is what makes --og-speed honest.
+
+     Minehut runs SIX motion regimes simultaneously. Claiming --mh-dur-* and
+     --mh-ease-* covers two; the other four are stock Tailwind timing utilities
+     whose values are baked into the class, so a token override cannot reach
+     them — they have to be restyled by name. `.ease-mh-out` and
+     `.ease-mh-spring` in particular hardcode their cubic-beziers rather than
+     reading the variable, which is easy to miss.
+     ═════════════════════════════════════════════════════════════════════════ */
+
+  :root {
+    --mh-dur-fast: calc(var(--og-speed) * 110ms) !important; /* !imp:token */
+    --mh-dur-base: calc(var(--og-speed) * 180ms) !important; /* !imp:token */
+    --mh-dur-slow: calc(var(--og-speed) * 320ms) !important; /* !imp:token */
+
+    /* One curve for the whole page. Minehut's own --mh-ease-out, kept. */
+    --mh-ease-out: cubic-bezier(0.22, 0.61, 0.36, 1) !important; /* !imp:token */
+
+    /* Minehut's spring overshoots 56% (.34,1.56,.64,1). The brief bans
+       bouncing, so it is flattened to a firm settle with no overshoot. */
+    --mh-ease-spring: cubic-bezier(0.22, 0.9, 0.3, 1) !important; /* !imp:token */
+
+    --og-ease: var(--mh-ease-out);
   }
 
-  h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6,
-  a h1,
-  a h2,
-  a h3,
-  a h4,
-  .text-foreground {
-    color: var(--og-ink) !important;
+  /* Retune Minehut's own timing utilities. Same reach as the old blanket
+     PHYSICS rule, zero new selectors, and — critically — no `transition`
+     SHORTHAND, so Minehut's `input:-webkit-autofill{transition:background-color
+     9999s}` freeze survives. The 1.5.0 rule used the shorthand with
+     !important and re-enabled Chrome's yellow autofill flash.
+     @risk S  stock Tailwind names  verify: audit "transition" "duration" "ease" */
+  .transition,
+  .transition-all,
+  .transition-colors,
+  .transition-opacity,
+  .transition-transform,
+  .transition-\[width\],
+  .transition-\[filter\],
+  .transition-\[transform\2c width\],
+  .transition-\[border-color\2c box-shadow\],
+  .transition-\[background-color\2c color\2c transform\] {
+    transition-timing-function: var(--mh-ease-out);
+    transition-duration: var(--mh-dur-fast);
   }
-  .text-muted-foreground {
-    color: var(--og-ink-3) !important;
-    font-weight: 450 !important;
+  .duration-200,
+  .duration-\[200ms\] {
+    transition-duration: var(--mh-dur-base);
   }
-
-  article h3,
-  article [class*="font-semibold"]:not([class*="text-\[10px\]"]) {
-    color: var(--og-ink) !important;
-    font-weight: 550 !important;
+  .duration-\[120ms\],
+  .duration-\[var\(--mh-dur-fast\)\] {
+    transition-duration: var(--mh-dur-fast);
   }
-  article [class*="font-mono"]:not(.uppercase) {
-    color: var(--og-ink-3) !important;
-  }
-
-  .font-mono.uppercase.tracking-wider,
-  [class*="text-\[10px\]"].uppercase,
-  [class*="tracking-\[0\.08em\]"] {
-    color: var(--og-ink-4) !important;
-    font-weight: 450 !important;
-    letter-spacing: 0.08em !important;
-    text-transform: uppercase !important;
+  /* These three bake their curve into the class — unreachable via tokens. */
+  .ease-out,
+  .ease-mh-out,
+  .ease-mh-spring {
+    transition-timing-function: var(--mh-ease-out);
   }
 
-  .ds-label {
-    color: var(--mh-brand) !important;
-    font-weight: 600 !important;
-    letter-spacing: 0.09em !important;
-    text-transform: uppercase !important;
-    font-size: 11px !important;
-  }
+  /* ═════════════════════════════════════════════════════════════════════════
+     §08  GLOBAL — deliberately UNGATED. These must work in light mode too.
+     ═════════════════════════════════════════════════════════════════════════ */
 
-  aside a:not(.mh-nav-item):not([class*="mh-brand"]),
-  nav a:not(.mh-nav-item):not([class*="mh-brand"]) {
-    color: #8fb4e0 !important;
-  }
-  aside a:not(.mh-nav-item):hover,
-  nav a:not(.mh-nav-item):hover {
-    color: #b5cfef !important;
-  }
-
-  [class*="line-through"] {
-    color: var(--og-ink-4) !important;
-    text-decoration-color: rgba(224, 112, 119, 0.6) !important;
-  }
-
-  /* ──────────────────────────────────────────────────────────────────────────
-   PHYSICS – motion with intent
-   ────────────────────────────────────────────────────────────────────────── */
-
-  a,
-  button,
-  article,
-  input,
-  select,
-  textarea,
-  .mh-nav-item,
-  [role="tab"],
-  [class*="rounded-\[10px\]"],
-  [class*="rounded-md"] {
-    transition:
-      background-color var(--og-base) var(--og-ease),
-      border-color var(--og-base) var(--og-ease),
-      color var(--og-fast) var(--og-ease),
-      box-shadow var(--og-base) var(--og-ease),
-      transform var(--og-base) var(--og-ease),
-      opacity var(--og-fast) var(--og-ease) !important;
-  }
-
-  @keyframes og-page-in {
-    from {
-      opacity: 0;
-      transform: translateY(6px) scale(0.998);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0) scale(1);
-    }
-  }
-  main > div[class*="p-6"],
-  main > div[class*="p-8"] {
-    animation: og-page-in var(--og-slow) var(--og-ease);
-  }
-
-  /* ──────────────────────────────────────────────────────────────────────────
-   RADII – consistent scale
-   ────────────────────────────────────────────────────────────────────────── */
-
-  article[class*="rounded-\[10px\]"],
-  .rounded-lg,
-  [class*="rounded-lg"] {
-    border-radius: var(--og-r-card) !important;
-  }
-  .rounded-md,
-  [class*="rounded-md"] {
-    border-radius: var(--og-r-btn) !important;
-  }
-  input,
-  select,
-  textarea {
-    border-radius: var(--og-r-btn) !important;
-  }
-  .rounded-\[14px\],
-  [class*="rounded-\[14px\]"] {
-    border-radius: var(--og-r-drop) !important;
-  }
-  [role="menu"],
-  [class*="popover"],
-  [data-radix-popper-content-wrapper] > * {
-    border-radius: var(--og-r-drop) !important;
-  }
-  [role="dialog"] {
-    border-radius: var(--og-r-modal) !important;
-  }
-  [class*="rounded-full"] {
-    border-radius: var(--og-r-pill) !important;
-  }
-
-  /* ──────────────────────────────────────────────────────────────────────────
-   BORDERS – tinted, never pure grey
-   ────────────────────────────────────────────────────────────────────────── */
-
-  .border:not([class*="border-transparent"]),
-  .border-t:not([class*="border-transparent"]),
-  .border-b:not([class*="border-transparent"]),
-  .border-l:not([class*="border-transparent"]),
-  .border-r:not([class*="border-transparent"]),
-  [class*="border-border"],
-  [class*="border-input"] {
-    border-color: var(--og-line) !important;
-  }
-  [class*="border-transparent"] {
-    border-color: transparent !important;
-  }
-
-  [class*="hover\:border-foreground\/"]:hover {
-    border-color: var(--og-line-hover) !important;
-  }
-
-  [class*="shadow-\[0_1px_0_hsl\(var\(--foreground\)"] {
-    box-shadow: 0 1px 0 var(--og-line) !important;
-  }
-
-  [class*="border-dashed"],
-  [class*="border-dotted"] {
-    border-style: solid !important;
-    border-color: var(--og-line-soft) !important;
-  }
-
-  hr,
-  [class*="divider"] {
-    border-color: var(--og-line-soft) !important;
-    background-color: var(--og-line-soft) !important;
-  }
-
-  /* ──────────────────────────────────────────────────────────────────────────
-   SURFACES – physical layers
-   ────────────────────────────────────────────────────────────────────────── */
-
-  html,
-  body,
-  main,
-  [class*="layout"],
-  [class*="wrapper"] {
-    background-color: var(--og-bg) !important;
-    color: var(--og-ink) !important;
-  }
-  .bg-background {
-    background-color: var(--og-bg) !important;
-  }
-  .bg-card {
-    background-color: var(--og-s1) !important;
-  }
-  .bg-muted {
-    background-color: var(--og-s2) !important;
-  }
-  .bg-secondary {
-    background-color: var(--og-s2) !important;
-  }
-  .bg-popover {
-    background-color: var(--og-s3) !important;
-  }
-
-  /* ──────────────────────────────────────────────────────────────────────────
-   SIDEBAR – frosted glass
-   ────────────────────────────────────────────────────────────────────────── */
-
-  aside {
-    background: var(--og-glass-nav) !important;
-    backdrop-filter: blur(18px) saturate(140%) !important;
-    -webkit-backdrop-filter: blur(18px) saturate(140%) !important;
-    border-right: 1px solid var(--og-line) !important;
-  }
-
-  .mh-nav-item {
-    color: var(--og-ink-3) !important;
-    border-radius: 10px !important;
-    padding: 7px 12px !important;
-  }
-  .mh-nav-item svg {
-    color: var(--og-ink-4) !important;
-    opacity: 1 !important;
-  }
-
-  .mh-nav-item:hover {
-    background: var(--og-s2) !important;
-    color: var(--og-ink) !important;
-    transform: translateX(2px) !important;
-  }
-  .mh-nav-item:hover svg {
-    color: var(--og-ink-2) !important;
-  }
-
-  .mh-nav-item[data-active="true"] {
-    background: linear-gradient(
-      90deg,
-      color-mix(in oklab, var(--mh-brand) 14%, transparent),
-      color-mix(in oklab, var(--mh-brand) 4%, transparent)
-    ) !important;
-    color: #dce9f8 !important;
-    font-weight: 550 !important;
-    box-shadow:
-      inset 2px 0 0 var(--mh-brand),
-      -1px 0 12px -2px color-mix(in oklab, var(--mh-brand) 45%, transparent) !important;
-  }
-  .mh-nav-item[data-active="true"] svg {
-    color: var(--mh-brand-hover) !important;
-  }
-
-  div[role="radiogroup"] {
-    background: var(--og-s2) !important;
-    border-color: var(--og-line) !important;
-  }
-  div[role="radiogroup"] button.bg-muted {
-    background: var(--og-s3) !important;
-    color: var(--og-ink) !important;
-  }
-
-  /* ──────────────────────────────────────────────────────────────────────────
-   SERVER CARDS – hero element
-   ────────────────────────────────────────────────────────────────────────── */
-
-  article[class*="rounded-\[10px\]"] {
-    background:
-      linear-gradient(180deg, rgba(255, 255, 255, 0.05), transparent 35%), var(--og-s1) !important;
-    border: 1px solid var(--og-line) !important;
-    box-shadow: var(--og-lift) !important;
-    transition:
-      transform 150ms var(--og-ease),
-      background 150ms var(--og-ease),
-      border-color 150ms var(--og-ease),
-      box-shadow 150ms var(--og-ease) !important;
-    will-change: transform !important;
-  }
-  article[class*="rounded-\[10px\]"]:hover {
-    transform: translateY(-2px) scale(1.002) !important;
-    background:
-      linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent 40%), var(--og-s2) !important;
-    border-color: var(--og-line-hover) !important;
-    box-shadow:
-      var(--og-lift-2),
-      0 8px 28px rgba(0, 0, 0, 0.35),
-      0 0 0 1px color-mix(in oklab, var(--mh-brand) 12%, transparent) !important;
-  }
-
-  /* ─── STATE RAIL – glowing left edge (clean, single-pass) ─── */
-
-  /* Base rail – default state (blue-tinted) */
-  article[class*="rounded-\[10px\]"]::before {
-    content: "" !important;
-    position: absolute !important;
-    left: 0 !important;
-    top: 0 !important;
-    bottom: 0 !important;
-    width: 3px !important;
-    border-radius: 2px 0 0 2px !important;
-    background: color-mix(in oklab, var(--mh-brand) 40%, transparent) !important;
-    pointer-events: none !important;
-    z-index: 1 !important;
-    transition:
-      background 150ms var(--og-ease),
-      box-shadow 150ms var(--og-ease) !important;
-  }
-
-  /* Warning (gold) – comes before emerald */
-  article[class*="rounded-\[10px\]"]:has([class*="mh-gold"])::before {
-    background: rgba(228, 184, 96, 0.7) !important;
-    box-shadow: 0 0 14px rgba(228, 184, 96, 0.35) !important;
-  }
-
-  /* Danger (redstone) – comes before emerald */
-  article[class*="rounded-\[10px\]"]:has([class*="mh-redstone"])::before {
-    background: rgba(224, 112, 119, 0.7) !important;
-    box-shadow: 0 0 14px rgba(224, 112, 119, 0.3) !important;
-  }
-
-  /* Online (emerald) – MUST BE LAST (Pitfall 3) */
-  article[class*="rounded-\[10px\]"]:has([class*="mh-emerald"])::before {
-    background: rgba(66, 211, 146, 0.8) !important;
-    box-shadow: 0 0 20px rgba(66, 211, 146, 0.5) !important;
-  }
-
-  /* Hover glow amplification */
-  article[class*="rounded-\[10px\]"]:hover::before {
-    box-shadow: 0 0 16px color-mix(in oklab, var(--mh-brand) 35%, transparent) !important;
-  }
-  article[class*="rounded-\[10px\]"]:has([class*="mh-emerald"]):hover::before {
-    box-shadow: 0 0 28px rgba(66, 211, 146, 0.55) !important;
-  }
-  article[class*="rounded-\[10px\]"]:has([class*="mh-redstone"]):hover::before {
-    box-shadow: 0 0 20px rgba(224, 112, 119, 0.4) !important;
-  }
-  article[class*="rounded-\[10px\]"]:has([class*="mh-gold"]):hover::before {
-    box-shadow: 0 0 20px rgba(228, 184, 96, 0.4) !important;
-  }
-
-  /* Remove Minehut's built-in top bars */
-  article .absolute.inset-x-0.top-0.h-\[2px\],
-  article .absolute.inset-x-0.top-0.h-\[3px\] {
-    opacity: 0 !important;
-    background: none !important;
-  }
-
-  /* ──────────────────────────────────────────────────────────────────────────
-   HEADER ACCENT BARS – chrome, not state (FIXED for both heights)
-   ────────────────────────────────────────────────────────────────────────── */
-
-  /* For h-[3px] – existing top bar */
-  .absolute.inset-x-0.top-0.h-\[3px\] {
-    height: 2.5px !important;
-    opacity: 1 !important;
-    background: linear-gradient(
-      90deg,
-      transparent 0%,
-      color-mix(in oklab, var(--mh-brand) 45%, transparent) 18%,
-      var(--mh-brand) 50%,
-      color-mix(in oklab, var(--mh-brand) 45%, transparent) 82%,
-      transparent 100%
-    ) !important;
-  }
-
-  /* For h-[2px] – the one with diamond→brand gradient and opacity-60 */
-  .absolute.inset-x-0.top-0.h-\[2px\] {
-    opacity: 1 !important;
-    background: var(--mh-brand) !important;
-    background-image: none !important;
-  }
-
-  /* ──────────────────────────────────────────────────────────────────────────
-   BUTTONS – physics‑based, 3D feel
-   ────────────────────────────────────────────────────────────────────────── */
-
-  /* Primary CTA */
-  [class*="bg-\[var\(--mh-brand\)\]"] {
-    background: linear-gradient(
-      180deg,
-      color-mix(in oklab, var(--mh-brand) 35%, transparent),
-      color-mix(in oklab, var(--mh-brand) 20%, transparent)
-    ) !important;
-    border: 1px solid color-mix(in oklab, var(--mh-brand) 42%, transparent) !important;
-    color: #dce9f8 !important;
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.08),
-      0 2px 0 color-mix(in oklab, var(--mh-brand) 20%, transparent) !important;
-    font-weight: 550 !important;
-    transition: all 120ms var(--og-ease) !important;
-  }
-  [class*="bg-\[var\(--mh-brand\)\]"]:hover {
-    background: linear-gradient(
-      180deg,
-      color-mix(in oklab, var(--mh-brand) 45%, transparent),
-      color-mix(in oklab, var(--mh-brand) 28%, transparent)
-    ) !important;
-    border-color: var(--og-line-focus) !important;
-    color: #eef5ff !important;
-    transform: translateY(-2px) !important;
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.1),
-      0 4px 0 color-mix(in oklab, var(--mh-brand) 15%, transparent),
-      0 8px 24px color-mix(in oklab, var(--mh-brand) 20%, transparent) !important;
-  }
-  [class*="bg-\[var\(--mh-brand\)\]"]:active {
-    transform: translateY(0) !important;
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.06),
-      0 1px 0 color-mix(in oklab, var(--mh-brand) 20%, transparent) !important;
-  }
-  [class*="bg-\[var\(--mh-brand\)\]"] svg {
-    color: var(--mh-brand-hover) !important;
-  }
-
-  /* Secondary Buttons */
-  button.border-border.bg-card.text-foreground,
-  a.border-border.bg-card.text-foreground,
-  button.border-input.bg-card,
-  a.border-input.bg-card {
-    background: var(--og-s3) !important;
-    border: 1px solid var(--og-line) !important;
-    color: var(--og-ink) !important;
-    box-shadow: var(--og-lift) !important;
-  }
-  button.border-border.bg-card.text-foreground:hover,
-  a.border-border.bg-card.text-foreground:hover,
-  button.border-input.bg-card:hover:not(:disabled),
-  a.border-input.bg-card:hover {
-    background: var(--og-s4) !important;
-    border-color: var(--og-line-hover) !important;
-    transform: translateY(-1px) !important;
-  }
-  button.border-input.bg-card svg {
-    color: var(--og-ink-3) !important;
-  }
-
-  /* Danger Buttons – muted, never bright */
-  button[class*="destructive"],
-  button[class*="bg-\[color-mix"][class*="mh-redstone"] {
-    background: rgba(224, 112, 119, 0.08) !important;
-    border: 1px solid rgba(224, 112, 119, 0.25) !important;
-    color: #e8969b !important;
-  }
-  button[class*="destructive"]:hover,
-  button[class*="bg-\[color-mix"][class*="mh-redstone"]:hover {
-    background: rgba(224, 112, 119, 0.14) !important;
-    border-color: rgba(224, 112, 119, 0.4) !important;
-    color: #f0afb3 !important;
-  }
-
-  /* ──────────────────────────────────────────────────────────────────────────
-   TABS – underline, never filled
-   ────────────────────────────────────────────────────────────────────────── */
-
-  [class*="shadow-\[0_1px_0_hsl\(var\(--foreground\)"] > button.border-input.bg-card {
-    background: rgba(255, 255, 255, 0.03) !important;
-    border: 1px solid var(--og-line) !important;
-    border-bottom-color: transparent !important;
-    color: var(--og-ink) !important;
-    font-weight: 550 !important;
-    position: relative !important;
-    box-shadow: 0 2px 12px -6px color-mix(in oklab, var(--mh-brand) 50%, transparent) !important;
-  }
-  [class*="shadow-\[0_1px_0_hsl\(var\(--foreground\)"] > button.border-input.bg-card svg {
-    color: var(--mh-brand-hover) !important;
-  }
-
-  @keyframes og-underline {
-    from {
-      transform: scaleX(0);
-      opacity: 0;
-    }
-    to {
-      transform: scaleX(1);
-      opacity: 1;
-    }
-  }
-  [class*="shadow-\[0_1px_0_hsl\(var\(--foreground\)"] > button.border-input.bg-card::after {
-    content: "" !important;
-    position: absolute !important;
-    left: 0;
-    right: 0;
-    bottom: -2px;
-    height: 2.5px !important;
-    background: var(--mh-brand) !important;
-    border-radius: 2px !important;
-    animation: og-underline var(--og-slow) var(--og-ease) both !important;
-  }
-
-  a.border-transparent.text-muted-foreground {
-    color: var(--og-ink-3) !important;
-  }
-  a.border-transparent.text-muted-foreground:hover {
-    background: var(--og-s2) !important;
-    color: var(--og-ink) !important;
-  }
-
-  /* ──────────────────────────────────────────────────────────────────────────
-   STATUS PILLS – glass, neutral text, coloured dot
-   ────────────────────────────────────────────────────────────────────────── */
-
-  [class*="bg-\[color-mix"][class*="mh-emerald"],
-  [class*="bg-\[color-mix"][class*="mh-redstone"],
-  [class*="bg-\[color-mix"][class*="mh-gold"],
-  [class*="bg-\[color-mix"][class*="mh-diamond"] {
-    background: var(--og-s2) !important;
-    border: 1px solid var(--og-line) !important;
-    color: var(--og-ink-3) !important;
-  }
-
-  span.bg-current {
-    opacity: 1 !important;
-    box-shadow: none !important;
-  }
-  [class*="mh-emerald"] span.bg-current {
-    background: var(--mh-emerald) !important;
-    box-shadow: 0 0 12px rgba(66, 211, 146, 0.6) !important;
-  }
-  [class*="mh-redstone"] span.bg-current {
-    background: var(--mh-redstone) !important;
-    box-shadow: 0 0 12px rgba(224, 112, 119, 0.55) !important;
-  }
-  [class*="mh-gold"] span.bg-current {
-    background: var(--mh-gold) !important;
-    box-shadow: 0 0 12px rgba(228, 184, 96, 0.55) !important;
-  }
-  [class*="mh-diamond"] span.bg-current {
-    background: var(--mh-diamond) !important;
-    box-shadow: 0 0 12px rgba(126, 212, 209, 0.55) !important;
-  }
-
-  @keyframes og-pulse {
-    0%,
-    100% {
-      box-shadow: 0 0 6px rgba(66, 211, 146, 0.5);
-    }
-    50% {
-      box-shadow: 0 0 16px rgba(66, 211, 146, 0.8);
-    }
-  }
-  [class*="mh-emerald"] span.bg-current {
-    animation: og-pulse 2.4s var(--og-ease) infinite !important;
-  }
-
-  /* ──────────────────────────────────────────────────────────────────────────
-   GLASS OVERLAYS – the only place blur belongs
-   ────────────────────────────────────────────────────────────────────────── */
-
-  [role="dialog"],
-  [role="menu"],
-  [role="listbox"],
-  [class*="popover"],
-  [data-radix-popper-content-wrapper] > * {
-    background: var(--og-glass) !important;
-    backdrop-filter: blur(20px) saturate(160%) !important;
-    -webkit-backdrop-filter: blur(20px) saturate(160%) !important;
-    border: 1px solid var(--og-line) !important;
-    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35) !important;
-  }
-  [class*="backdrop"],
-  [data-state="open"][class*="overlay"] {
-    background: rgba(4, 4, 5, 0.62) !important;
-    backdrop-filter: blur(3px) !important;
-    -webkit-backdrop-filter: blur(3px) !important;
-  }
-
-  /* ──────────────────────────────────────────────────────────────────────────
-   INPUTS – search‑first, Raycast style
-   ────────────────────────────────────────────────────────────────────────── */
-
-  input:not([class*="bg-transparent"]),
-  select,
-  textarea {
-    background: var(--og-s2) !important;
-    border: 1px solid var(--og-line) !important;
-    color: var(--og-ink) !important;
-  }
-  input::placeholder,
-  textarea::placeholder {
-    color: var(--og-ink-4) !important;
-    transition: color var(--og-base) var(--og-ease) !important;
-  }
-  input:focus::placeholder {
-    color: rgba(156, 154, 149, 0.45) !important;
-  }
-
-  input[placeholder*="Search"],
-  input[type="search"] {
-    height: 44px !important;
-    padding-left: 2.75rem !important;
-    padding-right: 1rem !important;
-    font-size: 14px !important;
-  }
-  input[placeholder*="Search"]:focus-visible {
-    box-shadow:
-      0 0 0 4px color-mix(in oklab, var(--mh-brand) 10%, transparent),
-      0 8px 28px -8px color-mix(in oklab, var(--mh-brand) 45%, transparent) !important;
-  }
-
-  /* Focus – WCAG 2.4.11 AA (≥3:1) */
-  :focus-visible {
-    outline: 2px solid var(--og-line-focus) !important;
-    outline-offset: 2px !important;
-  }
-  input:focus-visible,
-  select:focus-visible,
-  textarea:focus-visible {
-    border-color: var(--og-line-focus) !important;
-    background: var(--og-s3) !important;
-    outline-offset: 0 !important;
-    box-shadow:
-      0 0 0 3px color-mix(in oklab, var(--mh-brand) 12%, transparent),
-      0 0 20px -6px color-mix(in oklab, var(--mh-brand) 35%, transparent) !important;
-  }
-
-  /* ──────────────────────────────────────────────────────────────────────────
-   CONSOLE – modern IDE, not Monokai
-   ────────────────────────────────────────────────────────────────────────── */
-
-  html.dark,
+  /* Minehut never sets color-scheme, so the UA renders native controls light on
+     a black page: <select> popups, date/time pickers, <input type=color>,
+     number spinners, and the default canvas. */
   .dark,
   [data-theme="dark"] {
-    --console-bg: #0a0b10 !important;
-    --console-fg: #d6dce4 !important;
-    --console-ansi-0: #1d2025 !important;
-    --console-ansi-1: #dd6b72 !important;
-    --console-ansi-2: #43ab81 !important;
-    --console-ansi-3: #dcac59 !important;
-    --console-ansi-4: #5a97e2 !important;
-    --console-ansi-5: #9aa5e0 !important;
-    --console-ansi-6: #71c9c6 !important;
-    --console-ansi-7: #d6dce4 !important;
-    --console-ansi-8: #6b7787 !important;
-    --console-ansi-9: #e8969b !important;
-    --console-ansi-10: #6bc79c !important;
-    --console-ansi-11: #e8c17f !important;
-    --console-ansi-12: #86b0e8 !important;
-    --console-ansi-13: #b3bce8 !important;
-    --console-ansi-14: #96d9d6 !important;
-    --console-ansi-15: #ffffff !important;
+    color-scheme: dark;
   }
 
-  [class*="var\(--console-bg\)"] {
-    border: 1px solid var(--og-line) !important;
-    border-radius: var(--og-r-card) !important;
-    box-shadow: var(--og-lift) !important;
-  }
-  [class*="var\(--console-bg\)"] > div,
-  [class*="var\(--console-bg\)"] > form {
-    background: transparent !important;
-  }
-  [class*="var\(--console-bg\)"] ::selection {
-    background: color-mix(in oklab, var(--mh-brand) 28%, transparent);
-    color: #fff;
-  }
-
-  /* Monokai overrides – order is critical (Pitfall 6) */
-  [class*="3e3d32"] {
-    border-color: var(--og-line) !important;
-  }
-  [class*="F92672"] {
-    color: var(--mh-brand) !important;
-  }
-  [class*="75715E"] {
-    color: #7d9ab8 !important;
-  }
-  [class*="75715E"]::placeholder,
-  [class*="placeholder\:text-\[\#75715E\]"]::placeholder {
-    color: #8aa8c6 !important;
-    opacity: 1 !important;
-  }
-  [class*="F8F8F2"] {
-    color: var(--console-fg) !important;
-  }
-  [class*="caret-\[\#F92672\]"] {
-    caret-color: #ffffff !important;
+  /* The root element itself. Tailwind's class strategy puts .dark ON <html>, so
+     it can only be reached by qualifying the element — a descendant selector
+     inside the gate (`:is(.dark) html`) matches nothing. Setting the canvas
+     here also prevents a light flash on overscroll before body paints. */
+  html.dark,
+  html[data-theme="dark"],
+  body.dark,
+  body[data-theme="dark"] {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-family: var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   }
 
-  /* ──────────────────────────────────────────────────────────────────────────
-   MOTD / PREVIEW BLOCKS – fix for hardcoded bg-[#1c1c1c]
-   ────────────────────────────────────────────────────────────────────────── */
-
-  [class*="bg-\[#"] {
-    background: var(--og-s2) !important;
+  /* Restore Minehut's autofill freeze explicitly, so no future transition rule
+     can re-break it. Without this Chrome repaints its yellow autofill
+     background over the themed input. */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
+  input:-webkit-autofill:active {
+    transition: background-color 9999s ease-in-out 0s !important; /* !imp:a11y */
+    -webkit-text-fill-color: hsl(var(--foreground));
+    -webkit-box-shadow: 0 0 0 1000px hsl(var(--muted)) inset;
+    caret-color: hsl(var(--foreground));
   }
 
-  [class*="break-words"][class*="rounded-md"][class*="border-border"] {
-    background: var(--og-s2) !important;
-    border-color: var(--og-line) !important;
-    color: var(--og-ink) !important;
-  }
-
-  [class*="break-words"][class*="rounded-md"] [style*="color: rgb(255, 228, 181)"] {
-    color: var(--mh-gold) !important;
-  }
-
-  [class*="break-words"][class*="rounded-md"] .text-white\/40 {
-    color: var(--og-ink-4) !important;
-  }
-
-  /* ──────────────────────────────────────────────────────────────────────────
-   METER – resource usage
-   ────────────────────────────────────────────────────────────────────────── */
-
-  .mh-meter-track {
-    height: 6px;
-    background: var(--og-s3) !important;
-    border-radius: 999px;
-    overflow: hidden;
-    position: relative;
-  }
-  .mh-meter-fill {
-    height: 100%;
-    border-radius: 999px;
-    background: var(--mh-brand) !important;
-    position: relative;
-    transition:
-      width var(--og-slow) var(--og-ease),
-      background var(--og-base) var(--og-ease);
-  }
-  .mh-meter-fill::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2));
-    pointer-events: none;
-  }
-
-  /* ──────────────────────────────────────────────────────────────────────────
-   ICONS – Lucide optimisation
-   ────────────────────────────────────────────────────────────────────────── */
-
-  svg[class*="lucide"] {
-    stroke-width: 1.75 !important;
-    transition: color var(--og-fast) var(--og-ease) !important;
-  }
-  a:hover > svg[class*="lucide"],
-  button:hover > svg[class*="lucide"] {
-    color: var(--og-ink) !important;
-  }
-
-  /* ──────────────────────────────────────────────────────────────────────────
-   SPACING – 8pt grid, internal ≤ external
-   ────────────────────────────────────────────────────────────────────────── */
-
-  article[class*="rounded-\[10px\]"] > [class*="px-6"] {
-    padding-left: 24px !important;
-    padding-right: 24px !important;
-  }
-  article[class*="rounded-\[10px\]"] > [class*="pt-6"] {
-    padding-top: 24px !important;
-  }
-  article[class*="rounded-\[10px\]"] > [class*="pb-4"] {
-    padding-bottom: 24px !important;
-  }
-  article[class*="rounded-\[10px\]"] [class*="p-4"] {
-    padding: 24px !important;
-  }
-  [class*="grid"][class*="gap-4"] {
-    gap: 24px !important;
-  }
-  main [class*="mt-6"] {
-    margin-top: 32px !important;
-  }
-
-  main > div[class*="p-6"],
-  main > div[class*="p-8"] {
-    padding: 32px !important;
-  }
-  @media (min-width: 1536px) {
-    main > div[class*="p-6"],
-    main > div[class*="p-8"] {
-      padding: 40px !important;
-    }
-  }
-  @media (max-width: 640px) {
-    main > div[class*="p-6"],
-    main > div[class*="p-8"] {
-      padding: 24px !important;
-    }
-  }
-  main {
-    scroll-padding-top: 24px !important;
-  }
-
-  /* ──────────────────────────────────────────────────────────────────────────
-   TARGET SIZE – WCAG 2.5.8 AA (24px)
-   ────────────────────────────────────────────────────────────────────────── */
-
-  button:not([class*="h-"]):not([class*="size-"]):not([class*="hidden"]),
-  a[role="button"]:not([class*="h-"]):not([class*="size-"]):not([class*="hidden"]) {
-    min-height: 24px !important;
-    min-width: 24px !important;
-  }
-
-  /* ──────────────────────────────────────────────────────────────────────────
-   DISABLED – unavailable, not loading
-   ────────────────────────────────────────────────────────────────────────── */
-
-  button:disabled,
-  [aria-disabled="true"],
-  [data-disabled] {
-    opacity: 1 !important;
-    background: var(--og-s2) !important;
-    border-color: var(--og-line-soft) !important;
-    color: #868f9a !important;
-    box-shadow: none !important;
-    cursor: not-allowed !important;
-    transform: none !important;
-  }
-  button:disabled svg,
-  [aria-disabled="true"] svg {
-    color: #868f9a !important;
-  }
-  button:disabled:hover,
-  [aria-disabled="true"]:hover {
-    background: var(--og-s2) !important;
-    border-color: var(--og-line-soft) !important;
-    transform: none !important;
-  }
-  button:disabled::after,
-  button:disabled::before,
-  [aria-disabled="true"]::after {
-    content: none !important;
-  }
-
-  /* ──────────────────────────────────────────────────────────────────────────
-   SCROLLBARS – minimal, matches theme
-   ────────────────────────────────────────────────────────────────────────── */
-
-  * {
+  /* scrollbar-width and scrollbar-color INHERIT, so hosting them on `*` was a
+     1000+ element style recalc for nothing. */
+  html {
     scrollbar-width: thin;
-    scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+    scrollbar-color: hsl(var(--input)) transparent;
   }
-  *::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
   }
-  *::-webkit-scrollbar-track {
+  ::-webkit-scrollbar-track {
     background: transparent;
   }
-  *::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.06);
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--input));
     border-radius: 999px;
-    transition: background var(--og-base) var(--og-ease) !important;
   }
-  *:hover::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.12);
-  }
-  *::-webkit-scrollbar-thumb:hover {
-    background: color-mix(in oklab, var(--mh-brand) 35%, transparent) !important;
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground) / 0.5);
   }
 
   ::selection {
-    background: color-mix(in oklab, var(--mh-brand) 35%, transparent);
-    color: #fff;
+    background: hsl(var(--primary) / 0.3);
+    color: hsl(var(--foreground));
   }
 
-  /* ──────────────────────────────────────────────────────────────────────────
-   SERVER SELECTION PAGE – extra contrast for metadata
-   ────────────────────────────────────────────────────────────────────────── */
-
-  /* Header separator */
-  main > div:first-child > div.flex.items-center.justify-between {
-    padding-bottom: 20px !important;
-    margin-bottom: 24px !important;
-    border-bottom: 1px solid var(--og-line-soft) !important;
+  /* Focus. WCAG 2.4.11: the ring measures 4.70–6.40:1 across every surface it
+     can appear over. Signalled by outline AND offset AND (on inputs, §40) a
+     surface shift — never by colour alone. */
+  :focus-visible {
+    outline: 2px solid hsl(var(--ring)) !important; /* !imp:a11y */
+    outline-offset: 2px !important; /* !imp:a11y */
   }
 
-  /* Grid breathing room */
-  [class*="grid"][class*="md:grid-cols"] {
-    padding-top: 4px !important;
+  /* ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀  DARK GATE OPENS  ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
+     Everything below is (0,2,x) and needs no !important to beat Minehut.
+     ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀ */
+
+  .dark,
+  [data-theme="dark"] {
+    /* ═══════════════════════════════════════════════════════════════════════
+       §10  TYPOGRAPHY
+
+       1.5.0 requested "Inter var","Inter","Geist" — the page loads NONE of
+       them, so the whole UI fell through to Segoe UI while Minehut's own Geist
+       sat unused, and the Inter-specific cv02/cv03/cv04 features did nothing.
+       Minehut ships GeistSans (variable 100–900), GeistMono and Unbounded via
+       next/font. We consume them; we never redeclare --font-* (they live on
+       hashed .__variable_* classes, and redeclaring would defeat next/font's
+       size-adjust fallback metrics).
+
+       The scale is the other half of the fix. 1.5.0 set line-height:1.6 once
+       on body and never overrode it for a heading, so a 24px h1 rendered at
+       38px leading — most of the "loose template" feel came from that one
+       declaration.
+       ═══════════════════════════════════════════════════════════════════════ */
+
+    /* NOTE: `html` is handled in §08, not here. Inside this gate `& html` would
+       resolve to `:is(.dark, [data-theme="dark"]) html` — an <html> DESCENDANT
+       of a .dark element. Tailwind's class strategy puts .dark ON <html>, so
+       that selector can never match anything. `& body` and `& main` are fine;
+       they really are descendants. */
+    & body,
+    & button,
+    & input,
+    & select,
+    & textarea {
+      font-family: var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    & body {
+      font-size: 14px;
+      font-weight: 400;
+      line-height: 1.55;
+      /* Minehut sets "ss01","cv11" — Geist's own stylistic sets. Left alone.
+         1.5.0 also forced `tnum` globally, pushing tabular figures into
+         running prose while the metrics that actually need them got nothing.
+         Tabular numerals are applied where they belong instead (§31, §50). */
+    }
+
+    /* Page title. Unbounded is Minehut's display face and it earns its place
+       here — but ONLY here. 1.5.0 forced font-size:28px on every .font-display
+       element, including small lockups and badges.
+       @risk D  hook:h1 / .font-display  verify: inspect a page heading */
+    & h1 {
+      font-size: 28px;
+      line-height: 1.15;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      text-wrap: balance;
+    }
+    & h2 {
+      font-size: 20px;
+      line-height: 1.25;
+      font-weight: 600;
+      letter-spacing: -0.015em;
+    }
+    & h3 {
+      font-size: 16px;
+      line-height: 1.35;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+    }
+    & h4,
+    & h5,
+    & h6 {
+      font-size: 14px;
+      line-height: 1.4;
+      font-weight: 600;
+      letter-spacing: -0.005em;
+    }
+
+    & h1,
+    & h2,
+    & h3,
+    & h4,
+    & h5,
+    & h6,
+    & .text-foreground {
+      color: hsl(var(--foreground));
+    }
+    & .text-muted-foreground {
+      color: hsl(var(--muted-foreground));
+    }
+
+    /* Minehut's own micro-label component. 1.5.0 reimplemented it with three
+       fragile arbitrary-value hooks (.font-mono.uppercase.tracking-wider,
+       [class*="text-\[10px\]"], [class*="tracking-\[0\.08em\]"]) when the real
+       class was right there. Minehut already sets 11px / mono / uppercase /
+       .08em, so only the colour is ours.
+       @risk D  hook:.ds-label  verify: audit finds it in the bundle */
+    & .ds-label {
+      color: hsl(var(--muted-foreground));
+      font-weight: 500;
+    }
+
+    /* Numbers read as data, not prose. */
+    & .font-mono,
+    & .tabular-nums {
+      font-variant-numeric: tabular-nums;
+      font-feature-settings: "tnum";
+    }
+
+    & .line-through {
+      color: var(--mh-ink-4);
+      text-decoration-color: hsl(var(--destructive) / 0.6);
+    }
+
+    /* ═══════════════════════════════════════════════════════════════════════
+       §11  SURFACES
+
+       Depth is lightness, not shadow. Hover raises a surface one rung; nothing
+       casts. In 1.5.0 the five-rung ladder collapsed to two in practice —
+       --og-s2 did twelve jobs and --og-s4 exactly one — which is precisely
+       what Theme guide.md warns against ("Do not make everything the same dark
+       grey"). Each rung below has one job.
+       ═══════════════════════════════════════════════════════════════════════ */
+
+    /* Again, no `& html` — see §10. The root canvas is covered in §08. */
+    & body,
+    & main {
+      background-color: hsl(var(--background));
+      color: hsl(var(--foreground));
+    }
+
+    /* Atmosphere, restored properly. 1.5.0 put this on `body::before` at
+       z-index:-1, which paints in the root stacking context's negative-z step
+       — BEFORE body's own opaque background box — so it was provably
+       invisible: a full-viewport paint with zero output. Folding it into
+       body's own background stack costs one paint and, critically, preserves
+       Minehut's grain, which is also a body background-image. */
+    & body {
+      background-image:
+        radial-gradient(ellipse 80% 50% at 50% -10%, hsl(var(--primary) / 0.055), transparent 70%),
+        repeating-conic-gradient(hsl(var(--surface-grain)) 0deg 90deg, transparent 90deg 180deg);
+      background-size:
+        auto,
+        4px 4px;
+      background-attachment: fixed, scroll;
+    }
+
+    & .bg-background {
+      background-color: hsl(var(--background));
+    }
+    & .bg-card {
+      background-color: hsl(var(--card));
+    }
+    & .bg-muted {
+      background-color: hsl(var(--muted));
+    }
+    & .bg-secondary {
+      background-color: hsl(var(--secondary));
+    }
+    & .bg-popover {
+      background-color: hsl(var(--popover));
+    }
+
+    /* ═══════════════════════════════════════════════════════════════════════
+       §12  BORDERS
+
+       Almost empty by design. Minehut ships `*{border-color:hsl(var(--border))}`,
+       so claiming --border in §03 already recoloured every bordered element in
+       the app. 1.5.0 spent nine selectors restating that, then applied one
+       identical hairline to nine component families — no distinction between a
+       container edge, a control edge and a divider. What remains here is only
+       the hierarchy that token cannot express.
+       ═══════════════════════════════════════════════════════════════════════ */
+
+    & hr {
+      border-color: hsl(var(--border) / 0.55);
+      background-color: hsl(var(--border) / 0.55);
+    }
+    & .border-dashed {
+      border-style: solid;
+      border-color: hsl(var(--border) / 0.55);
+    }
+    /* @risk S  hook:.hover\:border-foreground\/30|40  hits:2  verify: audit "hover:border-foreground" */
+    & .hover\:border-foreground\/30:hover,
+    & .hover\:border-foreground\/40:hover {
+      border-color: hsl(var(--primary) / 0.35);
+    }
+
+    /* ═══════════════════════════════════════════════════════════════════════
+       §13  RADII — only where --radius cannot reach.
+       --radius (§06) already drives .rounded-sm/md/lg/xl, .mh-nav-item and
+       .mh-sc-icon. 1.5.0 restated those with substring matches, including
+       three redundant pairs where `.rounded-lg` was a strict subset of
+       `[class*="rounded-lg"]`, plus a `rounded-full` rule that forced 999px
+       over Tailwind's existing 9999px — a no-op on a near-universal match.
+       ═══════════════════════════════════════════════════════════════════════ */
+
+    & input,
+    & select,
+    & textarea {
+      border-radius: calc(var(--radius) - 2px);
+    }
+    & [role="menu"],
+    & [role="listbox"],
+    & .bg-popover,
+    & [data-radix-popper-content-wrapper] > * {
+      border-radius: var(--og-r-drop);
+    }
+    & [role="dialog"] {
+      border-radius: var(--og-r-modal);
+    }
+
+    /* ═══════════════════════════════════════════════════════════════════════
+       §20  SIDEBAR — one of only three places blur is allowed.
+       backdrop-filter is the most expensive filter available and repaints
+       against whatever scrolls behind it, so it never touches cards or lists.
+       ═══════════════════════════════════════════════════════════════════════ */
+
+    & aside {
+      background: var(--og-glass-nav);
+      backdrop-filter: blur(20px) saturate(130%);
+      -webkit-backdrop-filter: blur(20px) saturate(130%);
+      border-right: 1px solid hsl(var(--border));
+    }
+
+    /* ═══════════════════════════════════════════════════════════════════════
+       §21  NAV ITEM — Minehut's own class, so this is durable.
+       Minehut already transitions it on --mh-dur-fast / --mh-ease-out, which
+       §07 now owns. In 1.5.0 the theme fought that with a second transition at
+       a different duration and curve on the same element.
+       @risk D  hook:.mh-nav-item[data-active]  verify: audit "mh-nav-item"
+       ═══════════════════════════════════════════════════════════════════════ */
+
+    & .mh-nav-item {
+      color: hsl(var(--muted-foreground));
+      padding: 7px 10px;
+    }
+    & .mh-nav-item svg {
+      color: var(--mh-ink-4);
+      opacity: 1;
+    }
+    & .mh-nav-item:hover {
+      background: hsl(var(--muted));
+      color: hsl(var(--foreground));
+    }
+    & .mh-nav-item:hover svg {
+      color: hsl(var(--secondary-foreground));
+    }
+
+    /* Selected, not highlighted. A 2px inset rail plus a soft tint — no glow,
+       no gradient sweep. The rail is the only accent the sidebar spends. */
+    & .mh-nav-item[data-active="true"] {
+      background: hsl(var(--primary) / 0.1);
+      color: hsl(var(--foreground));
+      font-weight: 500;
+      box-shadow: inset 2px 0 0 hsl(var(--primary));
+    }
+    & .mh-nav-item[data-active="true"] svg {
+      color: hsl(var(--primary));
+    }
+
+    /* The sidebar count badge — zero rules before 2.0.0. */
+    & .mh-nav-item .mh-nav-count {
+      background: hsl(var(--muted));
+      color: var(--mh-ink-4);
+      font-variant-numeric: tabular-nums;
+    }
+    & .mh-nav-item[data-active="true"] .mh-nav-count {
+      background: hsl(var(--primary) / 0.16);
+      color: hsl(var(--primary));
+    }
+
+    & div[role="radiogroup"] {
+      background: hsl(var(--muted));
+      border-color: hsl(var(--border));
+    }
+    & div[role="radiogroup"] button.bg-muted {
+      background: hsl(var(--popover));
+      color: hsl(var(--foreground));
+    }
+
+    /* ═══════════════════════════════════════════════════════════════════════
+       §30  CARD — the hero component.
+
+       The hook appears ONCE, at the top of this nested group. That is
+       deliberate: in 1.5.0 `article[class*="rounded-\[10px\]"]` was written
+       out seventeen times, so a Minehut rebuild meant seventeen edits. It
+       audits to exactly one class (no over-match), but it is still an
+       arbitrary value, so it is the single most likely thing in this file to
+       break. One line to change.
+
+       `main article` would be durable and is the intended migration — but it
+       is only correct if EVERY <article> on the page is a server card, and
+       Minehut's bundle emits no element selectors, so the CSS cannot tell us.
+       See §99; the DevTools check is one line.
+
+       @risk F  hook:article[class*="rounded-[10px]"]  hits:1  fallback:main article
+                verify: audit "rounded-[10px]" must return exactly ["rounded-[10px]"]
+       ═══════════════════════════════════════════════════════════════════════ */
+
+    & article[class*="rounded-\[10px\]"] {
+      background: hsl(var(--card));
+      border: 1px solid hsl(var(--border));
+      border-radius: var(--og-r-card);
+      box-shadow: var(--og-lift);
+      transition:
+        background-color var(--mh-dur-fast) var(--mh-ease-out),
+        border-color var(--mh-dur-fast) var(--mh-ease-out),
+        box-shadow var(--mh-dur-fast) var(--mh-ease-out),
+        translate var(--mh-dur-fast) var(--mh-ease-out);
+
+      /* Hover raises the surface one rung and lifts 1px. No glow, no scale.
+         `translate` (the independent property) rather than `transform`, so it
+         does not clobber Tailwind's --tw-translate-* machinery, which
+         data-[side=top]:-translate-y-1 depends on.
+         `will-change` is deliberately absent — 1.5.0 pinned it permanently,
+         holding a compositor layer per card for the whole session and never
+         releasing it under reduced motion. Both engines promote on demand. */
+      &:hover {
+        background: hsl(var(--muted));
+        border-color: hsl(var(--border));
+        box-shadow:
+          var(--og-lift-2),
+          var(--mh-shadow-2);
+        translate: 0 -1px;
+      }
+
+      /* One neutral rail, not four coloured ones.
+         1.5.0 drove the rail from the card's status with six :has() rules —
+         on the one component that re-renders on a metric timer, so every tick
+         invalidated the ancestor, times twelve cards. State is carried by the
+         status pill's dot + label (§52), which the accessibility contract
+         requires anyway and which does not depend on colour alone.
+         Re-enabling coloured rails cheaply is possible — see §99. */
+      &::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        border-radius: 2px 0 0 2px;
+        background: hsl(var(--primary) / 0.35);
+        pointer-events: none;
+        transition: background var(--mh-dur-fast) var(--mh-ease-out);
+      }
+      &:hover::before {
+        background: hsl(var(--primary) / 0.7);
+      }
+
+      /* Minehut's own top accent bar. One height-agnostic rule replaces
+         1.5.0's hide/restore pair, where the hide rule at (0,4,1) outranked
+         the restore at (0,4,0) — so inside a card the gradient never rendered
+         at all, despite a comment claiming it was "FIXED for both heights".
+         @risk S  hook:.absolute.inset-x-0.top-0  verify: inspect a card */
+      & > .absolute.inset-x-0.top-0 {
+        opacity: 1;
+        height: 2px;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          hsl(var(--primary) / 0.5) 30%,
+          hsl(var(--primary) / 0.5) 70%,
+          transparent
+        );
+        background-image: linear-gradient(
+          90deg,
+          transparent,
+          hsl(var(--primary) / 0.5) 30%,
+          hsl(var(--primary) / 0.5) 70%,
+          transparent
+        );
+      }
+
+      /* The server identity tile — 42×42, hand-written by Minehut, and
+         completely unstyled before 2.0.0 on a server-management dashboard. */
+      & .mh-sc-icon {
+        box-shadow:
+          var(--og-lift),
+          var(--mh-shadow-1);
+        font-weight: 650;
+        letter-spacing: -0.02em;
+      }
+    }
+
+    /* SPACING — 1.5.0 forced 24px onto every inner gap and inflated page
+       padding to 32/40px. Both rules over-matched badly: `[class*="p-6"]` also
+       matches gap-6, md:gap-6, sm:gap-6 and -top-6; `[class*="p-4"]` matches
+       gap-4 and top-4. Minehut's own spacing is coherent and responsive, so
+       v2 leaves it alone entirely and spends the budget on the type scale. */
+
+    /* ═══════════════════════════════════════════════════════════════════════
+       §31  METER — Minehut's own classes.
+       The theme's `transition: width` rule is deliberately NOT restated:
+       Minehut already ships `transition: width var(--mh-dur-slow)
+       var(--mh-ease-out)`, and §07 owns both of those variables, so the timing
+       is controlled with zero selectors. `contain` keeps the width animation
+       from dirtying the card's layout on every tick.
+       @risk D  hook:.mh-meter-track/.mh-meter-fill
+       ═══════════════════════════════════════════════════════════════════════ */
+
+    & .mh-meter-track {
+      background: hsl(var(--muted));
+      contain: layout paint;
+    }
+    & .mh-meter-fill {
+      background: hsl(var(--primary) / 0.85);
+    }
+    & .mh-meter-fill::after {
+      background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.14));
+    }
+
+    /* ═══════════════════════════════════════════════════════════════════════
+       §32  TABS — Minehut's real component.
+       1.5.0 targeted a 142-character generated shadow class instead, which is
+       both fragile and probably a different element than the one Minehut
+       ships. `.mh-tabs` has NO container rule upstream, so the container look
+       is entirely ours to own.
+       @risk D  hook:.mh-tabs  verify: audit "mh-tabs"
+       ═══════════════════════════════════════════════════════════════════════ */
+
+    & .mh-tabs {
+      border-bottom: 1px solid hsl(var(--border));
+      gap: 2px;
+    }
+    & .mh-tabs > button,
+    & .mh-tabs > [role="tab"] {
+      color: hsl(var(--muted-foreground));
+      background: transparent;
+      box-shadow: none;
+      border-radius: calc(var(--radius) - 2px) calc(var(--radius) - 2px) 0 0;
+      position: relative;
+      transition:
+        color var(--mh-dur-fast) var(--mh-ease-out),
+        background-color var(--mh-dur-fast) var(--mh-ease-out);
+    }
+    & .mh-tabs > button:hover,
+    & .mh-tabs > [role="tab"]:hover {
+      color: hsl(var(--foreground));
+      background: hsl(var(--muted) / 0.6);
+    }
+
+    /* Underline, never a filled pill. `.\!active` ships !important upstream on
+       background, color and box-shadow, so it is the one place we must match
+       it declaration-for-declaration. */
+    & .mh-tabs > button.active,
+    & .mh-tabs > button[data-state="active"],
+    & .mh-tabs > [role="tab"][data-state="active"],
+    & .mh-tabs > button.\!active {
+      background: transparent !important; /* !imp:bang */
+      color: hsl(var(--foreground)) !important; /* !imp:bang */
+      box-shadow: inset 0 -2px 0 hsl(var(--primary)) !important; /* !imp:bang */
+      font-weight: 550;
+    }
+
+    /* Minehut's own tab-enter animation, now on the shared curve. */
+    & .mh-tab-in {
+      animation-timing-function: var(--mh-ease-out);
+      animation-duration: var(--mh-dur-base);
+    }
+
+    /* ═══════════════════════════════════════════════════════════════════════
+       §33  BUTTONS
+
+       Primary is element-qualified. In 1.5.0 the bare substring also matched
+       `data-[state=checked]:bg-[var(--mh-brand)]`, so every checkbox and
+       switch received the full CTA treatment — gradient, lift shadow and a
+       translateY(-2px) hover.
+       @risk F  hook:.bg-\[var\(--mh-brand\)\]  hits:3  qualified to button/a
+                verify: audit "bg-[var(--mh-brand)]"
+       ═══════════════════════════════════════════════════════════════════════ */
+
+    & button.bg-\[var\(--mh-brand\)\],
+    & a.bg-\[var\(--mh-brand\)\] {
+      background: hsl(var(--primary));
+      border: 1px solid hsl(var(--primary));
+      color: hsl(var(--primary-foreground));
+      box-shadow:
+        inset 0 1px 0 rgb(255 255 255 / 0.16),
+        var(--mh-shadow-1);
+      font-weight: 550;
+      transition:
+        background-color var(--mh-dur-fast) var(--mh-ease-out),
+        border-color var(--mh-dur-fast) var(--mh-ease-out),
+        box-shadow var(--mh-dur-fast) var(--mh-ease-out),
+        translate var(--mh-dur-fast) var(--mh-ease-out);
+    }
+    & button.bg-\[var\(--mh-brand\)\]:hover,
+    & a.bg-\[var\(--mh-brand\)\]:hover {
+      background: var(--mh-brand-hover);
+      border-color: var(--mh-brand-hover);
+      translate: 0 -1px;
+      box-shadow:
+        inset 0 1px 0 rgb(255 255 255 / 0.2),
+        var(--mh-shadow-2);
+    }
+    & button.bg-\[var\(--mh-brand\)\]:active,
+    & a.bg-\[var\(--mh-brand\)\]:active {
+      background: var(--mh-brand-press);
+      translate: 0 0;
+      box-shadow: inset 0 1px 2px rgb(0 0 0 / 0.25);
+    }
+    & button.bg-\[var\(--mh-brand\)\] svg {
+      color: hsl(var(--primary-foreground));
+    }
+
+    /* Secondary — a material surface, not a tinted one.
+       @risk S  stock utility chain  verify: audit "border-border" "border-input" */
+    & button.border-border.bg-card.text-foreground,
+    & a.border-border.bg-card.text-foreground,
+    & button.border-input.bg-card,
+    & a.border-input.bg-card {
+      background: hsl(var(--popover));
+      border: 1px solid hsl(var(--border));
+      color: hsl(var(--foreground));
+      box-shadow: var(--og-lift);
+    }
+    & button.border-border.bg-card.text-foreground:hover,
+    & a.border-border.bg-card.text-foreground:hover,
+    & button.border-input.bg-card:hover:not(:disabled),
+    & a.border-input.bg-card:hover {
+      background: hsl(var(--accent));
+      border-color: hsl(var(--input));
+    }
+    & button.border-input.bg-card svg {
+      color: hsl(var(--muted-foreground));
+    }
+
+    /* Danger — serious, not a bright red gamer button.
+       Restricted to buttons that actually CARRY a destructive background. The
+       1.5.0 substring matched 15 classes including `hover:text-destructive`
+       and `focus:text-destructive`, so a ghost button that merely turns red on
+       hover wore a permanent red skin.
+       @risk S  hook:.bg-destructive .bg-destructive\/10  verify: audit "destructive" */
+    & button.bg-destructive,
+    & button.bg-destructive\/10 {
+      background: hsl(var(--destructive) / 0.1);
+      border: 1px solid hsl(var(--destructive) / 0.28);
+      color: hsl(var(--destructive));
+    }
+    & button.bg-destructive:hover,
+    & button.bg-destructive\/10:hover {
+      background: hsl(var(--destructive) / 0.16);
+      border-color: hsl(var(--destructive) / 0.45);
+    }
+
+    /* ═══════════════════════════════════════════════════════════════════════
+       §40  FORMS
+       ═══════════════════════════════════════════════════════════════════════ */
+
+    & input:not(.bg-transparent),
+    & select,
+    & textarea {
+      background: hsl(var(--muted));
+      border: 1px solid hsl(var(--border));
+      color: hsl(var(--foreground));
+    }
+    & input::placeholder,
+    & textarea::placeholder {
+      color: var(--mh-ink-4);
+      opacity: 1;
+    }
+    /* Deliberately NOT dimmed on focus. 1.5.0 dropped the focused placeholder
+       to rgba(156,154,149,.45), roughly 1.9:1 — illegible at exactly the
+       moment it is being read. */
+
+    & input[placeholder*="Search" i],
+    & input[type="search"] {
+      height: 40px;
+      padding-left: 2.5rem;
+      font-size: 14px;
+    }
+
+    /* Focus signalled three ways: outline (§08), surface shift, and border. */
+    & input:focus-visible,
+    & select:focus-visible,
+    & textarea:focus-visible {
+      border-color: hsl(var(--ring));
+      background: hsl(var(--popover));
+      outline-offset: 0 !important; /* !imp:a11y */
+    }
+
+    /* ═══════════════════════════════════════════════════════════════════════
+       §41  OVERLAYS — blur allowed here and in the scrim only.
+       ═══════════════════════════════════════════════════════════════════════ */
+
+    & [role="dialog"],
+    & [role="menu"],
+    & [role="listbox"],
+    & .bg-popover,
+    & [data-radix-popper-content-wrapper] > * {
+      background: var(--og-glass);
+      backdrop-filter: blur(20px) saturate(150%);
+      -webkit-backdrop-filter: blur(20px) saturate(150%);
+      border: 1px solid hsl(var(--border));
+      box-shadow: var(--mh-shadow-3);
+    }
+
+    /* @risk S  hook:.bg-black\/60 .bg-black\/80  hits:2  verify: audit "bg-black" */
+    & .fixed.inset-0.bg-black\/60,
+    & .fixed.inset-0.bg-black\/80 {
+      background: hsl(var(--background) / 0.72);
+      backdrop-filter: blur(3px);
+      -webkit-backdrop-filter: blur(3px);
+    }
+
+    /* Dialog internals — unstyled before 2.0.0. */
+    & [role="dialog"] h2,
+    & [role="dialog"] h3 {
+      letter-spacing: -0.015em;
+    }
+    & [role="dialog"] .text-muted-foreground {
+      max-width: 60ch;
+      text-wrap: pretty;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════════════
+       §42  MENU / SELECT ITEMS — the panel was styled before 2.0.0, the items
+       inside it never were. Radix Select and DropdownMenu are both confirmed
+       in use (--radix-select-trigger-height, --radix-dropdown-menu-trigger-width).
+       Portalled content mounts under <body>, outside any app container, which
+       is why these are scoped to the theme root rather than to main.
+       @risk D  hook:[role=menuitem]/[role=option]/[data-highlighted]
+       ═══════════════════════════════════════════════════════════════════════ */
+
+    & [role="menuitem"],
+    & [role="option"] {
+      border-radius: calc(var(--radius) - 4px);
+      color: hsl(var(--secondary-foreground));
+      transition: background-color var(--mh-dur-fast) var(--mh-ease-out);
+    }
+    & [role="menuitem"]:hover,
+    & [role="option"]:hover,
+    & [role="menuitem"][data-highlighted],
+    & [role="option"][data-highlighted] {
+      background: hsl(var(--accent));
+      color: hsl(var(--foreground));
+    }
+    & [role="option"][data-state="checked"] {
+      color: hsl(var(--primary));
+    }
+    & [role="separator"] {
+      background: hsl(var(--border) / 0.55);
+    }
+
+    /* Tooltips. Radix popper sides are confirmed present. */
+    & [data-side="top"],
+    & [data-side="right"],
+    & [data-side="bottom"],
+    & [data-side="left"] {
+      font-size: 12px;
+      line-height: 1.4;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════════════
+       §43  CONTROLS — checkbox / switch / radio.
+       The brand recolour already arrives free via --mh-brand. What Minehut
+       leaves unstyled is the unchecked track and the transition.
+       @risk D  hook:[data-state=checked]  verify: force the state in DevTools
+       ═══════════════════════════════════════════════════════════════════════ */
+
+    & [role="checkbox"],
+    & [role="switch"],
+    & [role="radio"] {
+      border-color: hsl(var(--input));
+      background: hsl(var(--muted));
+      transition:
+        background-color var(--mh-dur-fast) var(--mh-ease-out),
+        border-color var(--mh-dur-fast) var(--mh-ease-out);
+    }
+    & [role="checkbox"][data-state="checked"],
+    & [role="switch"][data-state="checked"],
+    & [role="radio"][data-state="checked"] {
+      background: hsl(var(--primary));
+      border-color: hsl(var(--primary));
+      color: hsl(var(--primary-foreground));
+    }
+
+    /* ═══════════════════════════════════════════════════════════════════════
+       §50  DATA GRIDS — wide scrolling tables, unstyled before 2.0.0.
+       Minehut ships grid-cols-[44px_36px_1fr_auto_auto_auto], min-w-[1040px],
+       min-w-[760px] and sticky headers.
+       @risk S  stock utility names  verify: audit "min-w-[1040px]" "sticky"
+       ═══════════════════════════════════════════════════════════════════════ */
+
+    & thead th,
+    & .sticky.top-0 {
+      background: hsl(var(--card));
+      color: var(--mh-ink-4);
+      font-weight: 500;
+      letter-spacing: 0.04em;
+    }
+    & tbody tr {
+      border-color: hsl(var(--border) / 0.55);
+      transition: background-color var(--mh-dur-fast) var(--mh-ease-out);
+    }
+    & tbody tr:hover {
+      background: hsl(var(--muted) / 0.6);
+    }
+    /* Metrics in a grid are compared down the column, so they must align. */
+    & td,
+    & th {
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════════════
+       §51  CHARTS — recharts. Untouched before 2.0.0, and its default palette
+       sits at 68–100% saturation, making it the loudest thing on the page.
+       These are recharts' own DOM classes, which Minehut already hooks, so
+       they are library-stable rather than build-generated.
+       @risk D  hook:.recharts-*  verify: document.querySelector('.recharts-surface')
+       ═══════════════════════════════════════════════════════════════════════ */
+
+    & .recharts-cartesian-grid line {
+      stroke: hsl(var(--border) / 0.5);
+    }
+    & .recharts-cartesian-axis-tick text {
+      fill: var(--mh-ink-4);
+      font-size: 11px;
+    }
+    & .recharts-cartesian-axis line,
+    & .recharts-tooltip-cursor {
+      stroke: hsl(var(--border));
+    }
+    & .recharts-dot {
+      stroke: transparent;
+    }
+    & .recharts-default-tooltip {
+      background: var(--og-glass) !important; /* !imp:dark-util */
+      border: 1px solid hsl(var(--border)) !important; /* !imp:dark-util */
+      border-radius: var(--og-r-drop) !important; /* !imp:dark-util */
+      box-shadow: var(--mh-shadow-2) !important; /* !imp:dark-util */
+    }
+
+    /* ═══════════════════════════════════════════════════════════════════════
+       §52  STATUS — colour AND a dot AND a label. Never colour alone.
+       These substring matches are an INTENTIONAL family match across ~30
+       generated `bg-[color-mix(in_oklab,var(--mh-X)_N%,transparent)]` classes;
+       enumerating them would be worse. The pill chrome is neutral so the dot
+       carries the state, which is what keeps the accent meaningful.
+       @risk F  hook:.bg-\[color-mix + hue  intentional family
+                verify: audit "bg-[color-mix" "mh-emerald"
+       ═══════════════════════════════════════════════════════════════════════ */
+
+    & [class*="bg-\[color-mix"][class*="mh-emerald"],
+    & [class*="bg-\[color-mix"][class*="mh-redstone"],
+    & [class*="bg-\[color-mix"][class*="mh-gold"],
+    & [class*="bg-\[color-mix"][class*="mh-diamond"],
+    & [class*="bg-\[color-mix"][class*="mh-amethyst"],
+    & [class*="bg-\[color-mix"][class*="mh-copper"] {
+      background: hsl(var(--muted));
+      border: 1px solid hsl(var(--border));
+      color: hsl(var(--secondary-foreground));
+    }
+
+    /* The dot. No glow — 1.5.0 carried sixteen glow declarations, up to
+       0 0 28px on a card rail, against a brief that bans exactly that. A 1px
+       ring reads as a lit indicator without the bloom. */
+    & span.bg-current {
+      opacity: 1;
+      box-shadow: none;
+    }
+    & [class*="mh-emerald"] span.bg-current {
+      background: var(--mh-emerald);
+      box-shadow: 0 0 0 3px color-mix(in oklab, var(--mh-emerald) 18%, transparent);
+    }
+    & [class*="mh-redstone"] span.bg-current {
+      background: var(--mh-redstone);
+      box-shadow: 0 0 0 3px color-mix(in oklab, var(--mh-redstone) 18%, transparent);
+    }
+    & [class*="mh-gold"] span.bg-current {
+      background: var(--mh-gold);
+      box-shadow: 0 0 0 3px color-mix(in oklab, var(--mh-gold) 18%, transparent);
+    }
+    & [class*="mh-diamond"] span.bg-current {
+      background: var(--mh-diamond);
+      box-shadow: 0 0 0 3px color-mix(in oklab, var(--mh-diamond) 18%, transparent);
+    }
+
+    /* ═══════════════════════════════════════════════════════════════════════
+       §53  SKELETONS — .animate-pulse over .bg-muted. Unstyled before 2.0.0,
+       so loading states were flat grey blocks on Tailwind's default pulse.
+       ═══════════════════════════════════════════════════════════════════════ */
+
+    & .animate-pulse {
+      animation-duration: 1.6s;
+      animation-timing-function: cubic-bezier(0.4, 0, 0.6, 1);
+    }
+    & .animate-pulse.bg-muted,
+    & .animate-pulse .bg-muted {
+      background: hsl(var(--muted));
+      border-radius: calc(var(--radius) - 4px);
+    }
+
+    /* ═══════════════════════════════════════════════════════════════════════
+       §60  CONSOLE — a professional developer tool, not Monokai.
+       The 18 --console-* tokens are declared up in §04a, NOT here: a bare
+       declaration placed after a nested rule is dropped entirely by Chrome
+       112–129 (the CSSNestedDeclarations rule postdates nesting itself), and
+       this block sits well below dozens of nested rules.
+       ═══════════════════════════════════════════════════════════════════════ */
+
+    /* @risk F  hook:.bg-\[var\(--console-bg\)\]  hits:1  verify: audit "var(--console-bg)" */
+    & .bg-\[var\(--console-bg\)\] {
+      border: 1px solid hsl(var(--border));
+      border-radius: var(--og-r-card);
+      box-shadow: var(--og-lift);
+    }
+    & .bg-\[var\(--console-bg\)\] > div,
+    & .bg-\[var\(--console-bg\)\] > form {
+      background: transparent;
+    }
+    & .bg-\[var\(--console-bg\)\] ::selection {
+      background: hsl(var(--primary) / 0.32);
+      color: hsl(var(--foreground));
+    }
+
+    /* ═══════════════════════════════════════════════════════════════════════
+       §61  LITERAL-COLOUR QUARANTINE — deliberately last, because it overrides
+       §11. Everything here is a hardcoded hex Minehut writes outside its own
+       token system, so no token override can reach it.
+
+       These are now EXACT escaped classes. 1.5.0 matched them by hex
+       substring, which was both case-sensitive and over-broad: `[class*="bg-\[#"]`
+       also caught `hover:bg-[#3D2210]` and pinned that element's background
+       permanently, killing the hover outright.
+
+       All are `dark:` variants compiling to (0,2,0) — a tie with our gated
+       (0,2,0) — and ties resolve on source order, which we do not control
+       against Stylus injection. Hence !imp:dark-util throughout.
+       ═══════════════════════════════════════════════════════════════════════ */
+
+    /* MOTD / server preview. @risk F  hits:1  verify: audit "bg-[#1c1c1c]" */
+    & .bg-\[\#1c1c1c\] {
+      background: hsl(var(--muted)) !important; /* !imp:dark-util */
+    }
+    & .break-words.rounded-md.border-border {
+      background: hsl(var(--muted)) !important; /* !imp:dark-util */
+      border-color: hsl(var(--border)) !important; /* !imp:dark-util */
+      color: hsl(var(--foreground)) !important; /* !imp:dark-util */
+    }
+    & .break-words.rounded-md .text-white\/40 {
+      color: var(--mh-ink-4) !important; /* !imp:dark-util */
+    }
+
+    /* Monokai literals duplicated outside the --console-* tokens, so retheming
+       the tokens alone leaves these behind.
+       @risk F  hits:1–2 each  verify: audit "3e3d32" "F92672" "75715E" "F8F8F2" */
+    & .dark\:border-\[\#3e3d32\] {
+      border-color: hsl(var(--border)) !important; /* !imp:dark-util */
+    }
+    & .dark\:text-\[\#F92672\] {
+      color: var(--console-ansi-4) !important; /* !imp:dark-util */
+    }
+    & .dark\:text-\[\#A6E22E\] {
+      color: var(--console-ansi-2) !important; /* !imp:dark-util */
+    }
+    & .dark\:text-\[\#E6DB74\] {
+      color: var(--console-ansi-3) !important; /* !imp:dark-util */
+    }
+    & .dark\:text-\[\#75715E\] {
+      color: var(--console-ansi-8) !important; /* !imp:dark-util */
+    }
+    & .dark\:text-\[\#F8F8F2\] {
+      color: var(--console-fg) !important; /* !imp:dark-util */
+    }
+    & .dark\:placeholder\:text-\[\#75715E\]::placeholder {
+      color: var(--mh-ink-4) !important; /* !imp:dark-util */
+      opacity: 1;
+    }
+    & .dark\:caret-\[\#F92672\] {
+      caret-color: hsl(var(--primary)) !important; /* !imp:dark-util */
+    }
+
+    /* Tailwind stock-palette utilities Minehut uses for warnings and badges.
+       They are fixed scale values with no token indirection, so they sit
+       outside the palette unless claimed here.
+       @risk S  stock names  verify: audit "yellow-500" "amber-500" "emerald-500" */
+    & .text-yellow-500,
+    & .text-yellow-400,
+    & .text-amber-500,
+    & .dark\:text-amber-400 {
+      color: var(--mh-gold) !important; /* !imp:dark-util */
+    }
+    & .text-emerald-500,
+    & .text-green-400,
+    & .text-green-500,
+    & .dark\:text-emerald-400 {
+      color: var(--mh-emerald) !important; /* !imp:dark-util */
+    }
+    & .text-red-400,
+    & .text-rose-500 {
+      color: var(--mh-redstone) !important; /* !imp:dark-util */
+    }
+    & .text-blue-400 {
+      color: hsl(var(--primary)) !important; /* !imp:dark-util */
+    }
+    & .text-purple-400 {
+      color: var(--mh-amethyst) !important; /* !imp:dark-util */
+    }
+    & .border-yellow-500\/30,
+    & .border-yellow-500\/40,
+    & .border-yellow-500\/50,
+    & .border-amber-500\/40,
+    & .border-amber-500\/50 {
+      border-color: color-mix(in oklab, var(--mh-gold) 35%, transparent) !important; /* !imp:dark-util */
+    }
+    & .bg-yellow-500\/5,
+    & .bg-yellow-500\/10,
+    & .bg-amber-500\/10 {
+      background: color-mix(in oklab, var(--mh-gold) 10%, transparent) !important; /* !imp:dark-util */
+    }
+    & .bg-emerald-500\/10,
+    & .bg-green-500\/20 {
+      background: color-mix(in oklab, var(--mh-emerald) 12%, transparent) !important; /* !imp:dark-util */
+    }
+    & .bg-red-500\/20 {
+      background: color-mix(in oklab, var(--mh-redstone) 12%, transparent) !important; /* !imp:dark-util */
+    }
+
+    /* ═══════════════════════════════════════════════════════════════════════
+       §70  ICONS
+       lucide-react injects `class="lucide lucide-x"` in the DOM only, so the
+       string never appears in the CSS bundle — the audit reporting 0 hits for
+       it is expected, not a dead rule.
+       @risk D  hook:svg.lucide  verify: document.querySelector('svg.lucide')
+       ═══════════════════════════════════════════════════════════════════════ */
+
+    & svg.lucide {
+      stroke-width: 1.75;
+    }
+    & a:hover > svg.lucide,
+    & button:hover > svg.lucide {
+      color: hsl(var(--foreground));
+    }
   }
 
-  /* ──────────────────────────────────────────────────────────────────────────
-   FALLBACKS & REDUCED MOTION
-   ────────────────────────────────────────────────────────────────────────── */
+  /* ▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄  DARK GATE CLOSES  ▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄ */
+
+  /* ═════════════════════════════════════════════════════════════════════════
+     §80  A11Y — ungated, and last, so it beats the whole file by construction.
+     ═════════════════════════════════════════════════════════════════════════ */
+
+  /* WCAG 2.5.8 AA, 24×24 minimum.
+     The guards must be anchored to a class-token boundary. Unanchored,
+     `[class*="h-"]` matched 200 of Minehut's 1096 class tokens — every
+     `bg-[var(--mh-brand)]`, `text-[var(--mh-emerald)]`, `border-[var(--mh-gold)]`
+     contains "h-" inside "mh-" — so this rule was dead on most buttons, and
+     `hidden` also matched overflow-hidden. `[class~=]` is whole-token;
+     `[class^=]` plus `[class*=" …"]` covers first vs. later position in the
+     attribute. Intent unchanged: don't fight Tailwind's own sizing, don't
+     inflate hidden elements. */
+  button:not([class~="hidden"]):not([class^="h-"]):not([class*=" h-"]):not([class^="size-"]):not([class*=" size-"]),
+  a[role="button"]:not([class~="hidden"]):not([class^="h-"]):not([class*=" h-"]):not([class^="size-"]):not([class*=" size-"]) {
+    min-height: 24px !important; /* !imp:a11y */
+    min-width: 24px !important; /* !imp:a11y */
+  }
+
+  /* Disabled means unavailable, not loading. opacity:.5 is the common default
+     and it makes disabled text illegible; this keeps full opacity and signals
+     with surface, border, cursor and a measured 4.91:1 text colour. */
+  .dark button:disabled,
+  .dark [aria-disabled="true"],
+  .dark [data-disabled],
+  [data-theme="dark"] button:disabled,
+  [data-theme="dark"] [aria-disabled="true"],
+  [data-theme="dark"] [data-disabled] {
+    opacity: 1 !important; /* !imp:a11y */
+    background: hsl(var(--muted)) !important; /* !imp:a11y */
+    border-color: hsl(var(--border) / 0.55) !important; /* !imp:a11y */
+    color: #8a8781 !important; /* 4.91:1 on --muted */ /* !imp:a11y */
+    box-shadow: none !important; /* !imp:a11y */
+    cursor: not-allowed !important; /* !imp:a11y */
+    translate: none !important; /* !imp:a11y */
+  }
+  .dark button:disabled svg,
+  .dark [aria-disabled="true"] svg,
+  [data-theme="dark"] button:disabled svg,
+  [data-theme="dark"] [aria-disabled="true"] svg {
+    color: #8a8781 !important; /* !imp:a11y */
+  }
+  .dark button:disabled::after,
+  .dark button:disabled::before,
+  [data-theme="dark"] button:disabled::after,
+  [data-theme="dark"] button:disabled::before {
+    content: none !important; /* !imp:a11y */
+  }
+
+  /* ═════════════════════════════════════════════════════════════════════════
+     §90  DEGRADATION TAIL — three distinct user needs, handled separately.
+     Any new blur or motion added above MUST be registered here.
+     ═════════════════════════════════════════════════════════════════════════ */
 
   @supports not (backdrop-filter: blur(1px)) {
-    aside {
-      background: #0e0f14 !important;
+    .dark aside,
+    [data-theme="dark"] aside {
+      background: hsl(var(--background)) !important; /* !imp:a11y */
     }
-    [role="dialog"],
-    [role="menu"],
-    [class*="popover"] {
-      background: #14161e !important;
+    .dark [role="dialog"],
+    .dark [role="menu"],
+    .dark [role="listbox"],
+    .dark .bg-popover,
+    [data-theme="dark"] [role="dialog"],
+    [data-theme="dark"] [role="menu"],
+    [data-theme="dark"] [role="listbox"],
+    [data-theme="dark"] .bg-popover {
+      background: hsl(var(--popover)) !important; /* !imp:a11y */
     }
   }
+
+  /* Reduced transparency is a different need from reduced motion — a user can
+     want opaque surfaces without wanting animation removed. */
   @media (prefers-reduced-transparency: reduce) {
-    aside {
-      background: #0e0f14 !important;
-      backdrop-filter: none !important;
-      -webkit-backdrop-filter: none !important;
+    .dark aside,
+    [data-theme="dark"] aside {
+      background: hsl(var(--background)) !important; /* !imp:a11y */
+      backdrop-filter: none !important; /* !imp:a11y */
+      -webkit-backdrop-filter: none !important; /* !imp:a11y */
     }
-    [role="dialog"],
-    [role="menu"],
-    [class*="popover"] {
-      background: #14161e !important;
-      backdrop-filter: none !important;
-      -webkit-backdrop-filter: none !important;
+    .dark [role="dialog"],
+    .dark [role="menu"],
+    .dark [role="listbox"],
+    .dark .bg-popover,
+    .dark .fixed.inset-0.bg-black\/60,
+    .dark .fixed.inset-0.bg-black\/80,
+    [data-theme="dark"] [role="dialog"],
+    [data-theme="dark"] [role="menu"],
+    [data-theme="dark"] [role="listbox"],
+    [data-theme="dark"] .bg-popover,
+    [data-theme="dark"] .fixed.inset-0.bg-black\/60,
+    [data-theme="dark"] .fixed.inset-0.bg-black\/80 {
+      background: hsl(var(--popover)) !important; /* !imp:a11y */
+      backdrop-filter: none !important; /* !imp:a11y */
+      -webkit-backdrop-filter: none !important; /* !imp:a11y */
     }
   }
+
   @media (prefers-reduced-motion: reduce) {
     *,
     *::before,
     *::after {
-      animation-duration: 0.001ms !important;
-      animation-iteration-count: 1 !important;
-      transition-duration: 0.001ms !important;
+      animation-duration: 0.001ms !important; /* !imp:a11y */
+      animation-iteration-count: 1 !important; /* !imp:a11y */
+      transition-duration: 0.001ms !important; /* !imp:a11y */
     }
-    article[class*="rounded-\[10px\]"]:hover,
-    [class*="bg-\[var\(--mh-brand\)\]"]:hover,
-    .mh-nav-item:hover {
-      transform: none !important;
+    /* Killing duration alone is the common mistake — it leaves the transform
+       applied instantly rather than not at all. Every property this theme
+       moves is neutralised explicitly. */
+    .dark article:hover,
+    .dark button:hover,
+    .dark a:hover,
+    .dark .mh-nav-item:hover,
+    [data-theme="dark"] article:hover,
+    [data-theme="dark"] button:hover,
+    [data-theme="dark"] a:hover,
+    [data-theme="dark"] .mh-nav-item:hover {
+      translate: none !important; /* !imp:a11y */
+      scale: none !important; /* !imp:a11y */
+      transform: none !important; /* !imp:a11y */
+      will-change: auto !important; /* !imp:a11y */
     }
   }
+
+  /* ═══════════════════════════════════════════════════════════════════════════
+     §99  ACCEPTED-RISK REGISTER
+
+     Every rule below depends on a value Minehut generates rather than a name it
+     wrote by hand. Nothing durable exists for these — they are literal-hex or
+     arbitrary-value Tailwind classes. When a Minehut rebuild breaks the theme,
+     start here: `grep '@risk F'` and re-run the audit for each verify string.
+
+       §30  article[class*="rounded-[10px]"]   audit "rounded-[10px]"
+            The card. Also the intended migration target: if every <article> in
+            the app is a server card, this becomes `main article` (tier D) and
+            the file's largest remaining fragility disappears. Settle with:
+              [...document.querySelectorAll('article')]
+                .map(a => [a.className.slice(0,60), !!a.closest('main')])
+            If all are cards, change the one selector in §30.
+
+       §33  .bg-[var(--mh-brand)]              audit "bg-[var(--mh-brand)]"
+            3 hits; qualified to button/a so the checkbox variant is excluded.
+
+       §52  .bg-[color-mix… + hue              audit "bg-[color-mix" "mh-emerald"
+            Intentional family match across ~30 generated classes.
+
+       §60  .bg-[var(--console-bg)]            audit "var(--console-bg)"
+
+       §61  .bg-[#1c1c1c]                      audit "bg-[#1c1c1c]"
+            .dark:border-[#3e3d32]             audit "3e3d32"
+            .dark:text-[#F92672] / [#A6E22E] / [#E6DB74] / [#75715E] / [#F8F8F2]
+            .dark:caret-[#F92672]              audit "F92672"
+            Monokai literals Minehut writes outside its own --console-* tokens.
+            Case-sensitive: Minehut authors them uppercase except 3e3d32.
+
+     ── STANDING NOTES ────────────────────────────────────────────────────────
+
+     · The state-coloured card rail was removed with the six :has() rules it
+       needed. To bring it back cheaply, attach a pseudo-element to the status
+       PILL rather than the card — the pill sits inside the card, and if the
+       card is the nearest positioned ancestor an absolutely-positioned pseudo
+       on the pill resolves against it. Verify first:
+         getComputedStyle(document.querySelector('article')).position === 'relative'
+       and that the pill itself is not positioned. If either fails, the neutral
+       rail shipped here is the correct answer.
+
+     · `.ease-mh-out` and `.ease-mh-spring` hardcode their cubic-beziers instead
+       of reading --mh-ease-*, so token overrides cannot reach them and §07
+       restyles them by name. After any bundle refresh, re-grep the bundle for
+       `cubic-bezier`; every literal must be claimed in §07 or motion silently
+       re-fragments.
+
+     · --chart-1..5 have zero var() consumers in the CSS, so recharts is almost
+       certainly coloured from JS. §51 styles the .recharts-* DOM hooks, which
+       works regardless; the token block is cheap insurance.
+
+     · Requires CSS nesting (Chrome 112+ / Firefox 117+). If the entire theme
+       stops applying after a browser downgrade, that is the first thing to check.
+
+     · The gate assumes the theme class sits on <html>, which is what Tailwind's
+       class strategy and next-themes both do. Confirm once with
+         document.documentElement.className
+       If it turns out to be on <body> instead, `& body` inside the gate
+       (`:is(.dark) body`) stops matching — §08 already covers that case for the
+       canvas and font, but §11's body background would need the same treatment.
+       Everything selecting `main` or deeper is unaffected either way.
+
+     · Bare declarations must never be placed AFTER a nested rule inside the
+       gate: Chrome 112–129 predates the CSSNestedDeclarations rule and drops
+       them silently. This is why the --console-* tokens live in §04a rather
+       than beside the console rules in §60.
+     ═══════════════════════════════════════════════════════════════════════════ */
 } /* end @-moz-document */
