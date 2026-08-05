@@ -1,7 +1,7 @@
 /* ==UserStyle==
 @name           Minehut Premium Dashboard
 @namespace      github.com/DaisyCatTs/minehut-premium-dashboard
-@version        4.1.1
+@version        4.1.2
 @description    A premium dark theme for the Minehut dashboard. Warm-neutral OLED surfaces, one restrained accent, Geist typography, and contrast-verified text.
 @author         Daisy
 @license        MIT
@@ -44,9 +44,15 @@
    that constraint drives the whole token architecture.
 
    NOTE FOR CONTRIBUTORS: @preprocessor makes this file a TEMPLATE. The raw
-   source carries a /*[[accent]]*/ placeholder and is not valid CSS until Stylus
-   substitutes it. `tools/build-fixture.js` and `tools/check-palette.py` both
-   substitute the default first, so the local gate still works on the raw file.
+   source carries an [[accent]] placeholder (wrapped in comment delimiters at
+   its use site) and is not valid CSS until Stylus substitutes it.
+   `tools/build-fixture.js` and `tools/check-palette.py` both substitute the
+   default first, so the local gate still works on the raw file.
+
+   NEVER write that placeholder in full inside a comment. Its closing delimiter
+   terminates the ENCLOSING comment, and every line after it becomes live CSS.
+   That shipped in 4.1.0 and broke the entire stylesheet; check-css.js now fails
+   the build on a comment-open sequence appearing inside a comment.
    ═══════════════════════════════════════════════════════════════════════════ */
 
 /* ═══════════════════════════════════════════════════════════════════════════

@@ -33,6 +33,36 @@ for (let i = 0; i < src.length; i++) {
   if (c === "\n") line++;
 
   if (inComment) {
+    // A comment-open sequence INSIDE a comment means someone wrote a nested
+    // comment or, far worse, embedded a token containing */ — which terminates
+    // the enclosing comment and turns every following line into live CSS.
+    // Shipping `/*[[accent]]*/` inside a prose block did exactly that in 4.1.0
+    // and destroyed the whole stylesheet while every other gate reported OK.
+    // Only the SELF-CLOSING form is fatal: an inner "/*" whose matching "*/"
+    // lands on the same line, e.g. a placeholder written out in full inside
+    // prose. That terminates the enclosing comment and turns every following
+    // line into live CSS — it shipped in 4.1.0 and broke the whole stylesheet.
+    //
+    // Writing "/* !imp:token *<ZWSP>/" in a policy table is fine and deliberate:
+    // the zero-width space means there is no real "*/", so the comment survives.
+    // Flagging those would make the gate unusable, so the check looks for a real
+    // terminator on the same line rather than for "/*" alone.
+    if (c === "/" && next === "*") {
+      const eol = src.indexOf("\n", i);
+      const rest = src.slice(i + 2, eol === -1 ? src.length : eol);
+      if (rest.includes("*/")) {
+        errors.push(
+          `line ${line}: self-closing "/* … */" inside the comment opened at line ` +
+            `${commentStart}. CSS has no nested comments — that inner "*/" ENDS ` +
+            `the block and everything after it becomes live CSS. Write the token ` +
+            `without its delimiters, or break it with a zero-width space.`
+        );
+      } else {
+        warn.push(
+          `line ${line}: "/*" inside a comment (opened line ${commentStart}) — harmless here, but verify no "*/" follows`
+        );
+      }
+    }
     if (c === "*" && next === "/") {
       inComment = false;
       i++;
