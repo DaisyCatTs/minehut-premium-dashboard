@@ -1,7 +1,7 @@
 /* ==UserStyle==
 @name           Minehut Premium Dashboard
 @namespace      github.com/DaisyCatTs/minehut-premium-dashboard
-@version        2.0.5
+@version        2.1.0
 @description    A premium dark theme for the Minehut dashboard. Warm-neutral OLED surfaces, one restrained accent, Geist typography, and contrast-verified text.
 @author         Daisy
 @license        MIT
@@ -1111,6 +1111,57 @@
       font-size: 14px;
     }
 
+    /* Tailwind's preflight sets `--tw-ring-color: rgb(59 130 246/0.5)` and
+       `--tw-ring-offset-color: #fff` on `*,::before,::after`, and Minehut never
+       overrides either. It ships 10 ring-WIDTH utilities but only 7 ring-COLOUR
+       ones, and 4 offset-widths against 3 offset-colours — so whatever carries
+       the surplus renders Tailwind's default blue (not Minehut's brand) inside
+       a solid WHITE halo, on a near-black page. Most likely on checked switches
+       (`data-[state=checked]:ring-2`) and focused inputs.
+       Enumerated rather than universal-selected, for the same reason §08 hosts
+       scrollbar properties on `html` instead of `*`.
+       @risk S  stock Tailwind names  verify: audit "ring-" */
+    & .ring,
+    & .ring-0,
+    & .ring-1,
+    & .ring-2,
+    & .focus\:ring-1,
+    & .focus\:ring-2,
+    & .focus-visible\:ring-1,
+    & .focus-visible\:ring-2,
+    & .focus-visible\:ring-\[3px\],
+    & .data-\[state\=checked\]\:ring-2 {
+      --tw-ring-color: hsl(var(--ring) / 0.5);
+    }
+    & .ring-offset-2,
+    & .focus\:ring-offset-2,
+    & .focus-visible\:ring-offset-1,
+    & .focus-visible\:ring-offset-2 {
+      --tw-ring-offset-color: hsl(var(--background));
+    }
+
+    /* File input. Minehut styles the control but leaves the BUTTON at
+       `file:bg-transparent file:border-0`, so its label falls back to the UA's
+       `ButtonText` — dark ink on a dark input, i.e. unreadable, on every upload
+       in the File Manager and every icon/world upload.
+       @risk D  hook:::file-selector-button  verify: File Manager upload */
+    & input[type="file"]::file-selector-button,
+    & input[type="file"]::-webkit-file-upload-button {
+      background: hsl(var(--popover));
+      color: hsl(var(--foreground));
+      border: 1px solid hsl(var(--border));
+      border-radius: calc(var(--radius) - 4px);
+      padding: 4px 10px;
+      margin-right: 10px;
+      font: inherit;
+      font-size: 13px;
+      cursor: pointer;
+      transition: background-color var(--mh-dur-fast) var(--mh-ease-out);
+    }
+    & input[type="file"]::file-selector-button:hover {
+      background: hsl(var(--accent));
+    }
+
     /* Focus signalled three ways: outline (§08), surface shift, and border. */
     & input:focus-visible,
     & select:focus-visible,
@@ -1183,11 +1234,15 @@
       background: hsl(var(--border) / 0.55);
     }
 
-    /* Tooltips. Radix popper sides are confirmed present. */
-    & [data-side="top"],
-    & [data-side="right"],
-    & [data-side="bottom"],
-    & [data-side="left"] {
+    /* Tooltips.
+       This was `[data-side="top"|"right"|"bottom"|"left"]`, which Radix puts on
+       EVERY popper Content — Select, DropdownMenu and Popover as well as
+       Tooltip. At (0,2,0) it beat `.text-sm` (0,1,0) on the panel and on every
+       descendant without its own `text-*`, so it was shrinking every dropdown
+       and select panel in the app to 12px. The comment said "Tooltips"; the
+       selector did not.
+       @risk D  hook:[role=tooltip]  verify: open a tooltip and a select */
+    & [role="tooltip"] {
       font-size: 12px;
       line-height: 1.4;
     }
@@ -1223,8 +1278,16 @@
        @risk S  stock utility names  verify: audit "min-w-[1040px]" "sticky"
        ═══════════════════════════════════════════════════════════════════════ */
 
+    /* `.sticky.top-0` is NOT scoped to a table. Minehut's bundle carries the
+       canonical Next/shadcn shell — `sticky top-0 z-40 bg-background/95
+       backdrop-blur` — so an unscoped rule at (0,3,0) repaints the app header
+       as a table header: card-coloured (killing its translucency), all
+       unstyled text dropped to the fourth ink tier, plus 0.04em tracking.
+       Scoped to a horizontal scroll container, which is where the wide data
+       grids actually live (`min-w-[1040px]`, `min-w-[760px]`).
+       @risk S  verify: [...document.querySelectorAll('.sticky.top-0')] */
     & thead th,
-    & .sticky.top-0 {
+    & .overflow-x-auto .sticky.top-0 {
       background: hsl(var(--card));
       color: var(--mh-ink-4);
       font-weight: 500;
@@ -1270,6 +1333,19 @@
       border: 1px solid hsl(var(--border)) !important; /* !imp:dark-util */
       border-radius: var(--og-r-drop) !important; /* !imp:dark-util */
       box-shadow: var(--mh-shadow-2) !important; /* !imp:dark-util */
+    }
+    /* Tooltip rows and legend labels carry INLINE per-series colours straight
+       from recharts, so a class rule loses to them without !important. These
+       are chrome, not data — the series marks themselves keep their own colour. */
+    & .recharts-tooltip-label {
+      color: hsl(var(--foreground)) !important; /* !imp:dark-util */
+      font-weight: 550;
+    }
+    & .recharts-tooltip-item {
+      color: hsl(var(--secondary-foreground)) !important; /* !imp:dark-util */
+    }
+    & .recharts-legend-item-text {
+      color: hsl(var(--muted-foreground)) !important; /* !imp:dark-util */
     }
 
     /* ═══════════════════════════════════════════════════════════════════════
@@ -1347,6 +1423,21 @@
     & [class*="mh-diamond"] span.bg-current {
       background: var(--mh-diamond);
       box-shadow: 0 0 0 3px color-mix(in oklab, var(--mh-diamond) 18%, transparent);
+    }
+    /* `span.bg-current { box-shadow: none }` above strips the ring from every
+       dot, so each hue has to put one back. Amethyst, copper and brand pills
+       all exist in the bundle and were losing theirs. */
+    & [class*="mh-amethyst"] span.bg-current {
+      background: var(--mh-amethyst);
+      box-shadow: 0 0 0 3px color-mix(in oklab, var(--mh-amethyst) 18%, transparent);
+    }
+    & [class*="mh-copper"] span.bg-current {
+      background: var(--mh-copper);
+      box-shadow: 0 0 0 3px color-mix(in oklab, var(--mh-copper) 18%, transparent);
+    }
+    & [class*="mh-brand"] span.bg-current {
+      background: var(--mh-brand);
+      box-shadow: 0 0 0 3px color-mix(in oklab, var(--mh-brand) 18%, transparent);
     }
 
     /* ═══════════════════════════════════════════════════════════════════════
@@ -1442,6 +1533,52 @@
     }
     & .dark\:caret-\[\#F92672\] {
       caret-color: hsl(var(--primary)) !important; /* !imp:dark-util */
+    }
+
+    /* Minehut ships THIRTEEN coloured bloom utilities — `0 0 6/8/10/14px` in a
+       material hue or `currentColor`. §52 stripped the bloom from status dots
+       and the theme's own notes claim glow was removed "against a brief that
+       bans exactly that", but Minehut's were still live on version badges, plan
+       chips and upsell CTAs.
+
+       Converted rather than deleted: `0 0 0 1px` keeps the "this element is
+       lit" reading that earns the glow its place, and loses only the bloom.
+       The two `0_0_0_3px` classes are NOT in this list — those are spread-only
+       focus rings with no blur radius, which is exactly the right shape.
+       @risk F  15 exact classes  verify: audit "shadow-[0_0_" */
+    & .shadow-\[0_0_6px_var\(--mh-brand\)\],
+    & .shadow-\[0_0_8px_var\(--mh-emerald\)\],
+    & .shadow-\[0_0_8px_var\(--mh-gold\)\],
+    & .shadow-\[0_0_8px_var\(--mh-diamond\)\],
+    & .shadow-\[0_0_10px_var\(--mh-emerald\)\],
+    & .shadow-\[0_0_10px_var\(--mh-gold\)\],
+    & .shadow-\[0_0_10px_var\(--mh-diamond\)\],
+    & .shadow-\[0_0_10px_var\(--mh-redstone\)\],
+    & .shadow-\[0_0_10px_var\(--mh-amethyst\)\],
+    & .shadow-\[0_0_8px_color-mix\(in_oklab\2c var\(--mh-emerald\)_60\%\2c transparent\)\] {
+      box-shadow: 0 0 0 1px currentColor !important; /* !imp:dark-util */
+    }
+    & .shadow-\[0_0_8px_currentColor\],
+    & .shadow-\[0_0_10px_currentColor\],
+    & .shadow-\[0_0_14px_currentColor\] {
+      box-shadow: 0 0 0 1px currentColor !important; /* !imp:dark-util */
+    }
+
+    /* Inline links in prose. Minehut relies on colour alone, and Tailwind's
+       preflight makes a bare <a> typographically identical to the text around
+       it — a WCAG 1.4.1 failure anywhere a link appears in help text, a MOTD,
+       a plan description or the ToS blurb. Scoped to unclassed anchors inside
+       main so it cannot touch button-shaped or nav anchors.
+       @risk D  hook:main a[href]:not([class]) */
+    & main a[href]:not([class]) {
+      color: hsl(var(--primary));
+      text-decoration: underline;
+      text-underline-offset: 2px;
+      text-decoration-color: hsl(var(--primary) / 0.4);
+      transition: text-decoration-color var(--mh-dur-fast) var(--mh-ease-out);
+    }
+    & main a[href]:not([class]):hover {
+      text-decoration-color: hsl(var(--primary));
     }
 
     /* Tailwind stock-palette utilities Minehut uses for warnings and badges.
@@ -1673,6 +1810,17 @@
     [data-theme="dark"] main article:hover {
       border-color: Highlight !important; /* !imp:a11y */
     }
+    /* The resource meter is a pure background fill, which forced-colors
+       discards — so a server at 90% RAM reads as empty. An outline survives. */
+    .dark .mh-meter-fill,
+    [data-theme="dark"] .mh-meter-fill {
+      outline: 2px solid Highlight !important; /* !imp:a11y */
+      outline-offset: -2px !important; /* !imp:a11y */
+    }
+    .dark .mh-meter-track,
+    [data-theme="dark"] .mh-meter-track {
+      border: 1px solid CanvasText !important; /* !imp:a11y */
+    }
     /* The focus ring is the one thing that must never be lost. */
     :focus-visible {
       outline: 3px solid Highlight !important; /* !imp:a11y */
@@ -1687,6 +1835,13 @@
       animation-duration: 0.001ms !important; /* !imp:a11y */
       animation-iteration-count: 1 !important; /* !imp:a11y */
       transition-duration: 0.001ms !important; /* !imp:a11y */
+    }
+    /* Minehut ships `html { scroll-behavior: smooth }`. Smooth scrolling is
+       neither an animation nor a transition, so zeroing those durations does
+       not touch it — and it is a documented vestibular trigger (WCAG 2.3.3).
+       One line, and the only motion this block was still letting through. */
+    html {
+      scroll-behavior: auto !important; /* !imp:a11y */
     }
     /* Killing duration alone is the common mistake — it leaves the transform
        applied instantly rather than not at all. Every property this theme
@@ -1736,6 +1891,54 @@
             .dark:caret-[#F92672]              audit "F92672"
             Monokai literals Minehut writes outside its own --console-* tokens.
             Case-sensitive: Minehut authors them uppercase except 3e3d32.
+
+     ── UNRESOLVED, PENDING DOM RECON ─────────────────────────────────────────
+     Three routes have never been inspected — File Manager, Backups and Stats —
+     and they gate everything below. `node tools/build-fixture.js` renders what
+     IS known; `tools/audit-page.js` pasted into the console on those routes
+     would close most of this in one pass.
+
+     · MONACO EDITOR. Minehut ships a whole stylesheet for it (`.editor-classic
+       .monaco-editor`) and the theme has zero rules. Monaco themes itself from
+       JS, so the File Manager's editor sits next to §60's carefully retuned
+       console in an unrelated palette. CSS does reach its chrome —
+       `.monaco-editor-background`, `.margin`, `.line-numbers`, `.current-line`,
+       `.monaco-scrollable-element > .scrollbar > .slider`. Needs the DOM first.
+
+     · RECHARTS SERIES. §51 styles grid, axes, ticks, tooltip and legend. The
+       marks themselves — `.recharts-curve`, `.recharts-area-area`,
+       `.recharts-rectangle`, `.recharts-sector` — are still recharts' own
+       saturated defaults, and `--chart-1..5` have zero var() consumers so the
+       token block cannot reach them. Series colour comes from JS.
+
+     · TOAST SURFACE. No toast library ships CSS here, but the primitives are
+       unmistakable: `translate-y-[calc(100%+1.5rem)]`, `fixed bottom-4 right-4
+       z-50 max-w-[360px] flex-col-reverse`. Toasts land on token-correct
+       surfaces but with none of §41's glass/shadow/radius language, so they
+       read as a different product than the dialogs beside them.
+
+     · §50's `thead/tbody/td/th` RULES ARE PROBABLY DEAD. The evidence says
+       Minehut's wide grids are CSS Grid divs (`grid-cols-[44px_36px_1fr_auto_
+       auto_auto]`, `[&:not(:last-child)]:border-r`, `divide-x`), not tables.
+       Nothing looks broken — Minehut's own row hovers are token-backed — but
+       `font-variant-numeric: tabular-nums`, the one thing that section was
+       really buying, then never applies and grid numbers do not align.
+       Verify: document.querySelectorAll('table, thead, tbody, td, th').length
+
+     · THE BROWN LITERAL FAMILY. Ten hardcoded classes — `bg-[rgba(42,22,7,…)]`,
+       `text-[rgba(42,22,7,0.72)]`, `hover:bg-[#3D2210]`, `hover:text-[#2A1607]`,
+       `hover:text-[#FFF3E2]` — with NO `dark:` counterpart, so they render
+       identically in both themes. Almost certainly the credits / Plus upsell
+       banner. Deliberately NOT touched: if the parent is a bright fill the dark
+       brown text is correct and overriding it would break legibility; if the
+       parent is dark it is invisible and needs claiming. Cannot tell without
+       looking, and guessing risks making it worse.
+       Verify: [...document.querySelectorAll('[class*="rgba(42,22,7"]')]
+                 .map(e => getComputedStyle(e.parentElement).backgroundColor)
+
+     · DISCORD BUTTON. `from-[#7289DA] to-[#5865F2]` plus a blurple drop-glow,
+       on `bg-gradient-to-br`. §72 tames only `bg-gradient-to-r`. Arguably
+       correct as-is — it is Discord's brand, not Minehut's.
 
      ── STANDING NOTES ────────────────────────────────────────────────────────
 
