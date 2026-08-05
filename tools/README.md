@@ -22,6 +22,10 @@ run the full gate with no downloads; results are identical either way.
 | `check-exact-classes.py` | Exact escaped selectors (`.bg-\[var\(--mh-brand\)\]`) that match nothing. A typo there fails silently — the rule just never applies. |
 | `check-css.js` | Brace/paren/comment/string balance, declarations outside any block, unknown at-rules, and **untagged `!important`** (a policy violation per §01). |
 
+These three check the stylesheet against Minehut's CSS. They cannot tell you
+whether a rule reaches anything on a real page — `recon.js` and `audit-page.js`
+below do that, and both have caught bugs these three passed.
+
 ```sh
 python tools/audit-selectors.py                 # audit every pattern in the theme
 python tools/audit-selectors.py "bg-[#1c1c1c]"  # ad-hoc: what does this substring hit?
@@ -45,15 +49,53 @@ the surface they were measured on, and they have to stay true.
 python tools/ladder.py
 ```
 
-## DevTools
+## Seeing it render, without a Minehut login
 
-`devtools-preconditions.js` is a paste-into-the-console snippet for the four
-questions the CSS cannot answer: whether `.dark` sits on `<html>`, whether every
-`<article>` is a server card, whether the card is the nearest positioned ancestor
-of the status pill, and whether `--mh-r-md` really computed to `0px` before the
-theme declared it. Run it on **My Servers** and on a server's **Console** tab.
+This is the one that closes the loop. Everything else verifies the stylesheet
+against the *bundle*; this verifies it against a *rendering*.
 
-The first two gate real decisions — see §99 in the stylesheet.
+```sh
+node tools/build-fixture.js          # writes tools/fixture.html
+```
+
+It inlines Minehut's real shipped CSS, unwraps the theme's `@-moz-document` block
+so it applies to a local file, and rebuilds the exact markup `recon.js` captured
+from the live DOM — every class string in it was copied from the real page, not
+invented. Open the result and toggle `class="dark"` on `<html>` to check light mode.
+
+One divergence: next/font serves Geist, Unbounded and Silkscreen from Minehut's
+origin, so letterforms fall back locally. Colour, spacing, elevation, borders and
+state all render faithfully; type does not.
+
+## Runtime QA on any page
+
+`audit-page.js` works backwards from what actually rendered rather than from what
+the stylesheet claims, which is how it finds gaps on routes nobody has looked at.
+Paste it into the console on any route, in both themes. It reports:
+
+- **Unthemed colours** — every computed colour on the page that is not one of the
+  theme's tokens. The mechanical version of "what did I miss".
+- **Contrast failures** — every visible text node against its real *composited*
+  background, at the correct AA threshold for its size and weight.
+- **Component census** — which component families exist on this route.
+
+It caught two token bugs on its first run: the console blue had been left on a
+superseded accent, and console bright-black was below AA.
+
+## DevTools recon
+
+`recon.js` collects the structural facts the CSS cannot supply — how the page is
+assembled, rather than which class names exist. Run it on a route before writing
+rules for that route. It settled the `main article` migration, proved the tab bar
+has no `.mh-tabs`/`[role=tab]` anywhere on it, and confirmed the status pill is
+deliberately outside the hue-tinted family.
+
+`devtools-preconditions.js` is the older, narrower snippet for four specific
+questions; `recon.js` supersedes it.
+
+**Verify a hook in the DOM, not just in the stylesheet.** A whole section of this
+theme once targeted `.mh-tabs`, which is compiled into Minehut's CSS but appears
+zero times on the page it was written for.
 
 ## Refreshing the bundle
 
