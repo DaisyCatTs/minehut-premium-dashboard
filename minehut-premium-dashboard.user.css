@@ -1,7 +1,7 @@
 /* ==UserStyle==
 @name           Minehut Premium Dashboard
 @namespace      github.com/DaisyCatTs/minehut-premium-dashboard
-@version        4.5.0
+@version        4.6.0
 @description    A premium dark theme for the Minehut dashboard. Warm-neutral OLED surfaces, one restrained accent, Geist typography, and contrast-verified text.
 @author         Daisy
 @license        MIT
@@ -1053,14 +1053,29 @@
     & .mh-nav-item svg {
       color: var(--mh-ink-4);
     }
-    /* Minehut already ships the hover background and colour byte-for-byte, so
-       only the timing is ours. */
+    /* Minehut ships the hover BACKGROUND byte-for-byte, so only the timing is
+       ours there. The hover COLOUR is not free, and the comment that used to
+       claim it was is what hid this: their `.mh-nav-item:hover{color:hsl(var
+       (--foreground))}` is (0,2,0) and the resting rule above is *also* (0,2,0)
+       once the dark gate resolves to :is(.dark,[data-theme="dark"]). An exact
+       tie resolves on source order, and a userstyle is injected last — so the
+       resting colour beat their hover colour and nav labels never brightened.
+       The icon did, because its rule carries an extra element, which is what
+       made the sidebar look half-responsive rather than plainly broken.
+       Restated at (0,3,0) so intent decides rather than injection order.
+       @risk D  hook:.mh-nav-item:hover  verify: label goes white on hover */
     @media (hover: hover) and (pointer: fine) {
       & .mh-nav-item:hover {
         transition-duration: var(--og-hover-in);
       }
     }
+    & .mh-nav-item:hover {
+      color: hsl(var(--foreground));
+    }
     & .mh-nav-item:hover svg {
+      color: hsl(var(--secondary-foreground));
+    }
+    & .mh-nav-item:hover .mh-nav-count {
       color: hsl(var(--secondary-foreground));
     }
 
@@ -2286,22 +2301,46 @@
        instead catches every instance at any height.
        @risk S  hook:.absolute.inset-x-0.top-0.bg-gradient-to-r
                 verify: audit "bg-gradient-to-r" "inset-x-0" */
+    /* Outside a card this is a HEADER rule, and it was invisible. --border is
+       #292929 — 1.27:1 on --card and 1.20:1 on --background — so replacing
+       Minehut's sweep with it did not neutralise the bar, it deleted it. The
+       owner reported it as "transparent", which is exactly right.
+
+       Two treatments, because the two placements mean different things:
+       a section header's rule is chrome and may carry the accent, while the
+       strip on a server card is repeated once per card and must not. */
     & .absolute.inset-x-0.top-0.bg-gradient-to-r {
       opacity: 1;
       background-image: linear-gradient(
         90deg,
         transparent,
-        hsl(var(--border)) 18%,
-        hsl(var(--border)) 82%,
+        hsl(var(--primary) / 0.85) 18%,
+        hsl(var(--primary) / 0.85) 82%,
         transparent
       );
     }
-    /* NEUTRAL by default, not brand blue.
-       The state bar in §52 paints over this whenever a card HAS a state, so the
-       default is only ever seen on cards that are dormant — and painting those
-       in the accent made a grid of hibernating servers read as if everything
-       were active. Blue has to mean something; here it meant "a card exists".
-       This is the same mistake as the card rail, one layer up. */
+    /* NEUTRAL inside a card, not brand blue — but visible.
+       Painting the per-card strip in the accent made a grid of hibernating
+       servers read as if everything were active. Blue has to mean something;
+       there it meant "a card exists", which is the same mistake as the card
+       rail one layer up. It stays neutral, lifted from --border to --input so
+       it is an actual hairline rather than a rounding error.
+
+       NOTE: the claim that used to sit here — that a §52 state bar paints over
+       this whenever a card has a state — is stale. That rail was removed, and
+       `inset-x-0` now has exactly one consumer in the file, so the default was
+       not "only seen on dormant cards", it was seen on every card and every
+       header.
+       @risk S  hook:article .absolute.inset-x-0.top-0.bg-gradient-to-r */
+    & article .absolute.inset-x-0.top-0.bg-gradient-to-r {
+      background-image: linear-gradient(
+        90deg,
+        transparent,
+        hsl(var(--input)) 18%,
+        hsl(var(--input)) 82%,
+        transparent
+      );
+    }
 
     & svg.lucide {
       stroke-width: 1.75;
@@ -2326,6 +2365,45 @@
     & button.bg-\[var\(--mh-brand\)\] svg,
     & a.bg-\[var\(--mh-brand\)\] svg {
       color: hsl(var(--primary-foreground));
+    }
+
+    /* ═══════════════════════════════════════════════════════════════════════
+       §72  HOVER UTILITIES THE THEME WAS SILENTLY DEFEATING.
+
+       Minehut's `hover:text-foreground` compiles to `.hover\:text-foreground:
+       hover` = (0,2,0). The theme's own `& .text-muted-foreground` resolves
+       through the gate to :is(.dark,[data-theme="dark"]) .text-muted-foreground
+       = (0,2,0) as well. An exact tie resolves on SOURCE ORDER, and a userstyle
+       is always injected last — so claiming the resting colour silently killed
+       the hover on every element carrying both.
+
+       The server-address copy button is the visible casualty: it ships
+       `text-muted-foreground transition-colors hover:text-foreground`, so it
+       animated a colour change that could never happen. `.mh-nav-item` lost its
+       label brightening the same way, one section up.
+
+       This is NOT the same as the `dark:` variant problem the !important policy
+       covers — those are (0,2,0) against our (0,2,0) too, but they are OUR
+       overrides losing. Here it is Minehut's INTENT losing, so the fix is to
+       restate their rule at (0,3,0) rather than to add !important to ours.
+
+       Only utilities the theme actually defeats AND that exist in the bundle
+       are listed — `hover:text-muted-foreground` was in the first draft of this
+       block and check-exact-classes.py rejected it, which is exactly the job
+       that gate exists to do. Restating all fifty
+       hover utilities in the bundle would be over-reach; `hover:border-*` and
+       `hover:bg-[color-mix…]` already win because nothing here claims those
+       properties at a tying specificity.
+       @risk S  stock utility names
+       verify: tools/check-hover.js reports no dead hovers */
+    & .hover\:text-foreground:hover {
+      color: hsl(var(--foreground));
+    }
+    & .hover\:text-primary:hover {
+      color: hsl(var(--primary));
+    }
+    & .hover\:underline:hover {
+      text-decoration-line: underline;
     }
   }
 
