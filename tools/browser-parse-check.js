@@ -64,7 +64,7 @@ const body = css.slice(b + 1, end);
   // @var value as a :root declaration ABOVE the sheet. It does not template the
   // file. Override to preview another accent:
   //   ACCENT="255 92% 76.3%" node tools/browser-parse-check.js
-  const injected = ":root{--accentHsl:" + (process.env.ACCENT || "211 100% 65.1%") + "}";
+  const injected = ":root{--accentHsl:" + (process.env.ACCENT || "210 100% 69.8%") + "}";
   await p.setContent(
     '<style id="t">' +
       injected +
@@ -104,7 +104,7 @@ const body = css.slice(b + 1, end);
   console.log("  --card           :", r.card);
   console.log("  --og-accent      :", r.ogAccent);
   console.log("  --mh-brand       :", r.mhBrand);
-  console.log("  accent painted   :", r.accentPainted, "(expect rgb(77,163,255) for blue)");
+  console.log("  accent painted   :", r.accentPainted, "(expect rgb(101,178,255) for blue)");
   console.log("  article bg       :", r.cardBg, "(expect rgb(20,20,20))");
   console.log("  @keyframes pulse :", r.pulse.length ? r.pulse[0] : "(none — retune missing)");
   if (errs.length) console.log("  PAGE ERRORS      :", errs.join(" | "));

@@ -101,17 +101,27 @@ everyone who installed it.
 
 |                              |                       |                      |                      |
 | ---------------------------- | --------------------- | -------------------- | -------------------- |
-| **Blue** (default) `#4DA3FF` | **Purple** `#A78BFA`  | **Violet** `#8B7FF5` | **Indigo** `#818CF8` |
-| **Cyan** `#22D3EE`           | **Emerald** `#34D399` | **Rose** `#FB7185`   | **Amber** `#FBBF24`  |
+| **Blue** (default) `#65B2FF` | **Purple** `#C290FF`  | **Violet** `#AF9AFF` | **Indigo** `#94A5FF` |
+| **Cyan** `#00C9DB`           | **Emerald** `#00D37D` | **Rose** `#FF8390`   | **Amber** `#FF8E00`  |
 
 Only the accent moves. Surfaces stay pure neutral in every theme, and status
 colours stay semantic — green still means running, red still means stopped. A
 theme should change what the interface _points at_, not what it's made of, which
 is what Linear, Vercel and GitHub all do.
 
-Every preset is contrast-verified on the shipped ladder: all eight clear WCAG AA
-on the card surface and as a focus ring over all five surfaces, and dark ink wins
-on every one.
+These are a **system**, not eight colours picked one at a time. Each is solved for
+the same perceptual lightness (OKLCH L = 0.755), with chroma at 85% of what sRGB
+allows at that lightness — the last 15% is the difference between vivid and
+electric. Every theme therefore carries the same visual _weight_: switching accent
+changes the hue, not how loud the interface is.
+
+Equal _contrast_ would have been the wrong target. Forcing an intrinsically light
+hue down to a blue's luminance turns amber into a muddy olive — that set got
+generated and rejected. Equalising perceptual lightness is what Linear moved to
+LCH for: a red and a yellow at the same lightness should look equally light.
+
+All eight clear WCAG AA on the card (7.66–9.31 : 1), clear 3:1 as a focus ring
+over every surface, and take dark ink at 7.85 : 1 or better.
 
 Three more values live in **§02 KNOBS** at the top of the file (Stylus icon →
 **Manage** → the theme → **Edit**):

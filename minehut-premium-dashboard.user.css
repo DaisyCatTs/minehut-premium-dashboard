@@ -1,7 +1,7 @@
 /* ==UserStyle==
 @name           Minehut Premium Dashboard
 @namespace      github.com/DaisyCatTs/minehut-premium-dashboard
-@version        4.3.0
+@version        4.4.0
 @description    A premium dark theme for the Minehut dashboard. Warm-neutral OLED surfaces, one restrained accent, Geist typography, and contrast-verified text.
 @author         Daisy
 @license        MIT
@@ -11,14 +11,14 @@
 @preprocessor   default
 
 @var select accentHsl "Accent colour" {
-  "blue:Blue*":      "211 100% 65.1%",
-  "purple:Purple":   "255 92% 76.3%",
-  "violet:Violet":   "246 86% 72.9%",
-  "indigo:Indigo":   "234 89% 73.9%",
-  "cyan:Cyan":       "188 86% 53.3%",
-  "emerald:Emerald": "158 64% 51.6%",
-  "rose:Rose":       "351 95% 71.4%",
-  "amber:Amber":     "43 96% 56.3%"
+  "blue:Blue*":      "210 100% 69.8%",
+  "purple:Purple":   "267 100% 78.2%",
+  "violet:Violet":   "252 100% 80.2%",
+  "indigo:Indigo":   "230 100% 79.0%",
+  "cyan:Cyan":       "185 100% 42.9%",
+  "emerald:Emerald": "156 100% 41.4%",
+  "rose:Rose":       "354 100% 75.7%",
+  "amber:Amber":     "33 100% 50.0%"
 }
 ==/UserStyle== */
 
@@ -255,12 +255,27 @@
      ═════════════════════════════════════════════════════════════════════════ */
 
   /* ACCENT PRESETS live in the @var block at the top of the file, because
-     Stylus substitutes the CHOSEN VALUE into `--accentHsl` directly. Measured
-     on --card (#141414) / worst-case focus ring across all five surfaces:
-       blue 7.02/5.17 · purple 6.77/4.99 · violet 5.66/4.17 · indigo 6.18/4.55
-       cyan 10.19/7.51 · emerald 9.58/7.06 · rose 6.84/5.05 · amber 11.04/8.13
-     All clear AA, and dark ink wins on every one. The fallback in --primary
-     keeps the sheet correct if Stylus is not doing the injection at all. */
+     Stylus substitutes the chosen value into `--accentHsl` directly.
+
+     They are a SYSTEM, not eight colours picked one at a time. Each is solved
+     for the same perceptual lightness — OKLCH L = 0.755 — with chroma taken to
+     85% of what the sRGB gamut allows at that lightness. That last 15% is the
+     difference between vivid and electric, and the brief bans neon.
+
+     Why perceptual lightness and not equal contrast: equalising contrast forces
+     intrinsically light hues down to a blue's luminance, and a yellow dragged
+     to 7:1 becomes a muddy olive. Equalising OKLCH L keeps every accent looking
+     the same WEIGHT while letting luminance fall where the hue naturally puts
+     it. It is why Linear moved to LCH — "a red and a yellow at lightness 50
+     appear roughly equally light".
+
+     The contrast spread narrowed from 1.96x to 1.22x, and what remains is
+     correct rather than accidental. Measured on --card (#141414):
+       blue 8.22 · indigo 7.97 · amber 8.00 · rose 7.81 · violet 7.80
+       purple 7.66 · cyan 9.10 · emerald 9.31 : 1
+     Worst-case focus ring (over --accent) is 5.64:1, well past the 3:1 floor,
+     and dark ink clears 7.85:1 on every one. The fallback in --primary keeps
+     the sheet correct if Stylus is not injecting at all. */
 
   .dark,
   [data-theme="dark"] {
@@ -322,7 +337,7 @@
        an undefined property, and took --primary and --ring down with it.
        Reading the injected variable directly needs no substitution at all,
        which is also why this file is plain valid CSS again. */
-    --primary: var(--accentHsl, 211 100% 65.1%) !important; /* !imp:token */
+    --primary: var(--accentHsl, 210 100% 69.8%) !important; /* !imp:token */
     --ring: var(--primary) !important; /* !imp:token */
     --destructive: 0 84.2% 60.2% !important; /* #EF4444  4.90:1 on --card */ /* !imp:token */
 
