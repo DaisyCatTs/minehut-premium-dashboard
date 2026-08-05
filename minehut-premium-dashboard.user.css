@@ -1,7 +1,7 @@
 /* ==UserStyle==
 @name           Minehut Premium Dashboard
 @namespace      github.com/DaisyCatTs/minehut-premium-dashboard
-@version        2.0.2
+@version        2.0.3
 @description    A premium dark theme for the Minehut dashboard. Warm-neutral OLED surfaces, one restrained accent, Geist typography, and contrast-verified text.
 @author         Daisy
 @license        MIT
@@ -568,16 +568,13 @@
       font-weight: 500;
     }
 
-    /* Positive tracking on small text is counter-intuitive but it is what
-       Raycast does, and it is the cheapest fix available for dark UI feeling
-       heavy: light-on-dark text optically thickens and closes up, so a little
-       air restores legibility. Applied only to the small uppercase labels,
-       where the effect is strongest and Minehut's own tracking is already
-       loose. Titles keep their negative tracking. */
-    & .ds-label,
-    & .uppercase {
-      letter-spacing: 0.06em;
-    }
+    /* NOTE: 2.0.2 set `letter-spacing: 0.06em` on `.ds-label, .uppercase` here,
+       intending to add air to small light-on-dark text (Raycast's trick). Both
+       halves were wrong. Minehut already sets .ds-label to 0.08em, so this
+       REDUCED its tracking; and a gated `.uppercase` is (0,2,0), which
+       outranks every `tracking-*` utility Minehut deliberately applied to
+       uppercase elements. Reverted — Minehut's own tracking is already loose
+       enough, and this is not worth overriding a whole utility family for. */
 
     /* Numbers read as data, not prose. */
     & .font-mono,
