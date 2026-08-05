@@ -1,7 +1,7 @@
 /* ==UserStyle==
 @name           Minehut Premium Dashboard
 @namespace      github.com/DaisyCatTs/minehut-premium-dashboard
-@version        2.3.2
+@version        2.3.3
 @description    A premium dark theme for the Minehut dashboard. Warm-neutral OLED surfaces, one restrained accent, Geist typography, and contrast-verified text.
 @author         Daisy
 @license        MIT
@@ -92,15 +92,63 @@
    matching over-matches silently: `p-6` also matches `gap-6`, and `h-` matches
    200 of 1096 tokens because every `--mh-*` utility contains "mh-".
 
+   ── ADDING A RULE ──────────────────────────────────────────────────────────
+   In order. Steps 1 and 2 are where nearly every bug in this file came from.
+
+   1. CAN A TOKEN DO IT? Check §03–§07 first. A token override reaches every
+      consumer, costs no specificity and cannot over-match. Claiming `--border`
+      alone recoloured every bordered element in the app.
+
+   2. VERIFY THE HOOK IN THE DOM, NOT THE STYLESHEET. `python
+      tools/audit-selectors.py "your-substring"` says what a `[class*=]` really
+      matches; `tools/recon.js` in the browser console says whether it is on the
+      page at all. An entire section here once targeted `.mh-tabs`, which is
+      compiled into Minehut's CSS and appears ZERO times on the route it was
+      written for. Existing ≠ present.
+
+   3. ANCHOR SUBSTRING MATCHES. `[class*="p-6"]` also matches `gap-6`. `h-` matches
+      200 of 1096 tokens because every `--mh-*` utility contains "mh-". Use
+      `[class~=]` for whole tokens, or `[class^=]` plus `[class*=" …"]` for a
+      token boundary.
+
+   4. PUT IT IN THE RIGHT SECTION. Order is the override mechanism — a section
+      may only override sections above it.
+
+   5. TAG ANY `!important`, or `check-css.js` fails the file.
+
+   6. REGISTER BLUR AND MOTION in §90. Any `backdrop-filter`, `translate`,
+      `scale` or `animation` needs a fallback in all three degradation blocks.
+
+   7. RUN THE GATE:
+        node   tools/check-css.js minehut-premium-dashboard.user.css
+        python tools/check-exact-classes.py
+        python tools/audit-selectors.py
+        python tools/check-palette.py        # if you touched a colour
+      Then `node tools/build-fixture.js` and open `tools/fixture.html` to see it
+      render locally — no Minehut login needed. Check light mode too: this theme
+      is scoped to dark, and light must stay stock Minehut.
+
+   Colour changes additionally: every ratio in this file names the surface it was
+   measured against, and `check-palette.py` fails on any comment that disagrees
+   with its shipped value. Do not hand-write a ratio — compute it.
+
    ── CONTENTS ───────────────────────────────────────────────────────────────
-   §02 KNOBS          §03 LADDER        §04 DERIVED      §05 HUES
-   §06 GEOMETRY       §07 MOTION        §08 GLOBAL
-   §10 TYPOGRAPHY     §11 SURFACES      §12 BORDERS      §13 RADII
-   §20 SIDEBAR        §21 NAV ITEM      §30 CARD         §31 METER
-   §32 TABS           §33 BUTTONS       §40 FORMS        §41 OVERLAYS
-   §42 MENU ITEMS     §43 CONTROLS      §50 DATA GRIDS   §51 CHARTS
-   §52 STATUS         §53 SKELETONS     §60 CONSOLE      §61 QUARANTINE
-   §70 ICONS          §80 A11Y          §90 DEGRADATION  §99 RISK REGISTER
+   TOKENS, ungated
+     §02 KNOBS        §03 LADDER      §04 DERIVED     §04a CONSOLE TOKENS
+     §05 HUES         §06 GEOMETRY    §07 MOTION      §08  GLOBAL
+   COMPONENTS, inside the dark gate
+     §10 TYPOGRAPHY   §11 SURFACES    §12 BORDERS     §13  RADII
+     §20 SIDEBAR      §21 NAV ITEM    §30 CARD        §31  METER
+     §32 TABS         §33 BUTTONS     §40 FORMS       §41  OVERLAYS
+     §42 MENU ITEMS   §43 CONTROLS    §50 DATA GRIDS  §51  CHARTS
+     §52 STATUS       §53 SKELETONS   §54 MONACO      §55  TOASTS
+     §60 CONSOLE      §61 QUARANTINE  §70 ICONS       §71  TOP ACCENT BAR
+   ungated again
+     §80 A11Y         §90 DEGRADATION §99 RISK REGISTER
+
+   Sections appear in this order in the file, and §61 is deliberately near the
+   end because it must override §11. If you add one, put it where its overrides
+   belong rather than at the bottom.
    ═══════════════════════════════════════════════════════════════════════════ */
 
 @-moz-document domain("dashboard.minehut.com") {
@@ -153,9 +201,8 @@
   .dark,
   [data-theme="dark"] {
     /* The page stays OLED black; everything above it steps up ~4–5 L*.
-       Raised twice. 2.0.1 took the page→card step from 2.4 L* to 4.6 because
-       cards read as faint outlines rather than objects. 2.3.2 takes it to 6.7:
-       at 4.6 the card still sat close enough to an OLED-black page that the
+       Raised twice. The page→card step went 2.4 L* → 4.6 → 6.7. At 4.6 the card
+       still sat close enough to an OLED-black page that the
        grid read as one dark field with hairlines on it, rather than as a set
        of objects resting on a surface. The page deliberately stays at L* 2.7 —
        the separation should come from lifting the card, not from greying the
@@ -301,7 +348,7 @@
      focus, navigation and selection. Data, labels and domains stay neutral.
 
      The seven material hues belong to Minehut and carry state, not decoration.
-     2.3.1 pulled these back toward Minehut's OWN saturation. 2.0.0 had
+     These sit at Minehut's OWN saturation. An earlier revision had
      desaturated them on a "premium is restrained" instinct, which flattened
      the one part of the interface that is legitimately colourful — a server
      grid is almost entirely state — and left the page reading grey. Saturation
@@ -811,7 +858,7 @@
     /* ═══════════════════════════════════════════════════════════════════════
        §30  CARD — the hero component.
 
-       Migrated from `article[class*="rounded-\[10px\]"]` in 2.0.4. DOM recon
+       Migrated from `article[class*="rounded-\[10px\]"]`. DOM recon
        settled it: the server list has exactly 5 <article> elements for 5
        servers, all inside <main>, all carrying byte-identical class strings —
        and the console route has none at all, so nothing else in the app
@@ -866,9 +913,9 @@
           var(--mh-shadow-2);
       }
 
-      /* THE CARD RAIL IS GONE (2.0.5).
+      /* THE CARD RAIL IS GONE.
          Every card carried a permanent 2px brand-blue left rail AND the fading
-         top bar in §72 — two always-on, non-semantic blue ornaments on the same
+         top bar in §71 — two always-on, non-semantic blue ornaments on the same
          component, in the same colour, saying nothing the status pill does not
          already say. Coloured-rail-plus-gradient-top-border is about the most
          recognisable "AI dashboard" pairing there is, and Linear, Vercel and
@@ -950,7 +997,7 @@
     /* ═══════════════════════════════════════════════════════════════════════
        §32  TABS
 
-       DOM recon correction (2.0.4): the server page has ZERO `.mh-tabs`,
+       DOM recon correction: the server page has ZERO `.mh-tabs`,
        `.mh-tab-in`, `[role="tab"]` or `[role="tablist"]`. 2.0.0 migrated this
        section to `.mh-tabs` believing it was "Minehut's real component" and
        that 1.5.0's generated-shadow-class hook was wrong. It was the other way
@@ -1517,7 +1564,7 @@
        and the pill is `position: static` with no insets — so this costs one
        paint and zero selector matching against a re-rendering subtree.
 
-       Sits above §72's default brand bar, which stays for the neutral case.
+       Sits above §71's default brand bar, which stays for the neutral case.
        @risk F  hook:pill hue classes  verify: recon "card position: relative" */
     & main article .rounded-full[class^="bg-\[color-mix"]::after,
     & main article .rounded-full[class*=" bg-\[color-mix"]::after {
@@ -1588,31 +1635,7 @@
     }
 
     /* ═══════════════════════════════════════════════════════════════════════
-       §60  CONSOLE — a professional developer tool, not Monokai.
-       The 18 --console-* tokens are declared up in §04a, NOT here: a bare
-       declaration placed after a nested rule is dropped entirely by Chrome
-       112–129 (the CSSNestedDeclarations rule postdates nesting itself), and
-       this block sits well below dozens of nested rules.
-       ═══════════════════════════════════════════════════════════════════════ */
-
-    /* @risk F  hook:.bg-\[var\(--console-bg\)\]  hits:1  verify: audit "var(--console-bg)" */
-    & .bg-\[var\(--console-bg\)\] {
-      border: 1px solid hsl(var(--border));
-      border-radius: var(--og-r-card);
-      box-shadow: var(--og-lift);
-    }
-    & .bg-\[var\(--console-bg\)\] > div,
-    & .bg-\[var\(--console-bg\)\] > form {
-      background: transparent;
-    }
-    & .bg-\[var\(--console-bg\)\]::selection,
-    & .bg-\[var\(--console-bg\)\] ::selection {
-      background: hsl(var(--primary) / 0.32);
-      color: hsl(var(--foreground));
-    }
-
-    /* ═══════════════════════════════════════════════════════════════════════
-       §62  MONACO — the File Manager's code editor.
+       §54  MONACO — the File Manager's code editor.
 
        Minehut ships a whole stylesheet for it (`.editor-classic .monaco-editor
        .view-line`) and the theme had nothing, so the editor sat directly beside
@@ -1656,7 +1679,7 @@
     }
 
     /* ═══════════════════════════════════════════════════════════════════════
-       §63  TOASTS
+       §55  TOASTS
 
        No toast library ships CSS here, but the primitives are unmistakable:
        `translate-y-[calc(100%+1.5rem)]` for the off-screen enter/exit, pinned
@@ -1685,6 +1708,30 @@
     & .data-\[state\=active\]\:shadow-mh-1[data-state="active"] {
       background: transparent;
       box-shadow: inset 0 -2px 0 hsl(var(--primary));
+    }
+
+    /* ═══════════════════════════════════════════════════════════════════════
+       §60  CONSOLE — a professional developer tool, not Monokai.
+       The 18 --console-* tokens are declared up in §04a, NOT here: a bare
+       declaration placed after a nested rule is dropped entirely by Chrome
+       112–129 (the CSSNestedDeclarations rule postdates nesting itself), and
+       this block sits well below dozens of nested rules.
+       ═══════════════════════════════════════════════════════════════════════ */
+
+    /* @risk F  hook:.bg-\[var\(--console-bg\)\]  hits:1  verify: audit "var(--console-bg)" */
+    & .bg-\[var\(--console-bg\)\] {
+      border: 1px solid hsl(var(--border));
+      border-radius: var(--og-r-card);
+      box-shadow: var(--og-lift);
+    }
+    & .bg-\[var\(--console-bg\)\] > div,
+    & .bg-\[var\(--console-bg\)\] > form {
+      background: transparent;
+    }
+    & .bg-\[var\(--console-bg\)\]::selection,
+    & .bg-\[var\(--console-bg\)\] ::selection {
+      background: hsl(var(--primary) / 0.32);
+      color: hsl(var(--foreground));
     }
 
     /* ═══════════════════════════════════════════════════════════════════════
@@ -1871,7 +1918,7 @@
        ═══════════════════════════════════════════════════════════════════════ */
 
     /* ═══════════════════════════════════════════════════════════════════════
-       §72  TOP ACCENT BAR — brand blue, not a hue sweep.
+       §71  TOP ACCENT BAR — brand blue, not a hue sweep.
 
        Minehut ships this as `bg-gradient-to-r from-[var(--mh-emerald)]
        via-[var(--mh-brand)] to-[var(--mh-amethyst)] opacity-85` — a green-to-
@@ -1895,10 +1942,6 @@
         transparent
       );
     }
-
-    /* ═══════════════════════════════════════════════════════════════════════
-       §70  ICONS (cont.)
-       ═══════════════════════════════════════════════════════════════════════ */
 
     & svg.lucide {
       stroke-width: 1.75;

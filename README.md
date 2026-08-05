@@ -212,6 +212,47 @@ edit **§03** instead.
 |---|---|
 | `minehut-premium-dashboard.user.css` | The theme. §01 is the contract — read it before editing |
 | `Theme guide.md` | The design brief the theme is written against |
-| `tools/` | Selector audit, exact-class check and structural validator — the verification gate, since there's no build step. See `tools/README.md` |
+| `tools/` | The verification gate, since there's no build step. See `tools/README.md` |
+
+---
+
+## Contributing
+
+PRs welcome. The stylesheet is one file, organised into numbered sections
+(`§02 KNOBS`, `§30 CARD`, …) — `Ctrl-F` for `§30` is a single hit, and **§01 is
+the contract**: it explains the dark gate, the `!important` policy, the fragility
+markers, and a step-by-step **ADDING A RULE** checklist. Read that first; it will
+save you the two mistakes that account for most of this file's history.
+
+The short version of both:
+
+1. **Prefer a token over a selector.** Claiming `--border` recolours every
+   bordered element in the app with no selector at all.
+2. **Verify a hook in the DOM, not just in Minehut's CSS.** A whole section here
+   once targeted `.mh-tabs` — which is compiled into their stylesheet and appears
+   *zero* times on the page it was written for.
+
+Before opening a PR, run the gate — there is no build step, so this is it:
+
+```sh
+node   tools/check-css.js minehut-premium-dashboard.user.css
+python tools/check-exact-classes.py
+python tools/audit-selectors.py
+python tools/check-palette.py      # if you touched a colour
+```
+
+Then render it locally — no Minehut account required:
+
+```sh
+node tools/build-fixture.js && open tools/fixture.html
+```
+
+That inlines Minehut's shipped CSS and rebuilds real captured markup, so you can
+see the change. Check **light mode** too (remove `class="dark"` from `<html>`):
+the theme is scoped to dark, and light must stay stock Minehut.
+
+If you're changing a colour, don't hand-write a contrast ratio —
+`check-palette.py` recomputes every one and fails on any comment that disagrees
+with its shipped value.
 
 Not affiliated with Minehut.
