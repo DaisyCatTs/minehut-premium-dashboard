@@ -10,7 +10,7 @@ package manager, build step, test runner, or linter — the deliverable _is_
 
 | Path                                   | Role                                                                                                                                                                                                             |
 | -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `minehut-premium-dashboard.user.css`   | The entire theme (~1580 lines, one `@-moz-document` block)                                                                                                                                                       |
+| `minehut-premium-dashboard.user.css`   | The entire theme (~2840 lines, one `@-moz-document` block)                                                                                                                                                       |
 | `Original Css from their next static/` | Minehut's own shipped Next.js CSS bundles — the reference for real class names and token values. **Gitignored** (their copyrighted output, not ours to redistribute). Keep a local copy when doing selector work |
 | `tools/`                               | The verification gate that stands in for the absent build step, plus `bundle-tokens.txt` — the extracted class-name list the audits fall back to when the bundle isn't present                                   |
 | `Theme guide.md`                       | The design brief the theme is written against (restraint, elevation-by-lightness, no "AI UI")                                                                                                                    |
@@ -60,7 +60,7 @@ Everything from §10 to §71 lives inside **one** nested block:
 
 `&` resolves to `:is(.dark, [data-theme="dark"])` = (0,1,0), so a gated `.bg-card` is (0,2,0) and
 beats Minehut's `.bg-card` and `.mh-nav-item` (both (0,1,0)) **without `!important`**. That is why
-the file carries ~134 `!important` instead of 339. It also means light mode is genuinely untouched —
+the file carries 157 `!important` instead of 339. It also means light mode is genuinely untouched —
 before 2.0.0 the palette was `:root` and ~200 rules were ungated, so Minehut's light theme rendered
 dark cards on light tokens.
 
@@ -97,7 +97,7 @@ Prefer hooks in this order — the marker on each rule records which tier it is,
   attributes, and library DOM classes (`svg.lucide`, `.recharts-*`). Survives a rebuild.
 - **`@risk S`** — stock Tailwind names (`.bg-card`, `.border-input`, `.bg-black\/80`).
 - **`@risk F`** — arbitrary generated values (`rounded-[10px]`, `bg-[#1c1c1c]`, the Monokai
-  literals). ~12 remain, listed in §99 with the audit string that verifies each.
+  literals). 13 remain, listed in §99 with the audit string that verifies each.
 
 Note this is shadcn **pre-`data-slot`** — there is no `data-slot`, `data-radix-*`,
 `data-orientation` or `data-highlighted` in the bundle. Radix is confirmed via
@@ -161,10 +161,15 @@ repaint, and a shorthand with `!important` destroys it. Use the longhands only.
 - **The palette is pure neutral (zero chroma).** Minehut puts every token at hue 35–45, which leaves
   no neutral reference and makes small uppercase labels read brown. Chroma was trimmed twice before
   removing it entirely. Don't reintroduce warmth to the greys.
-- **The stylesheet is a Stylus template.** `@preprocessor default` + `@var select accent` gives a
-  settings dropdown; the raw file carries a `/*[[accent]]*/` placeholder and is not valid CSS until
-  substituted. `tools/build-fixture.js` and `tools/check-palette.py` both resolve the default first,
-  and `build-fixture.js --accent Purple` previews another theme.
+- **The stylesheet is PLAIN VALID CSS — it is not a template.** This paragraph used to say the
+  opposite and that misconception cost two broken releases. `@preprocessor default` performs **no
+  placeholder substitution at all**; it only injects `:root { --accentHsl: <chosen value> }` above
+  the sheet. So there is no `[[…]]` token anywhere, and there must never be one — writing
+  `/*[[accent]]*/` inside a comment in 4.1.0 terminated the enclosing comment and turned the rest of
+  the file into live CSS while every gate still reported OK. Only `@preprocessor uso` substitutes.
+  The twelve presets are read via `var(--accentHsl, 210 100% 69.8%)`, so the fallback keeps the file
+  correct even if Stylus injects nothing. `build-fixture.js --accent Purple` previews another theme
+  by injecting the same declaration a browser would.
 - **`--og-accent` is derived, never authored** — `hsl(var(--primary))`. There is exactly one place an
   accent is chosen. It used to be a hand-written hex kept equal to the triplet by a script, and they
   had already drifted apart once, shipping two accents at the same time.
@@ -184,8 +189,20 @@ repaint, and a shorthand with `!important` destroys it. Use the longhands only.
 
 ## Verifying a change
 
-There is no build or test runner. Three scripts stand in, and all three must pass before shipping
-a selector change:
+There is no build or test runner. Eight gates stand in, split into two groups, and **both groups
+must pass** before shipping:
+
+```sh
+npm run check          # static — the stylesheet against Minehut's class list
+npm run check:visual   # visual — the theme rendered in a real browser
+```
+
+The split is the important part. The static gates cannot tell whether a rule _reaches_ anything,
+and every notable bug in this file's history got past them: the accent picker that never
+substituted, the pink wizard card, the dead nav hover, the accent bar painted at 1.27:1. Each
+visual gate exists because a release shipped without it and broke something.
+
+### Static — `npm run check`
 
 | Check                    | What it catches                                                                                                                                              |
 | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -193,15 +210,36 @@ a selector change:
 | `check-exact-classes.py` | Exact escaped selectors (`.bg-\[var\(--mh-brand\)\]`) that match nothing — a typo there fails silently.                                                      |
 | `check-css.js`           | Brace/paren/comment balance, declarations outside any block, unknown at-rules, and untagged `!important`.                                                    |
 
-All three strip comments before counting — otherwise documenting a removed selector re-reports it
-forever. The bundle itself is gitignored, so the audits read `tools/bundle-tokens.txt` when it's
+| `check-palette.py` | Every colour claim against its shipped value — resolves the triplets, recomputes each ratio, fails on any comment that disagrees. Never hand-write a ratio. |
+
+### Visual — `npm run check:visual` (needs `playwright`)
+
+| Check                  | What it catches                                                                                                                                                      |
+| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `check-light-mode.js`  | The dark theme leaking into light mode. Exactly one property may differ: `--mh-r-md`'s radius, documented in §06 as the one deliberate exception.                    |
+| `check-accent-leak.js` | Values that do not follow the accent — renders blue vs amber and reports whatever stayed blue. `--mh-amethyst` is allowlisted; identity hues are accent-independent. |
+| `check-hover.js`       | Hovers that do nothing, and hovers that make something illegible.                                                                                                    |
+| `audit-all-accents.js` | Renders once per accent and runs the contrast checks against each. Reads the presets from the `@var` block, so there is one source of truth.                         |
+
+**A dead-hover exemption is a claim about intent, not a way to silence the gate.** `check-hover.js`
+skips elements that are covered, disabled, settled, or delegating feedback upward — but never one
+that ships its own `hover:` utility. Widening an exemption to make it pass produced a false negative
+once already, and the bug reached the user.
+
+The static gates strip comments before counting — otherwise documenting a removed selector re-reports
+it forever. The bundle itself is gitignored, so the audits read `tools/bundle-tokens.txt` when it's
 absent; results are identical. After refreshing the bundle, regenerate it with
 `python tools/audit-selectors.py --write-tokens`, update the `@note bundle` hash in §01, and
 re-audit — a new bundle invalidates every `@risk F` line.
 
 Then load in Stylus and hard-reload `dashboard.minehut.com`. Only **My Servers** and **Console** are
-visually verified — say so rather than claiming coverage. Check **both** themes: v2 gates to dark,
-so light mode must look like stock Minehut.
+visually verified — say so rather than claiming coverage. **File Manager, Backups and Stats have
+never been rendered by either party.** Check **both** themes: the theme gates to dark, so light mode
+must look like stock Minehut.
+
+**Green gates are not the same as verified.** Three consecutive releases passed every gate and still
+shipped a defect the owner spotted by eye within minutes. When that happens, fix the bug _and_ the
+gate that missed it — a fix without a new gate is half the work.
 
 Four things the scripts cannot settle, which need one DevTools paste:
 `document.documentElement.className` (is `.dark` on `<html>`?); whether every `<article>` is a
