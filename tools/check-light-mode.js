@@ -13,7 +13,8 @@
 //
 //   node tools/check-light-mode.js
 const { chromium } = require("playwright");
-const repo = "C:/Users/Daisy/Desktop/minehut-premium-dashboard";
+const path = require("path");
+const repo = path.resolve(__dirname, "..").split(path.sep).join("/");
 (async () => {
   const br = await chromium.launch();
   const page = await br.newPage({ viewport: { width: 1680, height: 1200 } });

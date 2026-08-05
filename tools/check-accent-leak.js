@@ -13,7 +13,8 @@
 //   node tools/check-accent-leak.js
 const { chromium } = require("playwright");
 const { execFileSync } = require("child_process");
-const repo = "C:/Users/Daisy/Desktop/minehut-premium-dashboard";
+const path = require("path");
+const repo = path.resolve(__dirname, "..").split(path.sep).join("/");
 
 const PROPS = [
   "color",
