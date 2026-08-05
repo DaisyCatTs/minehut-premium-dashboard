@@ -1,7 +1,7 @@
 /* ==UserStyle==
 @name           Minehut Premium Dashboard
 @namespace      github.com/DaisyCatTs/minehut-premium-dashboard
-@version        3.0.0
+@version        3.0.1
 @description    A premium dark theme for the Minehut dashboard. Warm-neutral OLED surfaces, one restrained accent, Geist typography, and contrast-verified text.
 @author         Daisy
 @license        MIT
@@ -607,20 +607,20 @@
        element, including small lockups and badges.
        @risk D  hook:h1 / .font-display  verify: inspect a page heading */
     & h1 {
-      font-size: 26px;
+      font-size: 28px;
       line-height: 1.15;
       font-weight: 600;
       letter-spacing: -0.02em;
       text-wrap: balance;
     }
     & h2 {
-      font-size: 19px;
+      font-size: 20px;
       line-height: 1.25;
       font-weight: 600;
       letter-spacing: -0.015em;
     }
     & h3 {
-      font-size: 15px;
+      font-size: 17px;
       line-height: 1.35;
       font-weight: 600;
       letter-spacing: -0.01em;
@@ -823,7 +823,7 @@
 
     & .mh-nav-item {
       color: hsl(var(--muted-foreground));
-      padding: 6px 10px;
+      padding: 8px 10px;
     }
     & .mh-nav-item svg {
       color: var(--mh-ink-4);
@@ -985,22 +985,22 @@
        ones: 24→20, 24→18, 16→14, 16→12 all stay on even values.
        @risk S  exact stock names  verify: audit "px-6" "pt-6" "pb-4" "gap-4" */
     & main article > .px-6 {
-      padding-left: 20px;
-      padding-right: 20px;
+      padding-left: 22px;
+      padding-right: 22px;
     }
     & main article > .pt-6 {
-      padding-top: 18px;
+      padding-top: 22px;
     }
     & main article > .pb-4 {
-      padding-bottom: 14px;
+      padding-bottom: 16px;
     }
     & main article > .gap-4 {
-      gap: 12px;
+      gap: 14px;
     }
     /* The server grid itself — tighter columns fit more per screen, which is
        the whole point of a 53-server dashboard. */
     & .grid.gap-4 {
-      gap: 12px;
+      gap: 14px;
     }
 
     /* Page padding is left to Minehut: it is responsive and coherent, and the
@@ -1013,11 +1013,9 @@
        is the cure for a sparse grid, not decoration. Only above 1800px, so
        Minehut's own breakpoints are untouched everywhere they were designed for.
        @risk S  hook:.grid.gap-4 + xl:grid-cols-3  verify: audit "xl:grid-cols-3" */
-    @media (min-width: 1800px) {
-      & .grid.gap-4.xl\:grid-cols-3 {
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-      }
-    }
+    /* A fourth column was added at 1800px and then removed: side by side with
+       the reference, three wide cards hold their content and four do not.
+       Density is worth having INSIDE a card, not by making cards narrower. */
 
     /* ═══════════════════════════════════════════════════════════════════════
        §31  METER — Minehut's own classes.
@@ -1983,11 +1981,17 @@
       background-image: linear-gradient(
         90deg,
         transparent,
-        hsl(var(--primary) / 0.65) 22%,
-        hsl(var(--primary) / 0.65) 78%,
+        hsl(var(--border)) 18%,
+        hsl(var(--border)) 82%,
         transparent
       );
     }
+    /* NEUTRAL by default, not brand blue.
+       The state bar in §52 paints over this whenever a card HAS a state, so the
+       default is only ever seen on cards that are dormant — and painting those
+       in the accent made a grid of hibernating servers read as if everything
+       were active. Blue has to mean something; here it meant "a card exists".
+       This is the same mistake as the card rail, one layer up. */
 
     & svg.lucide {
       stroke-width: 1.75;
