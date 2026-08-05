@@ -214,6 +214,35 @@ const components = `
     <span role="switch" data-state="checked" class="inline-block h-5 w-9 rounded-full border border-input"></span>
     <span role="switch" class="inline-block h-5 w-9 rounded-full border border-input"></span>
   </div>
+
+  <!-- The server-setup wizard puts role="radio" on a whole CARD, not a dot.
+       Real captured markup. Shipped 4.4.0 filled the checked one with the
+       accent and made every word inside it unreadable, so it lives here now. -->
+  <div class="mt-6 grid grid-cols-3 gap-4" role="radiogroup">
+    <button type="button" role="radio" aria-checked="false" data-state="unchecked" class="relative cursor-pointer rounded-lg border border-border bg-card p-4 text-left shadow-mh-1 flex flex-col gap-3">
+      <div class="flex items-center gap-3">
+        <span class="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">S</span>
+        <div class="min-w-0">
+          <div class="flex items-center gap-2 font-medium text-foreground">Single Server</div>
+          <div class="font-mono text-[11px] text-muted-foreground">Hosted on Minehut</div>
+        </div>
+      </div>
+      <p class="text-[13px] text-muted-foreground">A standalone server hosted on Minehut.</p>
+      <div class="mt-auto flex items-center gap-1.5 border-t border-dashed border-border pt-3 font-mono text-[11px] text-muted-foreground">Free &amp; paid plans</div>
+    </button>
+    <button type="button" role="radio" aria-checked="true" data-state="checked" class="relative cursor-pointer rounded-lg border border-border bg-card p-4 text-left shadow-mh-1 data-[state=checked]:border-[var(--mh-brand)] flex flex-col gap-3">
+      <div class="flex items-center gap-3">
+        <span class="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">E</span>
+        <div class="min-w-0">
+          <div class="flex items-center gap-2 font-medium text-foreground">External<div class="inline-flex items-center gap-1.5 rounded-sm border border-transparent px-1.5 py-0.5 font-mono text-[10.5px] font-medium uppercase tracking-[0.02em] leading-none bg-[color-mix(in_oklab,var(--mh-amethyst)_18%,transparent)] text-[var(--mh-amethyst)]">Advanced</div></div>
+          <div class="font-mono text-[11px] text-muted-foreground">Linked</div>
+        </div>
+      </div>
+      <p class="text-[13px] text-muted-foreground">Connect a server hosted elsewhere to Minehut.</p>
+      <div class="mt-auto flex items-center gap-1.5 border-t border-dashed border-border pt-3 font-mono text-[11px] text-muted-foreground">Dedicated External plan</div>
+      <span class="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-[var(--mh-brand)] px-2 py-0.5 text-[11px] font-medium text-white">Selected</span>
+    </button>
+  </div>
 </div>
 
 <div class="mt-4 rounded-[10px] border border-border bg-card p-6">
