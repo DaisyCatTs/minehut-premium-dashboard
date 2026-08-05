@@ -161,6 +161,16 @@ repaint, and a shorthand with `!important` destroys it. Use the longhands only.
 - **The palette is pure neutral (zero chroma).** Minehut puts every token at hue 35–45, which leaves
   no neutral reference and makes small uppercase labels read brown. Chroma was trimmed twice before
   removing it entirely. Don't reintroduce warmth to the greys.
+- **The stylesheet is a Stylus template.** `@preprocessor default` + `@var select accent` gives a
+  settings dropdown; the raw file carries a `/*[[accent]]*/` placeholder and is not valid CSS until
+  substituted. `tools/build-fixture.js` and `tools/check-palette.py` both resolve the default first,
+  and `build-fixture.js --accent Purple` previews another theme.
+- **`--og-accent` is derived, never authored** — `hsl(var(--primary))`. There is exactly one place an
+  accent is chosen. It used to be a hand-written hex kept equal to the triplet by a script, and they
+  had already drifted apart once, shipping two accents at the same time.
+- **A substring match is dangerous in ancestor position** in a way it isn't as a target.
+  `[class*="mh-brand"] span.bg-current` matched any forebear carrying the string — including
+  `hover:bg-[color-mix(…var(--mh-brand)…)]` — and recoloured every dot beneath it.
 - **Never run prettier on the stylesheet** — it's in `.prettierignore`. Escaped classes contain
   `c ` hex escapes where the trailing space is load-bearing; prettier wraps there and silently
   converts a class selector into a descendant combinator.

@@ -34,7 +34,27 @@ const minehut = fs
   .join("\n");
 
 // Unwrap `@-moz-document domain(...) { ... }` — a local file has no domain to match.
-const themeSrc = fs.readFileSync(path.join(repo, "minehut-premium-dashboard.user.css"), "utf8");
+let themeSrc = fs.readFileSync(path.join(repo, "minehut-premium-dashboard.user.css"), "utf8");
+
+// The stylesheet is a Stylus template (@preprocessor default). Substitute each
+// /*[[name]]*/ placeholder with its DEFAULT option — the one marked with * — so
+// the fixture renders exactly what a fresh install gets. Override on the command
+// line to preview another theme:  node tools/build-fixture.js --accent Purple
+const wanted =
+  (process.argv.find((a) => a.startsWith("--accent=")) || "").split("=")[1] ||
+  process.argv[process.argv.indexOf("--accent") + 1] ||
+  "";
+for (const m of themeSrc.matchAll(/@var\s+select\s+(\w+)\s+"[^"]*"\s*\{([^}]*)\}/g)) {
+  const opts = [...m[2].matchAll(/"([^"]+)"\s*:\s*"([^"]+)"/g)].map((o) => [o[1], o[2]]);
+  const picked =
+    opts.find(([k]) => k.replace(/\*$/, "").toLowerCase() === wanted.toLowerCase()) ||
+    opts.find(([k]) => k.endsWith("*")) ||
+    opts[0];
+  if (picked) {
+    themeSrc = themeSrc.split(`/*[[${m[1]}]]*/`).join(picked[1]);
+    console.log(`  ${m[1]} = ${picked[0].replace(/\*$/, "")} (${picked[1]})`);
+  }
+}
 const open = themeSrc.indexOf("@-moz-document");
 const braceAt = themeSrc.indexOf("{", open);
 let depth = 0,

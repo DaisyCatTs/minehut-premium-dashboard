@@ -69,6 +69,29 @@ def lstar(rgb) -> float:
 repo = repo_root()
 css = (repo / THEME).read_text(encoding="utf-8")
 
+# The stylesheet is a Stylus template: @preprocessor default means it carries
+# /*[[name]]*/ placeholders that Stylus substitutes at save time. Resolve each
+# one to its DEFAULT (the option marked with *) so the gate can verify the raw
+# file exactly as it would ship out of the box.
+_vars = {}
+for m in re.finditer(r"@var\s+select\s+(\w+)\s+\"[^\"]*\"\s*\{([^}]*)\}", css):
+    name, body = m.group(1), m.group(2)
+    opts = re.findall(r"\"([^\"]+)\"\s*:\s*\"([^\"]+)\"", body)
+    default = next((v for k, v in opts if k.endswith("*")), opts[0][1] if opts else None)
+    if default:
+        _vars[name] = default
+for name, val in _vars.items():
+    css = css.replace(f"/*[[{name}]]*/", val)
+if _vars:
+    print("resolved @var defaults: " + ", ".join(f"{k}={v}" for k, v in _vars.items()))
+
+
+# --ring / --chart-1 alias --primary rather than restating it; resolve the
+# indirection so every downstream check still sees a real triplet.
+_prim = re.search(r"--primary:\s*([\d.]+\s+[\d.]+%\s+[\d.]+%)", css)
+if _prim:
+    css = re.sub(r"(--(?:ring|chart-1):\s*)var\(--primary\)", r"\g<1>" + _prim.group(1), css)
+
 # ── resolve every authored triplet and raw colour token from the CSS itself ──
 triplets, colours = {}, {}
 for m in re.finditer(r"(--[a-z0-9-]+):\s*(-?[\d.]+)\s+([\d.]+)%\s+([\d.]+)%\s*(?:/\s*[\d.]+\s*)?!important", css):

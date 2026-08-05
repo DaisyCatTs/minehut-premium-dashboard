@@ -97,25 +97,35 @@ everyone who installed it.
 
 ## Settings
 
-The theme has no Stylus settings panel — it carries no `@var` declarations, so
-there is no gear icon. Edit the three values in **§02 KNOBS**, at the top of the
-file (Stylus icon → **Manage** → the theme → **Edit**).
+**Stylus icon → the theme's gear → Accent colour.** Eight presets:
 
-| Knob          | Default    | Notes                                                                                                    |
-| ------------- | ---------- | -------------------------------------------------------------------------------------------------------- |
-| `--og-accent` | `#5B93E8`  | Every blue: focus ring, active nav, primary action, card rail, tab underline, selection, console keyword |
-| `--og-speed`  | `1`        | Unitless multiplier. `0` disables all motion; `1.5` lands the base step at 270ms, which starts to drag   |
-| `--og-radius` | `0.625rem` | Control radius. Drives Minehut's own `rounded-sm/md/lg/xl` plus the sidebar items and server tiles       |
+|                              |                       |                      |                      |
+| ---------------------------- | --------------------- | -------------------- | -------------------- |
+| **Blue** (default) `#4DA3FF` | **Purple** `#A78BFA`  | **Violet** `#8B7FF5` | **Indigo** `#818CF8` |
+| **Cyan** `#22D3EE`           | **Emerald** `#34D399` | **Rose** `#FB7185`   | **Amber** `#FBBF24`  |
 
-A heavily saturated accent will fight the design: saturated colour on a
-near-black ground reads as though it is emitting light. Around 70–75% saturation
-stays calm.
+Only the accent moves. Surfaces stay pure neutral in every theme, and status
+colours stay semantic — green still means running, red still means stopped. A
+theme should change what the interface _points at_, not what it's made of, which
+is what Linear, Vercel and GitHub all do.
 
-The surface ladder is no longer a single knob. It is authored as HSL triplets in
+Every preset is contrast-verified on the shipped ladder: all eight clear WCAG AA
+on the card surface and as a focus ring over all five surfaces, and dark ink wins
+on every one.
+
+Three more values live in **§02 KNOBS** at the top of the file (Stylus icon →
+**Manage** → the theme → **Edit**):
+
+| Knob             | Default    | Notes                                                                                                                                      |
+| ---------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `--og-speed`     | `1`        | Unitless multiplier. `0` disables all motion; `1.5` lands the base step at 270ms, which starts to drag                                     |
+| `--og-radius`    | `0.625rem` | Control radius. Drives Minehut's own `rounded-sm/md/lg/xl` plus sidebar items and server tiles                                             |
+| `--og-hover-out` | `150ms`    | How long a hover highlight takes to fade _out_. It always appears instantly — that asymmetry is what stops rapid pointer movement strobing |
+
+The surface ladder is deliberately not a knob. It's authored as HSL triplets in
 **§03**, because shadcn resolves `hsl(var(--card))` and needs a bare `H S% L%`
-triplet — which no CSS function can derive from a colour. Every other token in
-the file is derived from that block, so editing a rung there moves everything
-that depends on it and nothing can drift out of sync.
+triplet, which no CSS function can derive from a colour. Everything else in the
+file derives from that block, so nothing can drift out of sync.
 
 ---
 

@@ -156,10 +156,37 @@ def main() -> None:
         return
 
     theme = (repo / THEME_NAME).read_text(encoding="utf-8")
-    # Strip comments first. Explaining a removed selector in prose ("[class*=\"divider\"]
-    # dropped — 0 hits") would otherwise re-report it forever as a live dead selector.
-    theme = re.sub(r"/\*[\s\S]*?\*/", "", theme)
-    pats = sorted(set(PATTERN_RE.findall(theme)), key=lambda p: (p[0], p[1]))
+    # Strip comments first, preserving line numbers. Explaining a removed selector in
+    # prose ("[class*=\"divider\"] dropped — 0 hits") would otherwise re-report it
+    # forever as a live dead selector.
+    theme = re.sub(r"/\*[\s\S]*?\*/", lambda m: re.sub(r"[^\n]", " ", m.group(0)), theme)
+
+    # Report EVERY occurrence with its line, and never deduplicate.
+    #
+    # This script used to collapse identical needles with sorted(set(...)). That hid
+    # real bugs twice: one CORRECT anchored use of a needle and one INCORRECT bare use
+    # of the same needle collapsed into a single clean-looking line, so the good usage
+    # laundered the bad one. The dot bug and an unanchored forced-colors rule both
+    # survived that way. A needle is only as safe as its worst occurrence.
+    occurrences = []
+    for lineno, line in enumerate(theme.split("\n"), 1):
+        for op, pat in PATTERN_RE.findall(line):
+            anchored = pat.startswith(" ") or op in "^~$"
+            compound = bool(re.search(r"\]\s*\[class|\]\s*[.:#\w]", line[line.index(pat) :] if pat in line else ""))
+            occurrences.append((op, pat, lineno, anchored))
+    pats = sorted({(o, p) for o, p, _, _ in occurrences}, key=lambda p: (p[0], p[1]))
+
+    # Flag any needle used BOTH anchored and bare — that pattern means someone fixed
+    # one site and missed another, which is exactly how this class of bug propagates.
+    bare_needles = {p.lstrip() for o, p, _, a in occurrences if not a}
+    mixed = sorted(n for n in bare_needles if any(p.lstrip() == n and a for o, p, _, a in occurrences))
+    if mixed:
+        print("!! NEEDLE USED BOTH ANCHORED AND BARE — the bare one is probably a bug:")
+        for n in mixed:
+            for o, p, ln, a in occurrences:
+                if p.lstrip() == n:
+                    print(f"     line {ln:5}  {'anchored' if a else 'BARE    '}  [class{o}=\"{p}\"]")
+        print()
     if not pats:
         print("no [class*=] patterns in the theme.")
         return

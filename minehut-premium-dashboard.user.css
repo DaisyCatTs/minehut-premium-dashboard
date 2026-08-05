@@ -1,14 +1,53 @@
 /* ==UserStyle==
 @name           Minehut Premium Dashboard
 @namespace      github.com/DaisyCatTs/minehut-premium-dashboard
-@version        3.0.2
+@version        4.0.0
 @description    A premium dark theme for the Minehut dashboard. Warm-neutral OLED surfaces, one restrained accent, Geist typography, and contrast-verified text.
 @author         Daisy
 @license        MIT
 @homepageURL    https://github.com/DaisyCatTs/minehut-premium-dashboard
 @supportURL     https://github.com/DaisyCatTs/minehut-premium-dashboard/issues
 @updateURL      https://raw.githubusercontent.com/DaisyCatTs/minehut-premium-dashboard/main/minehut-premium-dashboard.user.css
+@preprocessor   default
+
+@var select accent "Accent colour" {
+  "Blue*":  "211 100% 65.1%",
+  "Purple": "255 92% 76.3%",
+  "Violet": "246 86% 72.9%",
+  "Indigo": "234 89% 73.9%",
+  "Cyan":   "188 86% 53.3%",
+  "Emerald":"158 64% 51.6%",
+  "Rose":   "351 95% 71.4%",
+  "Amber":  "43 96% 56.3%"
+}
 ==/UserStyle== */
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ACCENT THEMES — Stylus icon → the theme's gear → "Accent colour".
+
+   Only the accent moves. Surfaces stay pure neutral in every theme, which is
+   what Linear, Vercel and GitHub do: a theme should change what the interface
+   POINTS AT, not what it is made of. Tinting the greys is also the exact
+   mechanism that made this theme's labels read brown for three releases.
+
+   Every preset is contrast-verified on the shipped ladder. Measured on --card
+   (#141414) / worst-case focus ring across all five surfaces / best on-accent
+   ink — all clear WCAG AA, and dark ink wins on every one:
+
+     Blue    #4DA3FF   7.02 / 5.17 / 7.2      Purple  #A78BFA   6.77 / 4.99 / 6.9
+     Violet  #8B7FF5   5.66 / 4.17 / 5.8      Indigo  #818CF8   6.18 / 4.55 / 6.3
+     Cyan    #22D3EE  10.19 / 7.51 / 10.5     Emerald #34D399   9.58 / 7.06 / 9.8
+     Rose    #FB7185   6.84 / 5.05 / 7.0      Amber   #FBBF24  11.04 / 8.13 / 11.3
+
+   Values are HSL TRIPLETS, not hex, because shadcn resolves hsl(var(--primary))
+   and no CSS function can turn a colour into a bare triplet. §03 explains why
+   that constraint drives the whole token architecture.
+
+   NOTE FOR CONTRIBUTORS: @preprocessor makes this file a TEMPLATE. The raw
+   source carries a /*[[accent]]*/ placeholder and is not valid CSS until Stylus
+   substitutes it. `tools/build-fixture.js` and `tools/check-palette.py` both
+   substitute the default first, so the local gate still works on the raw file.
+   ═══════════════════════════════════════════════════════════════════════════ */
 
 /* ═══════════════════════════════════════════════════════════════════════════
    §01  CONTRACT — read this before editing
@@ -168,7 +207,12 @@
        said #4B9EFF, so TWO accents shipped 2/255 apart — brand utilities got
        one, the ring/rail/underline/meter the other. Invisible, but it broke
        the one-accent invariant and invalidated every derived hex comment. */
-    --og-accent: #4da3ff;
+    /* Derived, never authored. Until v4 this was a hand-written hex that had to
+       be kept equal to the --primary triplet, and check-palette.py existed
+       partly to police that — they had already drifted apart once, shipping two
+       accents 2/255 apart. Deriving it makes the invariant structural: there is
+       now exactly one place an accent is chosen, and it is the Stylus setting. */
+    --og-accent: hsl(var(--primary));
 
     /* Motion multiplier, unitless. 0 disables every transition and animation
        in the theme; 1.5 lands the base step at 270ms, which starts to drag.
@@ -259,8 +303,8 @@
        4.39:1 across the five surfaces; WCAG 2.4.11 needs 3:1.
        (Re-measured in 2.1.1 — the previous figures were computed against the
        pre-2.0.1 card and never updated when the ladder was brightened.) */
-    --primary: 211 100% 65% !important; /* #4DA3FF  7.02:1 on --card */ /* !imp:token */
-    --ring: 211 100% 65% !important; /* !imp:token */
+    --primary: /*[[accent]]*/ !important; /* Blue #4DA3FF 7.02:1 on --card */ /* !imp:token */
+    --ring: var(--primary) !important; /* !imp:token */
     --destructive: 0 84.2% 60.2% !important; /* #EF4444  4.90:1 on --card */ /* !imp:token */
 
     /* Ink that sits ON the accent. Dark, not white: white on #4B9EFF is only
@@ -280,7 +324,7 @@
        NOTE: 0 var() consumers in the CSS bundle, so recharts is coloured from
        JS. These may be inert; §51 styles the .recharts-* hooks directly, which
        definitely works. Cheap to set either way. */
-    --chart-1: 211 100% 65% !important; /* !imp:token */
+    --chart-1: var(--primary) !important; /* !imp:token */
     --chart-2: 152 48% 52.5% !important; /* !imp:token */
     --chart-3: 39 64% 58% !important; /* !imp:token */
     --chart-4: 247 45% 70.8% !important; /* !imp:token */
@@ -312,9 +356,18 @@
        and .mh-sc-icon's box-shadow all consume these — zero selectors needed.
        On a near-black ground a cast shadow is nearly invisible, so depth comes
        from the surface ladder and these carry only a hairline + contact. */
-    --mh-shadow-1: 0 1px 2px rgb(0 0 0 / 0.5), 0 0 0 1px rgb(255 255 255 / 0.03) !important; /* !imp:token */
-    --mh-shadow-2: 0 4px 14px rgb(0 0 0 / 0.45), 0 0 0 1px rgb(255 255 255 / 0.04) !important; /* !imp:token */
-    --mh-shadow-3: 0 16px 40px rgb(0 0 0 / 0.55), 0 0 0 1px rgb(255 255 255 / 0.05) !important; /* !imp:token */
+    /* Alpha 0.6–0.8, not 0.15. A dark shadow on a dark surface at light-mode
+       alpha is simply invisible, and that is the most common reason dark themes
+       read flat. Negative spread on the wide stops pulls each layer inward, so
+       the result is depth BENEATH the element rather than a glow around it —
+       which is what keeps this from becoming the bloom the brief bans. */
+    --mh-shadow-1: 0 1px 2px rgb(0 0 0 / 0.65), 0 0 0 1px rgb(255 255 255 / 0.04) !important; /* !imp:token */
+    --mh-shadow-2:
+      0 0 0 1px rgb(255 255 255 / 0.05), 0 4px 10px -2px rgb(0 0 0 / 0.7),
+      0 12px 24px -8px rgb(0 0 0 / 0.6) !important; /* !imp:token */
+    --mh-shadow-3:
+      0 0 0 1px rgb(255 255 255 / 0.06), 0 8px 16px -4px rgb(0 0 0 / 0.75),
+      0 24px 48px -12px rgb(0 0 0 / 0.7), 0 48px 96px -24px rgb(0 0 0 / 0.6) !important; /* !imp:token */
   }
 
   /* ═════════════════════════════════════════════════════════════════════════
@@ -443,6 +496,14 @@
      ═════════════════════════════════════════════════════════════════════════ */
 
   :root {
+    /* Hover appears INSTANTLY and fades out over ~150ms. Linear ships this as
+       --speed-highlightFadeIn: 0s / --speed-highlightFadeOut: .15s, and it is
+       the highest-value microinteraction change available: rapid pointer
+       movement leaves a soft trail instead of strobing, while every individual
+       hover still feels immediate. Consumed by the component rules below. */
+    --og-hover-in: 0s;
+    --og-hover-out: calc(var(--og-speed) * 150ms);
+
     --mh-dur-fast: calc(var(--og-speed) * 110ms) !important; /* !imp:token */
     --mh-dur-base: calc(var(--og-speed) * 180ms) !important; /* !imp:token */
     --mh-dur-slow: calc(var(--og-speed) * 320ms) !important; /* !imp:token */
@@ -532,26 +593,56 @@
      1000+ element style recalc for nothing. */
   html {
     scrollbar-width: thin;
-    scrollbar-color: hsl(var(--input)) transparent;
+    scrollbar-color: rgb(255 255 255 / 0.16) transparent;
+    /* Reserve the gutter so content does not jump by a scrollbar's width when
+       one appears. No-op where the OS uses overlay scrollbars. */
+    scrollbar-gutter: stable;
   }
+  /* A 6px visible thumb inside a 12px hit target — the transparent border plus
+     background-clip:content-box is what Linear ships, and it is the whole
+     difference between a scrollbar that looks considered and one that is
+     annoying to grab. The alpha ladder (10% → 20% → 40%) is theirs too. */
   ::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+    width: 12px;
+    height: 12px;
   }
   ::-webkit-scrollbar-track {
     background: transparent;
   }
   ::-webkit-scrollbar-thumb {
-    background: hsl(var(--input));
+    background-color: rgb(255 255 255 / 0.1);
     border-radius: 999px;
+    border: 3px solid transparent;
+    background-clip: content-box;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: hsl(var(--muted-foreground) / 0.5);
+    background-color: rgb(255 255 255 / 0.2);
+  }
+  ::-webkit-scrollbar-thumb:active {
+    background-color: rgb(255 255 255 / 0.4);
+  }
+  ::-webkit-scrollbar-corner {
+    background: transparent;
   }
 
+  /* `color: currentColor` means a selection can never destroy text contrast,
+     whatever the text was — Linear's approach, and a detail almost nobody
+     ships. Images get a dimmer tint so they stay legible under selection. */
   ::selection {
-    background: hsl(var(--primary) / 0.3);
-    color: hsl(var(--foreground));
+    background: hsl(var(--primary) / 0.32);
+    color: currentColor;
+  }
+  img::selection,
+  svg::selection {
+    background: hsl(var(--primary) / 0.18);
+  }
+
+  /* Restyles native checkboxes, radios, range sliders and progress bars —
+     DOM a stylesheet cannot otherwise reach. One declaration. */
+  html.dark,
+  html[data-theme="dark"] {
+    accent-color: hsl(var(--primary));
+    caret-color: hsl(var(--foreground));
   }
 
   /* Focus. WCAG 2.4.11: the ring measures 4.70–6.40:1 across every surface it
@@ -679,10 +770,10 @@
        class was right there. Minehut already sets 11px / mono / uppercase /
        .08em, so only the colour is ours.
        @risk D  hook:.ds-label  verify: audit finds it in the bundle */
-    & .ds-label {
-      color: hsl(var(--muted-foreground));
-      font-weight: 500;
-    }
+    /* `.ds-label` needs nothing: Minehut already ships
+       `color: hsl(var(--muted-foreground)); font-weight: 500` on it, so the
+       theme's rule was a byte-identical restatement. Verified against the
+       bundle. Its colour follows --muted-foreground automatically. */
 
     /* NOTE: 2.0.2 set `letter-spacing: 0.06em` on `.ds-label, .uppercase` here,
        intending to add air to small light-on-dark text (Raycast's trick). Both
@@ -693,9 +784,12 @@
        enough, and this is not worth overriding a whole utility family for. */
 
     /* Numbers read as data, not prose. */
+    /* Tabular figures stop counts and timestamps jittering as they tick, and a
+       slashed zero removes the 0/O ambiguity that matters in IDs, ports and
+       version strings. Two words, outsized effect on perceived quality. */
     & .font-mono,
     & .tabular-nums {
-      font-variant-numeric: tabular-nums;
+      font-variant-numeric: tabular-nums slashed-zero;
     }
 
     & .line-through {
@@ -836,9 +930,12 @@
     & .mh-nav-item svg {
       color: var(--mh-ink-4);
     }
-    & .mh-nav-item:hover {
-      background: hsl(var(--muted));
-      color: hsl(var(--foreground));
+    /* Minehut already ships the hover background and colour byte-for-byte, so
+       only the timing is ours. */
+    @media (hover: hover) and (pointer: fine) {
+      & .mh-nav-item:hover {
+        transition-duration: var(--og-hover-in);
+      }
     }
     & .mh-nav-item:hover svg {
       color: hsl(var(--secondary-foreground));
@@ -908,10 +1005,15 @@
          surfaces need longer to read as physical, small controls need to feel
          instant. Cards, dialogs and overlays get --mh-dur-base; buttons, tabs,
          menu items and switches stay on --mh-dur-fast. */
+      /* Asymmetric: this is the fade-OUT. The :hover rule below zeroes the
+         duration so the highlight lands instantly. Linear ships exactly this
+         (--speed-highlightFadeIn: 0s / --speed-highlightFadeOut: .15s) and it
+         is why their lists feel responsive without strobing when the pointer
+         sweeps across them. */
       transition:
-        background-color var(--mh-dur-base) var(--mh-ease-out),
-        border-color var(--mh-dur-base) var(--mh-ease-out),
-        box-shadow var(--mh-dur-base) var(--mh-ease-out);
+        background-color var(--og-hover-out) var(--mh-ease-out),
+        border-color var(--og-hover-out) var(--mh-ease-out),
+        box-shadow var(--og-hover-out) var(--mh-ease-out);
 
       /* Brand colour IS the elevation signal — nothing tinted at rest, brand on
          interaction. Borrowed from Supabase, whose "elevated" state is simply
@@ -929,12 +1031,19 @@
          `will-change` is deliberately absent — 1.5.0 pinned it permanently,
          holding a compositor layer per card for the whole session and never
          releasing it under reduced motion. Both engines promote on demand. */
-      &:hover {
-        background: hsl(var(--muted));
-        border-color: color-mix(in oklab, var(--mh-brand) 30%, transparent);
-        box-shadow:
-          var(--og-lift-2),
-          var(--mh-shadow-2);
+      /* `@media (hover: hover)` guards against sticky hover on touch: a tapped
+         element otherwise keeps its hover styling forever, because touch never
+         fires mouse-leave. None of the reference products do this and all of
+         them have the bug. */
+      @media (hover: hover) and (pointer: fine) {
+        &:hover {
+          background: hsl(var(--muted));
+          border-color: color-mix(in oklab, var(--mh-brand) 30%, transparent);
+          box-shadow:
+            var(--og-lift-2),
+            var(--mh-shadow-2);
+          transition-duration: var(--og-hover-in);
+        }
       }
 
       /* THE CARD RAIL IS GONE.
@@ -1511,7 +1620,12 @@
     & th,
     & .min-w-\[1040px\],
     & .min-w-\[760px\] {
-      font-variant-numeric: tabular-nums;
+      font-variant-numeric: tabular-nums slashed-zero;
+    }
+    /* A trackpad swipe on a wide grid should scroll the grid, not trigger
+       browser back-navigation. Linear and Vercel both ship this. */
+    & .overflow-x-auto {
+      overscroll-behavior-x: contain;
     }
 
     /* ═══════════════════════════════════════════════════════════════════════
@@ -1855,7 +1969,7 @@
       caret-color: hsl(var(--primary)) !important; /* !imp:dark-util */
     }
 
-    /* Minehut ships THIRTEEN coloured bloom utilities — `0 0 6/8/10/14px` in a
+    /* Minehut ships thirteen coloured bloom utilities — `0 0 6/8/10/14px` in a
        material hue or `currentColor`. §52 stripped the bloom from status dots
        and the theme's own notes claim glow was removed "against a brief that
        bans exactly that", but Minehut's were still live on version badges, plan
@@ -1865,7 +1979,7 @@
        lit" reading that earns the glow its place, and loses only the bloom.
        The two `0_0_0_3px` classes are NOT in this list — those are spread-only
        focus rings with no blur radius, which is exactly the right shape.
-       @risk F  15 exact classes  verify: audit "shadow-[0_0_" */
+       @risk F  13 exact classes  verify: audit "shadow-[0_0_" */
     & .shadow-\[0_0_6px_var\(--mh-brand\)\],
     & .shadow-\[0_0_8px_var\(--mh-emerald\)\],
     & .shadow-\[0_0_8px_var\(--mh-gold\)\],
@@ -1876,12 +1990,18 @@
     & .shadow-\[0_0_10px_var\(--mh-redstone\)\],
     & .shadow-\[0_0_10px_var\(--mh-amethyst\)\],
     & .shadow-\[0_0_8px_color-mix\(in_oklab\2c var\(--mh-emerald\)_60\%\2c transparent\)\] {
-      box-shadow: 0 0 0 1px currentColor !important; /* !imp:dark-util */
+      box-shadow: 0 0 0 1px currentColor;
     }
+    /* No !important, deliberately. These are plain (0,1,0) utilities with no
+       dark: prefix and no upstream bang, so the gate already beats them — and
+       the !important was actively harmful: it overrode §52's status-dot ring
+       (0,2,0) for any dot that also carried one of these classes, which is
+       exactly what these classes exist for. Losing the bang resolves the
+       collision by specificity instead. */
     & .shadow-\[0_0_8px_currentColor\],
     & .shadow-\[0_0_10px_currentColor\],
     & .shadow-\[0_0_14px_currentColor\] {
-      box-shadow: 0 0 0 1px currentColor !important; /* !imp:dark-util */
+      box-shadow: 0 0 0 1px currentColor;
     }
 
     /* Inline links in prose. Minehut relies on colour alone, and Tailwind's
@@ -1984,11 +2104,11 @@
     /* ═══════════════════════════════════════════════════════════════════════
        §71  TOP ACCENT BAR — brand blue, not a hue sweep.
 
-       Minehut ships this as `bg-gradient-to-r from-[var(--mh-emerald)]
-       via-[var(--mh-brand)] to-[var(--mh-amethyst)] opacity-85` — a green-to-
-       blue-to-purple sweep. Three unrelated hues in one 3px rule reads as
-       decoration, and it fights the rule that the material hues mean STATE.
-       One brand blue, fading at both ends.
+       Minehut ships this as `bg-gradient-to-r from-[var(--mh-diamond)]
+       to-[var(--mh-brand)] opacity-60` — a teal-to-blue sweep. Two unrelated
+       hues in a 2px rule reads as decoration, and it fights the rule that the
+       material hues mean STATE. The default is neutral; §52's state bar paints
+       over it whenever a card actually has a state.
 
        2.0.0 scoped this to `article > .absolute.inset-x-0.top-0`, so it only
        applied inside a server card and the raw sweep still showed on the
@@ -2118,6 +2238,20 @@
     [data-theme="dark"] [data-radix-popper-content-wrapper] > * {
       background: hsl(var(--popover)) !important; /* !imp:a11y */
     }
+    /* Toasts (§55) and the modal scrim were blurred but registered in neither
+       block. A toast is the one surface that appears exactly when something has
+       gone wrong; 18% see-through with no blur to justify it is the worst place
+       to leave a gap. */
+    .dark .fixed.bottom-4.right-4.z-50 > *,
+    [data-theme="dark"] .fixed.bottom-4.right-4.z-50 > * {
+      background: hsl(var(--popover)) !important; /* !imp:a11y */
+    }
+    .dark .fixed.inset-0.bg-black\/60,
+    .dark .fixed.inset-0.bg-black\/80,
+    [data-theme="dark"] .fixed.inset-0.bg-black\/60,
+    [data-theme="dark"] .fixed.inset-0.bg-black\/80 {
+      background: hsl(var(--background) / 0.92) !important; /* !imp:a11y */
+    }
   }
 
   /* Reduced transparency is a different need from reduced motion — a user can
@@ -2139,6 +2273,12 @@
     [data-theme="dark"] [role="listbox"],
     [data-theme="dark"] .bg-popover,
     [data-theme="dark"] [data-radix-popper-content-wrapper] > * {
+      background: hsl(var(--popover)) !important; /* !imp:a11y */
+      backdrop-filter: none !important; /* !imp:a11y */
+      -webkit-backdrop-filter: none !important; /* !imp:a11y */
+    }
+    .dark .fixed.bottom-4.right-4.z-50 > *,
+    [data-theme="dark"] .fixed.bottom-4.right-4.z-50 > * {
       background: hsl(var(--popover)) !important; /* !imp:a11y */
       backdrop-filter: none !important; /* !imp:a11y */
       -webkit-backdrop-filter: none !important; /* !imp:a11y */
@@ -2180,9 +2320,28 @@
     }
     /* Status must stay distinguishable, and it already pairs colour with a dot
        AND a label — so the label carries it here and the chip just needs an edge. */
-    .dark [class*="bg-\[color-mix"],
-    [data-theme="dark"] [class*="bg-\[color-mix"] {
+    /* Token-ANCHORED, exactly as §52 is. The bare form here matched three
+       hover/disabled variants as well as the pills — the same over-match §52
+       documents, reintroduced in the one block nobody re-audits. The selector
+       audit could not see it: it deduplicated identical needles, so the correct
+       anchored use and this incorrect bare use collapsed into one clean line.
+       audit-selectors.py now reports every occurrence with its line number and
+       flags any needle used both ways. */
+    .dark [class^="bg-\[color-mix"],
+    .dark [class*=" bg-\[color-mix"],
+    [data-theme="dark"] [class^="bg-\[color-mix"],
+    [data-theme="dark"] [class*=" bg-\[color-mix"] {
       border: 1px solid CanvasText !important; /* !imp:a11y */
+    }
+    /* Two more box-shadow-only state signals forced-colors discards outright.
+       Without these, "which tab am I on" is unanswerable in High Contrast. */
+    .dark .mh-tabs > button.active,
+    .dark .mh-tabs > button[data-state="active"],
+    .dark .data-\[state\=active\]\:bg-muted[data-state="active"],
+    [data-theme="dark"] .mh-tabs > button.active,
+    [data-theme="dark"] .mh-tabs > button[data-state="active"],
+    [data-theme="dark"] .data-\[state\=active\]\:bg-muted[data-state="active"] {
+      border-bottom: 3px solid Highlight !important; /* !imp:a11y */
     }
     .dark main article,
     [data-theme="dark"] main article {
