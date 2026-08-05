@@ -1,7 +1,7 @@
 /* ==UserStyle==
 @name           Minehut Premium Dashboard
 @namespace      github.com/DaisyCatTs/minehut-premium-dashboard
-@version        3.0.1
+@version        3.0.2
 @description    A premium dark theme for the Minehut dashboard. Warm-neutral OLED surfaces, one restrained accent, Geist typography, and contrast-verified text.
 @author         Daisy
 @license        MIT
@@ -319,32 +319,40 @@
 
   /* ═════════════════════════════════════════════════════════════════════════
      §04a  CONSOLE TOKENS — Minehut ships Monokai in dark mode. These 18 slots
-     replace it wholesale with a calmer IDE palette in the theme's own
-     temperature. Declared here rather than beside §60 because a bare
+     replace it wholesale with an IDE palette drawn from the theme's own.
+
+     Kept in lockstep with §05 deliberately: ansi-1/2/3 ARE the danger, success
+     and warning hues, ansi-4 is the accent, ansi-5/6 are amethyst and diamond.
+     A log line that says "error" should be the same red as a card that says
+     PENDING DELETION. The runtime page audit caught this drifting once already
+     — the console had been left on the pre-v3 palette while everything else
+     moved, so the terminal used different state colours than the app around
+     it. All sixteen slots are measured on --console-bg; the lowest is red at
+     5.16:1 and ansi-0 is a background slot, so it is exempt. Declared here rather than beside §60 because a bare
      declaration placed after a nested rule is silently dropped by Chrome
      112–129, and §60 sits deep inside the gate.
      ═════════════════════════════════════════════════════════════════════════ */
 
   .dark,
   [data-theme="dark"] {
-    --console-bg: #0d0c0b !important; /* !imp:token */
-    --console-fg: #d6d3ce !important; /* !imp:token */
-    --console-ansi-0: #2e2c29 !important; /* black         */ /* !imp:token */
-    --console-ansi-1: #d9736f !important; /* red           */ /* !imp:token */
-    --console-ansi-2: #4cc08a !important; /* green         */ /* !imp:token */
-    --console-ansi-3: #d9a94f !important; /* yellow        */ /* !imp:token */
-    --console-ansi-4: #4b9eff !important; /* blue   7.10:1 */ /* !imp:token */
-    --console-ansi-5: #9b93d6 !important; /* magenta       */ /* !imp:token */
-    --console-ansi-6: #6fc4c0 !important; /* cyan          */ /* !imp:token */
-    --console-ansi-7: #d6d3ce !important; /* white         */ /* !imp:token */
-    --console-ansi-8: #8d8a83 !important; /* br-black 5.67:1 */ /* !imp:token */
-    --console-ansi-9: #e8918d !important; /* !imp:token */
-    --console-ansi-10: #6ed3a3 !important; /* !imp:token */
-    --console-ansi-11: #e8c176 !important; /* !imp:token */
-    --console-ansi-12: #7fb4ff !important; /* !imp:token */
-    --console-ansi-13: #b3ace4 !important; /* !imp:token */
-    --console-ansi-14: #8fd7d3 !important; /* !imp:token */
-    --console-ansi-15: #f5f4f2 !important; /* !imp:token */
+    --console-bg: #0d0d0d !important; /* !imp:token */
+    --console-fg: #d0d0d0 !important; /* !imp:token */
+    --console-ansi-0: #292929 !important; /* black — bg slot */ /* !imp:token */
+    --console-ansi-1: #ef4444 !important; /* red      5.16:1 */ /* !imp:token */
+    --console-ansi-2: #22c55e !important; /* green    8.53:1 */ /* !imp:token */
+    --console-ansi-3: #f59e0b !important; /* yellow   9.05:1 */ /* !imp:token */
+    --console-ansi-4: #4da3ff !important; /* blue     7.40:1 */ /* !imp:token */
+    --console-ansi-5: #ad97fa !important; /* magenta  7.94:1 */ /* !imp:token */
+    --console-ansi-6: #63dbd6 !important; /* cyan    11.69:1 */ /* !imp:token */
+    --console-ansi-7: #d0d0d0 !important; /* white   12.60:1 */ /* !imp:token */
+    --console-ansi-8: #8a8a8a !important; /* br-black 5.63:1 */ /* !imp:token */
+    --console-ansi-9: #f87171 !important; /* !imp:token */
+    --console-ansi-10: #4ade80 !important; /* !imp:token */
+    --console-ansi-11: #fbbf24 !important; /* !imp:token */
+    --console-ansi-12: #7fbfff !important; /* !imp:token */
+    --console-ansi-13: #c4b5fd !important; /* !imp:token */
+    --console-ansi-14: #8de6e2 !important; /* !imp:token */
+    --console-ansi-15: #ffffff !important; /* !imp:token */
   }
 
   /* ═════════════════════════════════════════════════════════════════════════
