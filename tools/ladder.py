@@ -1,4 +1,18 @@
 #!/usr/bin/env python3
+"""ladder.py — DESIGN a palette. It does not verify one.
+
+This computes hex -> shadcn HSL triplet, measured relative luminance and CIE L*,
+and a full contrast matrix, from values hardcoded below. That makes it useful when
+choosing a ladder, and useless for checking the shipped one: it never reads the
+stylesheet, so it cannot notice when the CSS drifts away from it. It did not
+notice when a card-colour change silently invalidated every contrast figure in
+the file.
+
+**Use `tools/check-palette.py` to verify.** That one parses the shipped CSS,
+recomputes every ratio, and fails on any comment that disagrees with reality.
+
+Edit the values under "the v2 palette" below to explore a change, then move the
+result into section 03 of the stylesheet and re-run check-palette.py.
 """Compute the v2 palette: hex -> shadcn HSL triplet, measured luminance, contrast matrix.
 
 shadcn consumes `hsl(var(--card))`, which needs a BARE component triplet (H S% L%).

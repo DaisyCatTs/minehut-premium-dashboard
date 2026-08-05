@@ -1,7 +1,7 @@
 /* ==UserStyle==
 @name           Minehut Premium Dashboard
 @namespace      github.com/DaisyCatTs/minehut-premium-dashboard
-@version        2.1.0
+@version        2.1.1
 @description    A premium dark theme for the Minehut dashboard. Warm-neutral OLED surfaces, one restrained accent, Geist typography, and contrast-verified text.
 @author         Daisy
 @license        MIT
@@ -75,9 +75,10 @@
                            Only `.mh-tabs > button.\!active` does.
      /* !imp:a11y *​/       §80 and §90 must beat the whole file by construction.
 
-   Enforceable with no tooling — these two counts must be equal:
-     grep -o '!important' theme.css | wc -l
-     grep -oE '!imp:(token|dark-util|bang|a11y)' theme.css | wc -l
+   Enforced by `node tools/check-css.js`, which strips comments first and fails
+   on any untagged occurrence. A bare grep does NOT work and will always read
+   red — it counts the four tag names inside this very policy block, plus every
+   prose mention of `!important` elsewhere in the file.
 
    ── FRAGILITY MARKERS ──────────────────────────────────────────────────────
      @risk D   hand-written class, element, ARIA role or data-attribute.
@@ -112,8 +113,14 @@
        primary action, card rail, tab underline, selection, console keyword.
        Kept as shipped rather than desaturated: this is the product's colour,
        and a theme that quietly rebrands it is worse than one that is slightly
-       louder than a design-system purist would pick. */
-    --og-accent: #4b9eff;
+       louder than a design-system purist would pick.
+
+       #4DA0FF, not #4B9EFF: `--primary: 212 100% 65%` in section 03 is the
+       authored source of truth and resolves to #4DA0FF. Until 2.1.0 the knob
+       said #4B9EFF, so TWO accents shipped 2/255 apart — brand utilities got
+       one, the ring/rail/underline/meter the other. Invisible, but it broke
+       the one-accent invariant and invalidated every derived hex comment. */
+    --og-accent: #4da0ff;
 
     /* Motion multiplier, unitless. 0 disables every transition and animation
        in the theme; 1.5 lands the base step at 270ms, which starts to drag.
@@ -190,16 +197,18 @@
 
     /* Accent is Minehut's OWN brand blue. 2.0.0 shipped a desaturated #5B93E8,
        which was calmer but was not the product's colour — and "premium" is not
-       a reason to be off-brand. Ring measures 7.20 / 6.57 / 6.04 / 5.40 /
-       4.64:1 across the five surfaces; WCAG 2.4.11 needs 3:1. */
-    --primary: 212 100% 65% !important; /* #4B9EFF  6.57:1 on --card */ /* !imp:token */
+       a reason to be off-brand. Ring measures 7.35 / 6.71 / 6.17 / 5.51 /
+       4.73:1 across the five surfaces; WCAG 2.4.11 needs 3:1.
+       (Re-measured in 2.1.1 — the previous figures were computed against the
+       pre-2.0.1 card and never updated when the ladder was brightened.) */
+    --primary: 212 100% 65% !important; /* #4DA0FF  6.71:1 on --card */ /* !imp:token */
     --ring: 212 100% 65% !important; /* !imp:token */
-    --destructive: 359 62% 68% !important; /* #E0797A  6.42:1 on --card */ /* !imp:token */
+    --destructive: 359 62% 68% !important; /* #E07B7C  6.28:1 on --card */ /* !imp:token */
 
     /* Ink that sits ON the accent. Dark, not white: white on #4B9EFF is only
-       2.75:1 and fails outright, while #04121F measures 6.85:1. Minehut's own
+       2.75:1 and fails outright, while #041220 measures 7.00:1. Minehut's own
        dark value (#0a1628) makes the same choice. */
-    --primary-foreground: 209 77% 7% !important; /* #04121F  6.85:1 on --primary */ /* !imp:token */
+    --primary-foreground: 209 77% 7% !important; /* #041220  7.00:1 on --primary */ /* !imp:token */
     --destructive-foreground: 0 60% 8% !important; /* !imp:token */
 
     /* The alpha slash is load-bearing. This feeds
@@ -213,7 +222,7 @@
        NOTE: 0 var() consumers in the CSS bundle, so recharts is coloured from
        JS. These may be inert; §51 styles the .recharts-* hooks directly, which
        definitely works. Cheap to set either way. */
-    --chart-1: 216 75% 63.3% !important; /* !imp:token */
+    --chart-1: 212 100% 65% !important; /* !imp:token */
     --chart-2: 152 48% 52.5% !important; /* !imp:token */
     --chart-3: 39 64% 58% !important; /* !imp:token */
     --chart-4: 247 45% 70.8% !important; /* !imp:token */
@@ -289,8 +298,10 @@
      focus, navigation and selection. Data, labels and domains stay neutral.
 
      The seven material hues belong to Minehut and carry state, not decoration.
-     Each is measured on --card: emerald 8.28, gold 8.75, diamond 9.28,
-     amethyst 6.77, copper 6.57, redstone 5.96, lapis 4.73 : 1.
+     Each is measured on the SHIPPED --card (#171614): emerald 7.93, gold
+     8.39, diamond 8.90, amethyst 6.49, copper 6.30, redstone 5.71, lapis
+     4.54 : 1. Note lapis clears the 4.5 floor by 0.04 — it appears only in
+     gradient stops, never as text, but do not darken it.
      ═════════════════════════════════════════════════════════════════════════ */
 
   :root {
@@ -362,7 +373,6 @@
        bouncing, so it is flattened to a firm settle with no overshoot. */
     --mh-ease-spring: cubic-bezier(0.22, 0.9, 0.3, 1) !important; /* !imp:token */
 
-    --og-ease: var(--mh-ease-out);
   }
 
   /* Retune Minehut's own timing utilities. Same reach as the old blanket
@@ -587,7 +597,6 @@
     & .font-mono,
     & .tabular-nums {
       font-variant-numeric: tabular-nums;
-      font-feature-settings: "tnum";
     }
 
     & .line-through {
@@ -659,8 +668,9 @@
       border-color: hsl(var(--border) / 0.55);
       background-color: hsl(var(--border) / 0.55);
     }
+    /* Dashed stays dashed: it marks drop zones and add-placeholders, and
+       flattening it to solid removed the affordance. Colour only. */
     & .border-dashed {
-      border-style: solid;
       border-color: hsl(var(--border) / 0.55);
     }
     /* @risk S  hook:.hover\:border-foreground\/30|40  hits:2  verify: audit "hover:border-foreground" */
@@ -720,7 +730,6 @@
     }
     & .mh-nav-item svg {
       color: var(--mh-ink-4);
-      opacity: 1;
     }
     & .mh-nav-item:hover {
       background: hsl(var(--muted));
@@ -943,6 +952,19 @@
       > button.border-input.bg-card svg {
       color: hsl(var(--primary));
     }
+    /* The active tab needs its own :hover, or §33's secondary-button hover
+       wins. That rule is `button.border-input.bg-card:hover:not(:disabled)` =
+       (0,5,1); the resting tab rule above is only (0,4,1). So hovering the
+       active tab restored exactly the accent fill and visible border this
+       section exists to remove — the collision was only ever fixed at rest.
+       (The note that used to sit above this had the arithmetic wrong: (0,4,1)
+       vs (0,3,1), and it reasoned about the resting state only.) */
+    & .shadow-\[0_1px_0_hsl\(var\(--foreground\)\/0\.08\)\2c 0_2px_0_hsl\(var\(--foreground\)\/0\.2\)\]
+      > button.border-input.bg-card:hover:not(:disabled) {
+      background: transparent;
+      border-color: transparent;
+      box-shadow: inset 0 -2px 0 hsl(var(--primary));
+    }
     /* Inactive */
     & .shadow-\[0_1px_0_hsl\(var\(--foreground\)\/0\.08\)\2c 0_2px_0_hsl\(var\(--foreground\)\/0\.2\)\]
       > a.border-transparent {
@@ -1088,7 +1110,7 @@
        §40  FORMS
        ═══════════════════════════════════════════════════════════════════════ */
 
-    & input:not(.bg-transparent),
+    & input:not(.bg-transparent):not([type="file"]):not([type="range"]):not([type="color"]):not([type="checkbox"]):not([type="radio"]),
     & select,
     & textarea {
       background: hsl(var(--muted));
@@ -1369,33 +1391,48 @@
        palette is the product's identity rather than decoration. So the pill
        keeps its hue; the chrome around it stays neutral, which is where the
        restraint belongs. Measured on --card: emerald 6.03, gold 6.22, diamond
-       6.55, amethyst 5.07, copper 4.94, redstone 4.59 : 1. */
-    & [class*="bg-\[color-mix"][class*="mh-emerald"] {
+       6.55, amethyst 5.07, copper 4.94, redstone 4.59 : 1.
+
+       The `bg-[color-mix` match is token-ANCHORED (`[class^=]` plus
+       `[class*=" …"]`), because the bare substring also caught
+       `hover:bg-[color-mix(…)]` and `disabled:hover:bg-[color-mix(…)]`. That
+       painted any button whose ONLY colour-mix class was a hover variant with
+       the pill's resting fill — most visibly the destructive ghost button,
+       which was force-repainted from its own 8%/26% redstone to the pill's
+       16%/34%. Exactly the regression §61 documents for the old `bg-[#`
+       substring, in a different place. */
+    & [class^="bg-\[color-mix"][class*="mh-emerald"],
+    & [class*=" bg-\[color-mix"][class*="mh-emerald"] {
       background: color-mix(in oklab, var(--mh-emerald) 16%, transparent);
       border-color: color-mix(in oklab, var(--mh-emerald) 34%, transparent);
       color: var(--mh-emerald);
     }
-    & [class*="bg-\[color-mix"][class*="mh-redstone"] {
+    & [class^="bg-\[color-mix"][class*="mh-redstone"],
+    & [class*=" bg-\[color-mix"][class*="mh-redstone"] {
       background: color-mix(in oklab, var(--mh-redstone) 16%, transparent);
       border-color: color-mix(in oklab, var(--mh-redstone) 34%, transparent);
       color: var(--mh-redstone);
     }
-    & [class*="bg-\[color-mix"][class*="mh-gold"] {
+    & [class^="bg-\[color-mix"][class*="mh-gold"],
+    & [class*=" bg-\[color-mix"][class*="mh-gold"] {
       background: color-mix(in oklab, var(--mh-gold) 16%, transparent);
       border-color: color-mix(in oklab, var(--mh-gold) 34%, transparent);
       color: var(--mh-gold);
     }
-    & [class*="bg-\[color-mix"][class*="mh-diamond"] {
+    & [class^="bg-\[color-mix"][class*="mh-diamond"],
+    & [class*=" bg-\[color-mix"][class*="mh-diamond"] {
       background: color-mix(in oklab, var(--mh-diamond) 16%, transparent);
       border-color: color-mix(in oklab, var(--mh-diamond) 34%, transparent);
       color: var(--mh-diamond);
     }
-    & [class*="bg-\[color-mix"][class*="mh-amethyst"] {
+    & [class^="bg-\[color-mix"][class*="mh-amethyst"],
+    & [class*=" bg-\[color-mix"][class*="mh-amethyst"] {
       background: color-mix(in oklab, var(--mh-amethyst) 16%, transparent);
       border-color: color-mix(in oklab, var(--mh-amethyst) 34%, transparent);
       color: var(--mh-amethyst);
     }
-    & [class*="bg-\[color-mix"][class*="mh-copper"] {
+    & [class^="bg-\[color-mix"][class*="mh-copper"],
+    & [class*=" bg-\[color-mix"][class*="mh-copper"] {
       background: color-mix(in oklab, var(--mh-copper) 16%, transparent);
       border-color: color-mix(in oklab, var(--mh-copper) 34%, transparent);
       color: var(--mh-copper);
@@ -1446,8 +1483,8 @@
        ═══════════════════════════════════════════════════════════════════════ */
 
     & .animate-pulse {
-      animation-duration: 1.6s;
-      animation-timing-function: cubic-bezier(0.4, 0, 0.6, 1);
+      animation-duration: calc(var(--og-speed) * 1600ms);
+      animation-timing-function: var(--mh-ease-out);
     }
     & .animate-pulse.bg-muted,
     & .animate-pulse .bg-muted {
@@ -1668,9 +1705,26 @@
     & svg.lucide {
       stroke-width: 1.75;
     }
+    /* Brightening an icon on hover is right for neutral chrome and wrong for
+       anything with its own foreground. Two casualties before the guards:
+         · the primary CTA — its icon flipped from the dark on-brand ink to
+           near-white on a blue fill, 2.72:1, while the label stayed dark
+         · `.mh-nav-item` icons — an exact (0,3,2) tie with §21's own hover,
+           so source order decided the colour rather than intent
+       Excluded rather than re-specified, so each component keeps owning its
+       own icon colour. */
     & a:hover > svg.lucide,
     & button:hover > svg.lucide {
       color: hsl(var(--foreground));
+    }
+    & .mh-nav-item:hover > svg.lucide {
+      color: hsl(var(--secondary-foreground));
+    }
+    & button.bg-\[var\(--mh-brand\)\]:hover > svg.lucide,
+    & a.bg-\[var\(--mh-brand\)\]:hover > svg.lucide,
+    & button.bg-\[var\(--mh-brand\)\] svg,
+    & a.bg-\[var\(--mh-brand\)\] svg {
+      color: hsl(var(--primary-foreground));
     }
   }
 
@@ -1688,9 +1742,15 @@
      `hidden` also matched overflow-hidden. `[class~=]` is whole-token;
      `[class^=]` plus `[class*=" …"]` covers first vs. later position in the
      attribute. Intent unchanged: don't fight Tailwind's own sizing, don't
-     inflate hidden elements. */
-  button:not([class~="hidden"]):not([class^="h-"]):not([class*=" h-"]):not([class^="size-"]):not([class*=" size-"]),
-  a[role="button"]:not([class~="hidden"]):not([class^="h-"]):not([class*=" h-"]):not([class^="size-"]):not([class*=" size-"]) {
+     inflate hidden elements.
+
+     `min-h-` is excluded too, and that omission was actively harmful: the
+     bundle ships `.min-h-[2.25rem]` (36px), and `[class*=" h-"]` does NOT
+     match `" min-h-[2.25rem]"`. So with `!important` this rule was LOWERING a
+     deliberately-36px button's floor to 24px — an accessibility rule making
+     targets smaller. */
+  button:not([class~="hidden"]):not([class^="h-"]):not([class*=" h-"]):not([class^="size-"]):not([class*=" size-"]):not([class^="min-h-"]):not([class*=" min-h-"]),
+  a[role="button"]:not([class~="hidden"]):not([class^="h-"]):not([class*=" h-"]):not([class^="size-"]):not([class*=" size-"]):not([class^="min-h-"]):not([class*=" min-h-"]) {
     min-height: 24px !important; /* !imp:a11y */
     min-width: 24px !important; /* !imp:a11y */
   }
@@ -1739,10 +1799,12 @@
     .dark [role="menu"],
     .dark [role="listbox"],
     .dark .bg-popover,
+    .dark [data-radix-popper-content-wrapper] > *,
     [data-theme="dark"] [role="dialog"],
     [data-theme="dark"] [role="menu"],
     [data-theme="dark"] [role="listbox"],
-    [data-theme="dark"] .bg-popover {
+    [data-theme="dark"] .bg-popover,
+    [data-theme="dark"] [data-radix-popper-content-wrapper] > * {
       background: hsl(var(--popover)) !important; /* !imp:a11y */
     }
   }
@@ -1760,15 +1822,24 @@
     .dark [role="menu"],
     .dark [role="listbox"],
     .dark .bg-popover,
-    .dark .fixed.inset-0.bg-black\/60,
-    .dark .fixed.inset-0.bg-black\/80,
+    .dark [data-radix-popper-content-wrapper] > *,
     [data-theme="dark"] [role="dialog"],
     [data-theme="dark"] [role="menu"],
     [data-theme="dark"] [role="listbox"],
     [data-theme="dark"] .bg-popover,
+    [data-theme="dark"] [data-radix-popper-content-wrapper] > * {
+      background: hsl(var(--popover)) !important; /* !imp:a11y */
+      backdrop-filter: none !important; /* !imp:a11y */
+      -webkit-backdrop-filter: none !important; /* !imp:a11y */
+    }
+    /* The scrim gets --background, not --popover. A modal scrim exists to dim
+       the page behind it, and --popover is LIGHTER than the page — so the
+       opaque fallback was brightening exactly what it was meant to suppress. */
+    .dark .fixed.inset-0.bg-black\/60,
+    .dark .fixed.inset-0.bg-black\/80,
     [data-theme="dark"] .fixed.inset-0.bg-black\/60,
     [data-theme="dark"] .fixed.inset-0.bg-black\/80 {
-      background: hsl(var(--popover)) !important; /* !imp:a11y */
+      background: hsl(var(--background) / 0.92) !important; /* !imp:a11y */
       backdrop-filter: none !important; /* !imp:a11y */
       -webkit-backdrop-filter: none !important; /* !imp:a11y */
     }
@@ -1846,17 +1917,24 @@
     /* Killing duration alone is the common mistake — it leaves the transform
        applied instantly rather than not at all. Every property this theme
        moves is neutralised explicitly. */
-    .dark article:hover,
-    .dark button:hover,
-    .dark a:hover,
+    /* Scoped to the elements this theme actually moves, and to `translate`
+       only. A blanket `transform: none` on `button:hover, a:hover` was an
+       over-reach with real consequences: this theme introduces no `transform`
+       anywhere — it uses the independent `translate` property — but Minehut
+       uses transforms for LAYOUT (`-translate-x-1/2`, `-translate-y-1/2`,
+       `rotate-90`, `data-[state=checked]:translate-x-[14px]`). Under reduced
+       motion, hovering any button or link positioned that way snapped it to
+       its untransformed origin. Reducing motion should never move the page. */
+    .dark main article:hover,
+    .dark button.bg-\[var\(--mh-brand\)\]:hover,
+    .dark a.bg-\[var\(--mh-brand\)\]:hover,
     .dark .mh-nav-item:hover,
-    [data-theme="dark"] article:hover,
-    [data-theme="dark"] button:hover,
-    [data-theme="dark"] a:hover,
+    [data-theme="dark"] main article:hover,
+    [data-theme="dark"] button.bg-\[var\(--mh-brand\)\]:hover,
+    [data-theme="dark"] a.bg-\[var\(--mh-brand\)\]:hover,
     [data-theme="dark"] .mh-nav-item:hover {
       translate: none !important; /* !imp:a11y */
       scale: none !important; /* !imp:a11y */
-      transform: none !important; /* !imp:a11y */
       will-change: auto !important; /* !imp:a11y */
     }
   }

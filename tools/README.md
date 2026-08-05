@@ -21,6 +21,7 @@ run the full gate with no downloads; results are identical either way.
 | `audit-selectors.py` | What each `[class*=]` **actually** matches. A pattern may ship only if the hit set equals the intended set recorded in its `@risk` comment. |
 | `check-exact-classes.py` | Exact escaped selectors (`.bg-\[var\(--mh-brand\)\]`) that match nothing. A typo there fails silently — the rule just never applies. |
 | `check-css.js` | Brace/paren/comment/string balance, declarations outside any block, unknown at-rules, and **untagged `!important`** (a policy violation per §01). |
+| `check-palette.py` | Every colour claim in the stylesheet against its shipped value — resolves the authored triplets, recomputes each ratio, and fails on any comment that disagrees. Also enforces the AA floor on the material hues, 3:1 on the focus ring, and that exactly one accent is shipping. |
 
 These three check the stylesheet against Minehut's CSS. They cannot tell you
 whether a rule reaches anything on a real page — `recon.js` and `audit-page.js`
@@ -37,16 +38,21 @@ node   tools/check-css.js minehut-premium-dashboard.user.css
 
 ## Palette
 
-`ladder.py` computes the §03 surface ladder: hex → shadcn HSL triplet (with a
-round-trip check that the rounded triplet still lands on the intended colour),
-measured relative luminance and CIE L\* per rung, and the full ink/accent contrast
-matrix against every surface.
+Two scripts, and the distinction matters:
 
-Use it whenever a colour changes — the stylesheet's contrast comments each name
-the surface they were measured on, and they have to stay true.
+- **`check-palette.py` verifies.** It parses the shipped CSS, resolves the
+  authored triplets itself, recomputes every ratio, and diffs against the numbers
+  written in the comments. Run it after any colour change.
+- **`ladder.py` designs.** It computes a ladder from hardcoded values, which is
+  useful when *choosing* one and verifies nothing — it never reads the stylesheet.
+
+That distinction was learned the hard way: `ladder.py` was treated as the
+verification story, so when the card colour was brightened, every contrast figure
+in the file silently became wrong and nothing noticed for four releases.
 
 ```sh
-python tools/ladder.py
+python tools/check-palette.py     # gate — fails on drift
+python tools/ladder.py            # exploration only
 ```
 
 ## Seeing it render, without a Minehut login
