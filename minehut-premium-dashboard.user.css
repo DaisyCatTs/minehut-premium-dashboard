@@ -1,7 +1,7 @@
 /* ==UserStyle==
 @name           Minehut Premium Dashboard
 @namespace      github.com/DaisyCatTs/minehut-premium-dashboard
-@version        2.0.0
+@version        2.0.1
 @description    A premium dark theme for the Minehut dashboard. Warm-neutral OLED surfaces, one restrained accent, Geist typography, and contrast-verified text.
 @author         Daisy
 @license        MIT
@@ -100,11 +100,12 @@
      ═════════════════════════════════════════════════════════════════════════ */
 
   :root {
-    /* Accent. Every blue: focus ring, active nav, primary action, rail, tab
-       underline, selection, console keyword. Around 70–75% saturation stays
-       calm; a heavily saturated blue on near-black reads as though it emits
-       light. Minehut's own is #4B9EFF, so this sits deliberately close. */
-    --og-accent: #5b93e8;
+    /* Accent — Minehut's own brand blue. Every blue: focus ring, active nav,
+       primary action, card rail, tab underline, selection, console keyword.
+       Kept as shipped rather than desaturated: this is the product's colour,
+       and a theme that quietly rebrands it is worse than one that is slightly
+       louder than a design-system purist would pick. */
+    --og-accent: #4b9eff;
 
     /* Motion multiplier, unitless. 0 disables every transition and animation
        in the theme; 1.5 lands the base step at 270ms, which starts to drag.
@@ -136,42 +137,52 @@
 
   .dark,
   [data-theme="dark"] {
-    /* surface                        hex       Y        L*     step */
+    /* The page stays OLED black; everything above it steps up ~4–5 L*.
+       2.0.1 raised every rung above the page. At the previous card value the
+       page→card step was only 2.4 L*, so cards read as faint outlines rather
+       than objects — the "gloomy, no life" complaint was largely this one
+       number. Now 4.6, with even steps the rest of the way up.
+
+       surface                        hex       Y        L*     step */
     --background: 60 5% 3.7% !important; /* #0A0A09  0.0030    2.7        */ /* !imp:token */
-    --card: 30 6% 6.7% !important; /* #121110  0.0057    5.1   +2.4 */ /* !imp:token */
-    --muted: 40 6% 9.6% !important; /* #1A1917  0.0098    8.8   +3.7 */ /* !imp:token */
-    --secondary: 40 6% 9.6% !important; /* #1A1917  — same rung as muted   */ /* !imp:token */
-    --popover: 0 2% 12.7% !important; /* #212020  0.0146   12.4   +3.6 */ /* !imp:token */
-    --accent: 45 5% 15.7% !important; /* #2A2926  0.0222   16.6   +4.2 */ /* !imp:token */
+    --card: 40 7% 8.4% !important; /* #171614  0.0089    7.3   +4.6 */ /* !imp:token */
+    --muted: 36 8% 11.6% !important; /* #201E1B  0.0141   11.4   +4.1 */ /* !imp:token */
+    --secondary: 36 8% 11.6% !important; /* #201E1B  — same rung as muted   */ /* !imp:token */
+    --popover: 30 8% 15.3% !important; /* #2A2724  0.0212   15.9   +4.5 */ /* !imp:token */
+    --accent: 37 8% 19.2% !important; /* #35322D  0.0316   20.9   +5.1 */ /* !imp:token */
 
     /* Lines. Minehut ships `*{border-color:hsl(var(--border))}`, so claiming
        --border alone recolours every bordered element in the app — which is
-       why §12 has almost no colour rules left. */
-    --border: 36 6% 17.1% !important; /* #2E2C29  1.35:1 on --card */ /* !imp:token */
-    --input: 34 6% 21.4% !important; /* #3A3733  1.59:1 on --card */ /* !imp:token */
+       why §12 has almost no colour rules left. Raised alongside the ladder so
+       card edges stay legible against the brighter fill. */
+    --border: 34 6% 21.4% !important; /* #3A3733  1.53:1 on --card */ /* !imp:token */
+    --input: 30 4% 26.7% !important; /* #474441  1.87:1 on --card */ /* !imp:token */
 
     /* Ink. Four tiers, each measured against --card (where most text sits).
-       All four clear 4.5:1, and adjacent tiers are separated by 1.4–1.7x so
-       the hierarchy is visible rather than nominal. */
-    --foreground: 40 13% 95.5% !important; /* #F5F4F2  17.16:1 on --card  titles   */ /* !imp:token */
-    --muted-foreground: 38 5% 59.8% !important; /* #9E9A93   6.73:1 on --card  metadata */ /* !imp:token */
+       Chroma pulled to ~4% in 2.0.1: at 13%/8%/5% the lower tiers rendered
+       visibly BROWN on small uppercase labels (PLAN, LAST ONLINE, DASHBOARD),
+       which read as muddy rather than warm. Surfaces stay warm; ink goes
+       near-neutral. Separation is 1.5x / 1.6x / 1.3x between tiers. */
+    --foreground: 60 4% 95.5% !important; /* #F4F4F3  16.43:1 on --card  titles   */ /* !imp:token */
+    --muted-foreground: 43 4% 62.5% !important; /* #A3A19C   7.01:1 on --card  metadata */ /* !imp:token */
 
-    --card-foreground: 40 13% 95.5% !important; /* !imp:token */
-    --popover-foreground: 40 13% 95.5% !important; /* !imp:token */
-    --secondary-foreground: 40 8% 77.8% !important; /* #CBC8C2  11.30:1  body    */ /* !imp:token */
-    --accent-foreground: 40 13% 95.5% !important; /* !imp:token */
+    --card-foreground: 60 4% 95.5% !important; /* !imp:token */
+    --popover-foreground: 60 4% 95.5% !important; /* !imp:token */
+    --secondary-foreground: 45 4% 78.4% !important; /* #CAC9C6  10.92:1  body    */ /* !imp:token */
+    --accent-foreground: 60 4% 95.5% !important; /* !imp:token */
 
-    /* Accent + danger. Focus ring measures 6.40 / 6.09 / 5.67 / 5.25 / 4.70:1
-       across the five surfaces above — WCAG 2.4.11 needs 3:1, so it passes
-       everywhere it can appear. */
-    --primary: 216 75% 63.3% !important; /* #5B93E8  6.09:1 on --card */ /* !imp:token */
-    --ring: 216 75% 63.3% !important; /* !imp:token */
-    --destructive: 2 58% 64.3% !important; /* #D9736F  5.96:1 on --card */ /* !imp:token */
+    /* Accent is Minehut's OWN brand blue. 2.0.0 shipped a desaturated #5B93E8,
+       which was calmer but was not the product's colour — and "premium" is not
+       a reason to be off-brand. Ring measures 7.20 / 6.57 / 6.04 / 5.40 /
+       4.64:1 across the five surfaces; WCAG 2.4.11 needs 3:1. */
+    --primary: 212 100% 65% !important; /* #4B9EFF  6.57:1 on --card */ /* !imp:token */
+    --ring: 212 100% 65% !important; /* !imp:token */
+    --destructive: 359 62% 68% !important; /* #E0797A  6.42:1 on --card */ /* !imp:token */
 
-    /* Ink that sits ON the accent. Dark, not white: white on #5B93E8 is only
-       3.10:1 and fails, while #06121F measures 6.09:1. Minehut's own dark
-       value (#0a1628) makes the same choice. */
-    --primary-foreground: 210 70% 7% !important; /* #06121F  6.09:1 on --primary */ /* !imp:token */
+    /* Ink that sits ON the accent. Dark, not white: white on #4B9EFF is only
+       2.75:1 and fails outright, while #04121F measures 6.85:1. Minehut's own
+       dark value (#0a1628) makes the same choice. */
+    --primary-foreground: 209 77% 7% !important; /* #04121F  6.85:1 on --primary */ /* !imp:token */
     --destructive-foreground: 0 60% 8% !important; /* !imp:token */
 
     /* The alpha slash is load-bearing. This feeds
@@ -210,7 +221,7 @@
 
     --mh-ink-2: hsl(var(--secondary-foreground)) !important; /* !imp:token */
     --mh-ink-3: hsl(var(--muted-foreground)) !important; /* !imp:token */
-    --mh-ink-4: #8a857d !important; /* 5.15:1 on --card — no shadcn twin */ /* !imp:token */
+    --mh-ink-4: #8e8b85 !important; /* 5.32:1 on --card — no shadcn twin */ /* !imp:token */
     --mh-on-brand: hsl(var(--primary-foreground)) !important; /* !imp:token */
 
     /* Shadows. Free reach: .shadow-mh-1/2/3, .data-[state=active]:shadow-mh-1
@@ -796,30 +807,6 @@
         background: hsl(var(--primary) / 0.7);
       }
 
-      /* Minehut's own top accent bar. One height-agnostic rule replaces
-         1.5.0's hide/restore pair, where the hide rule at (0,4,1) outranked
-         the restore at (0,4,0) — so inside a card the gradient never rendered
-         at all, despite a comment claiming it was "FIXED for both heights".
-         @risk S  hook:.absolute.inset-x-0.top-0  verify: inspect a card */
-      & > .absolute.inset-x-0.top-0 {
-        opacity: 1;
-        height: 2px;
-        background: linear-gradient(
-          90deg,
-          transparent,
-          hsl(var(--primary) / 0.5) 30%,
-          hsl(var(--primary) / 0.5) 70%,
-          transparent
-        );
-        background-image: linear-gradient(
-          90deg,
-          transparent,
-          hsl(var(--primary) / 0.5) 30%,
-          hsl(var(--primary) / 0.5) 70%,
-          transparent
-        );
-      }
-
       /* The server identity tile — 42×42, hand-written by Minehut, and
          completely unstyled before 2.0.0 on a server-management dashboard. */
       & .mh-sc-icon {
@@ -1190,15 +1177,47 @@
                 verify: audit "bg-[color-mix" "mh-emerald"
        ═══════════════════════════════════════════════════════════════════════ */
 
-    & [class*="bg-\[color-mix"][class*="mh-emerald"],
-    & [class*="bg-\[color-mix"][class*="mh-redstone"],
-    & [class*="bg-\[color-mix"][class*="mh-gold"],
-    & [class*="bg-\[color-mix"][class*="mh-diamond"],
-    & [class*="bg-\[color-mix"][class*="mh-amethyst"],
+    /* 2.0.0 flattened all six of these to grey chrome, on the theory that a
+       neutral pill plus a coloured dot was the more restrained choice. Seen on
+       a real server grid it was simply the thing that drained the page: every
+       card carried an identical grey chip, so nothing distinguished a running
+       server from a hibernating one at a glance.
+
+       Minehut's own recipe — a hue-tinted fill, a hue border and hue text — is
+       both livelier AND better information design, and the Minecraft material
+       palette is the product's identity rather than decoration. So the pill
+       keeps its hue; the chrome around it stays neutral, which is where the
+       restraint belongs. Measured on --card: emerald 6.03, gold 6.22, diamond
+       6.55, amethyst 5.07, copper 4.94, redstone 4.59 : 1. */
+    & [class*="bg-\[color-mix"][class*="mh-emerald"] {
+      background: color-mix(in oklab, var(--mh-emerald) 16%, transparent);
+      border-color: color-mix(in oklab, var(--mh-emerald) 34%, transparent);
+      color: var(--mh-emerald);
+    }
+    & [class*="bg-\[color-mix"][class*="mh-redstone"] {
+      background: color-mix(in oklab, var(--mh-redstone) 16%, transparent);
+      border-color: color-mix(in oklab, var(--mh-redstone) 34%, transparent);
+      color: var(--mh-redstone);
+    }
+    & [class*="bg-\[color-mix"][class*="mh-gold"] {
+      background: color-mix(in oklab, var(--mh-gold) 16%, transparent);
+      border-color: color-mix(in oklab, var(--mh-gold) 34%, transparent);
+      color: var(--mh-gold);
+    }
+    & [class*="bg-\[color-mix"][class*="mh-diamond"] {
+      background: color-mix(in oklab, var(--mh-diamond) 16%, transparent);
+      border-color: color-mix(in oklab, var(--mh-diamond) 34%, transparent);
+      color: var(--mh-diamond);
+    }
+    & [class*="bg-\[color-mix"][class*="mh-amethyst"] {
+      background: color-mix(in oklab, var(--mh-amethyst) 16%, transparent);
+      border-color: color-mix(in oklab, var(--mh-amethyst) 34%, transparent);
+      color: var(--mh-amethyst);
+    }
     & [class*="bg-\[color-mix"][class*="mh-copper"] {
-      background: hsl(var(--muted));
-      border: 1px solid hsl(var(--border));
-      color: hsl(var(--secondary-foreground));
+      background: color-mix(in oklab, var(--mh-copper) 16%, transparent);
+      border-color: color-mix(in oklab, var(--mh-copper) 34%, transparent);
+      color: var(--mh-copper);
     }
 
     /* The dot. No glow — 1.5.0 carried sixteen glow declarations, up to
@@ -1374,6 +1393,36 @@
        @risk D  hook:svg.lucide  verify: document.querySelector('svg.lucide')
        ═══════════════════════════════════════════════════════════════════════ */
 
+    /* ═══════════════════════════════════════════════════════════════════════
+       §72  TOP ACCENT BAR — brand blue, not a hue sweep.
+
+       Minehut ships this as `bg-gradient-to-r from-[var(--mh-emerald)]
+       via-[var(--mh-brand)] to-[var(--mh-amethyst)] opacity-85` — a green-to-
+       blue-to-purple sweep. Three unrelated hues in one 3px rule reads as
+       decoration, and it fights the rule that the material hues mean STATE.
+       One brand blue, fading at both ends.
+
+       2.0.0 scoped this to `article > .absolute.inset-x-0.top-0`, so it only
+       applied inside a server card and the raw sweep still showed on the
+       server-select and console headers. Matching on the gradient utility
+       instead catches every instance at any height.
+       @risk S  hook:.absolute.inset-x-0.top-0.bg-gradient-to-r
+                verify: audit "bg-gradient-to-r" "inset-x-0" */
+    & .absolute.inset-x-0.top-0.bg-gradient-to-r {
+      opacity: 1;
+      background-image: linear-gradient(
+        90deg,
+        transparent,
+        hsl(var(--primary) / 0.65) 22%,
+        hsl(var(--primary) / 0.65) 78%,
+        transparent
+      );
+    }
+
+    /* ═══════════════════════════════════════════════════════════════════════
+       §70  ICONS (cont.)
+       ═══════════════════════════════════════════════════════════════════════ */
+
     & svg.lucide {
       stroke-width: 1.75;
     }
@@ -1416,7 +1465,7 @@
     opacity: 1 !important; /* !imp:a11y */
     background: hsl(var(--muted)) !important; /* !imp:a11y */
     border-color: hsl(var(--border) / 0.55) !important; /* !imp:a11y */
-    color: #8a8781 !important; /* 4.91:1 on --muted */ /* !imp:a11y */
+    color: #97948e !important; /* 5.50:1 on --muted */ /* !imp:a11y */
     box-shadow: none !important; /* !imp:a11y */
     cursor: not-allowed !important; /* !imp:a11y */
     translate: none !important; /* !imp:a11y */
@@ -1425,7 +1474,7 @@
   .dark [aria-disabled="true"] svg,
   [data-theme="dark"] button:disabled svg,
   [data-theme="dark"] [aria-disabled="true"] svg {
-    color: #8a8781 !important; /* !imp:a11y */
+    color: #97948e !important; /* !imp:a11y */
   }
   .dark button:disabled::after,
   .dark button:disabled::before,
