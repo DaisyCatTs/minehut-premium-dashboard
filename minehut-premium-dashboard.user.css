@@ -1,7 +1,7 @@
 /* ==UserStyle==
 @name           Minehut Premium Dashboard
 @namespace      github.com/DaisyCatTs/minehut-premium-dashboard
-@version        2.0.3
+@version        2.0.4
 @description    A premium dark theme for the Minehut dashboard. Warm-neutral OLED surfaces, one restrained accent, Geist typography, and contrast-verified text.
 @author         Daisy
 @license        MIT
@@ -30,6 +30,14 @@
    `.mh-meter-fill`, `.mh-sc-icon`, `.mh-nav-count`, `.mh-tabs`, `.mh-tab-in`,
    `.ds-label`, `.font-display`, `.mh-gs-lockup`, `.mh-cloud-cluster-*` — which
    are the only component hooks that survive a Tailwind rebuild.
+
+   BUT: existing in the bundle is not the same as being on the route you are
+   styling. DOM recon found `.mh-tabs`, `.mh-tab-in`, `[role="tab"]` and
+   `[role="tablist"]` all at ZERO occurrences on both the server list and the
+   console route, even though `.mh-tabs` is compiled into the CSS. 2.0.0
+   migrated §32 to it on the strength of the bundle alone and shipped a tab
+   section that matched nothing. **Verify a hook in the DOM, not just in the
+   stylesheet.** `tools/recon.js` exists for this.
 
    PREFER A TOKEN OVER A SELECTOR. Always. A token override reaches every
    consumer, costs no specificity, and cannot over-match.
@@ -758,23 +766,23 @@
     /* ═══════════════════════════════════════════════════════════════════════
        §30  CARD — the hero component.
 
-       The hook appears ONCE, at the top of this nested group. That is
-       deliberate: in 1.5.0 `article[class*="rounded-\[10px\]"]` was written
-       out seventeen times, so a Minehut rebuild meant seventeen edits. It
-       audits to exactly one class (no over-match), but it is still an
-       arbitrary value, so it is the single most likely thing in this file to
-       break. One line to change.
+       Migrated from `article[class*="rounded-\[10px\]"]` in 2.0.4. DOM recon
+       settled it: the server list has exactly 5 <article> elements for 5
+       servers, all inside <main>, all carrying byte-identical class strings —
+       and the console route has none at all, so nothing else in the app
+       reaches for the element. That retires the file's single largest
+       fragility: the old hook was an arbitrary Tailwind value that any rebuild
+       could rename, and it was written out seventeen times in 1.5.0.
 
-       `main article` would be durable and is the intended migration — but it
-       is only correct if EVERY <article> on the page is a server card, and
-       Minehut's bundle emits no element selectors, so the CSS cannot tell us.
-       See §99; the DevTools check is one line.
+       Caveat recorded in §99: only 2 of 11 tab routes were sampled. File
+       Manager, Backups and Sub users are the plausible places a non-card
+       <article> could hide.
 
-       @risk F  hook:article[class*="rounded-[10px]"]  hits:1  fallback:main article
-                verify: audit "rounded-[10px]" must return exactly ["rounded-[10px]"]
+       @risk D  hook:main article  verify: [...document.querySelectorAll('article')]
+                .every(a => a.closest('main') && a.className.includes('rounded-[10px]'))
        ═══════════════════════════════════════════════════════════════════════ */
 
-    & article[class*="rounded-\[10px\]"] {
+    & main article {
       background: hsl(var(--card));
       border: 1px solid hsl(var(--border));
       border-radius: var(--og-r-card);
@@ -848,13 +856,37 @@
       & .mh-sc-icon img {
         image-rendering: pixelated;
       }
+
+      /* The presence dot on the server icon — Minehut ships it at opacity 70,
+         which on a dark ground reads as smudged rather than subtle. This is
+         the Discord model's most important pixel: the one element whose colour
+         IS the server's state. Full opacity, and a slightly wider card-coloured
+         ring so it reads as deliberately punched out of the icon.
+         Colour is left to Minehut so it stays correct per state.
+         @risk S  hook:.size-3\.5.rounded-full.border-card  verify: audit "size-3.5" */
+      & .size-3\.5.rounded-full.border-card {
+        opacity: 1;
+      }
     }
 
     /* SPACING — 1.5.0 forced 24px onto every inner gap and inflated page
        padding to 32/40px. Both rules over-matched badly: `[class*="p-6"]` also
        matches gap-6, md:gap-6, sm:gap-6 and -top-6; `[class*="p-4"]` matches
        gap-4 and top-4. Minehut's own spacing is coherent and responsive, so
-       v2 leaves it alone entirely and spends the budget on the type scale. */
+       v2 leaves it alone entirely and spends the budget on the type scale.
+
+       The one exception: Minehut's grid tops out at `xl:grid-cols-3`, which on
+       a wide monitor stretches each card to ~600px. A server card holds a
+       name, a domain, a plan and a timestamp — at 600px that content is marooned
+       in whitespace, which reads as emptiness rather than generosity. Density
+       is the cure for a sparse grid, not decoration. Only above 1800px, so
+       Minehut's own breakpoints are untouched everywhere they were designed for.
+       @risk S  hook:.grid.gap-4 + xl:grid-cols-3  verify: audit "xl:grid-cols-3" */
+    @media (min-width: 1800px) {
+      & .grid.gap-4.xl\:grid-cols-3 {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+    }
 
     /* ═══════════════════════════════════════════════════════════════════════
        §31  METER — Minehut's own classes.
@@ -878,14 +910,63 @@
     }
 
     /* ═══════════════════════════════════════════════════════════════════════
-       §32  TABS — Minehut's real component.
-       1.5.0 targeted a 142-character generated shadow class instead, which is
-       both fragile and probably a different element than the one Minehut
-       ships. `.mh-tabs` has NO container rule upstream, so the container look
-       is entirely ours to own.
-       @risk D  hook:.mh-tabs  verify: audit "mh-tabs"
-       ═══════════════════════════════════════════════════════════════════════ */
+       §32  TABS
 
+       DOM recon correction (2.0.4): the server page has ZERO `.mh-tabs`,
+       `.mh-tab-in`, `[role="tab"]` or `[role="tablist"]`. 2.0.0 migrated this
+       section to `.mh-tabs` believing it was "Minehut's real component" and
+       that 1.5.0's generated-shadow-class hook was wrong. It was the other way
+       round — 1.5.0 was right, and 2.0.0 through 2.0.3 shipped a tab section
+       that matched nothing on the route it was written for.
+
+       The real tab bar is a plain div with no ARIA and no data-attribute:
+         <div class="mt-6 flex flex-wrap gap-2 border-b border-border pb-2
+                     shadow-[0_1px_0_hsl(var(--foreground)/0.08),…]">
+       and state is expressed only by element type plus swapped utilities —
+       active is a <button> with `border-input bg-card text-foreground`,
+       inactive an <a> with `border-transparent text-muted-foreground`.
+
+       That means the active tab is ALSO matched by §33's secondary-button rule
+       (`button.border-input.bg-card`). Scoping these to the container puts them
+       at (0,5,1) against §33's (0,3,1), so the tab treatment wins wherever a
+       tab actually lives and real secondary buttons elsewhere are untouched.
+
+       @risk F  hook:the container's generated shadow class  hits:1
+                verify: audit "shadow-[0_1px_0_hsl(var(--foreground)" */
+    & .shadow-\[0_1px_0_hsl\(var\(--foreground\)\/0\.08\)\2c 0_2px_0_hsl\(var\(--foreground\)\/0\.2\)\] {
+      box-shadow: none;
+      border-bottom: 1px solid hsl(var(--border));
+    }
+    /* Active — underline, not a filled pill. */
+    & .shadow-\[0_1px_0_hsl\(var\(--foreground\)\/0\.08\)\2c 0_2px_0_hsl\(var\(--foreground\)\/0\.2\)\]
+      > button.border-input.bg-card {
+      background: transparent;
+      border-color: transparent;
+      color: hsl(var(--foreground));
+      font-weight: 550;
+      box-shadow: inset 0 -2px 0 hsl(var(--primary));
+      border-radius: calc(var(--radius) - 2px) calc(var(--radius) - 2px) 0 0;
+    }
+    & .shadow-\[0_1px_0_hsl\(var\(--foreground\)\/0\.08\)\2c 0_2px_0_hsl\(var\(--foreground\)\/0\.2\)\]
+      > button.border-input.bg-card svg {
+      color: hsl(var(--primary));
+    }
+    /* Inactive */
+    & .shadow-\[0_1px_0_hsl\(var\(--foreground\)\/0\.08\)\2c 0_2px_0_hsl\(var\(--foreground\)\/0\.2\)\]
+      > a.border-transparent {
+      color: hsl(var(--muted-foreground));
+      border-radius: calc(var(--radius) - 2px) calc(var(--radius) - 2px) 0 0;
+    }
+    & .shadow-\[0_1px_0_hsl\(var\(--foreground\)\/0\.08\)\2c 0_2px_0_hsl\(var\(--foreground\)\/0\.2\)\]
+      > a.border-transparent:hover {
+      color: hsl(var(--foreground));
+      background: hsl(var(--muted) / 0.6);
+    }
+
+    /* `.mh-tabs` IS in the shipped bundle, so Minehut uses it on some route we
+       have not sampled. Kept for that case; it is simply not the server page.
+       @risk D  hook:.mh-tabs  verify: audit "mh-tabs" (exists in CSS, 0 in DOM
+                on / and /servers/<id>/console) */
     & .mh-tabs {
       border-bottom: 1px solid hsl(var(--border));
       gap: 2px;
