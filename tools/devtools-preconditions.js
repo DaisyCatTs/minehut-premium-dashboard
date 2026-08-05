@@ -49,7 +49,9 @@
     body: getComputedStyle(document.body).fontFamily,
     display: (() => {
       const d = document.querySelector(".font-display");
-      return d ? getComputedStyle(d).fontFamily + " @ " + getComputedStyle(d).fontSize : "none found";
+      return d
+        ? getComputedStyle(d).fontFamily + " @ " + getComputedStyle(d).fontSize
+        : "none found";
     })(),
   };
 

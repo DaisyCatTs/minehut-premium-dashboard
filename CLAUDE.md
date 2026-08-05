@@ -5,16 +5,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## What this is
 
 A single-file **UserCSS theme** (Stylus) that restyles `dashboard.minehut.com`. There is no
-package manager, build step, test runner, or linter — the deliverable *is*
+package manager, build step, test runner, or linter — the deliverable _is_
 `minehut-premium-dashboard.user.css`, shipped verbatim from the repo's raw URL.
 
-| Path | Role |
-|---|---|
-| `minehut-premium-dashboard.user.css` | The entire theme (~1580 lines, one `@-moz-document` block) |
+| Path                                   | Role                                                                                                                                                                                                             |
+| -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `minehut-premium-dashboard.user.css`   | The entire theme (~1580 lines, one `@-moz-document` block)                                                                                                                                                       |
 | `Original Css from their next static/` | Minehut's own shipped Next.js CSS bundles — the reference for real class names and token values. **Gitignored** (their copyrighted output, not ours to redistribute). Keep a local copy when doing selector work |
-| `tools/` | The verification gate that stands in for the absent build step, plus `bundle-tokens.txt` — the extracted class-name list the audits fall back to when the bundle isn't present |
-| `Theme guide.md` | The design brief the theme is written against (restraint, elevation-by-lightness, no "AI UI") |
-| `docs/screenshots/` | README images |
+| `tools/`                               | The verification gate that stands in for the absent build step, plus `bundle-tokens.txt` — the extracted class-name list the audits fall back to when the bundle isn't present                                   |
+| `Theme guide.md`                       | The design brief the theme is written against (restraint, elevation-by-lightness, no "AI UI")                                                                                                                    |
+| `docs/screenshots/`                    | README images                                                                                                                                                                                                    |
 
 ## Release / distribution
 
@@ -24,13 +24,13 @@ when the user asks to ship.
 
 ## Architecture: authored vs derived tokens
 
-**One rule decides the whole design:** shadcn consumes `hsl(var(--card))`, which needs a *bare
-component triplet* (`H S% L%`), not a colour. No CSS feature can produce a bare triplet from a
+**One rule decides the whole design:** shadcn consumes `hsl(var(--card))`, which needs a _bare
+component triplet_ (`H S% L%`), not a colour. No CSS feature can produce a bare triplet from a
 colour — not `color-mix()`, not relative colour syntax. So the shadcn layer cannot be derived, and
 is therefore the **source of truth**.
 
 - **Authored** (§03, §04a) — shadcn triplets: `--background --card --muted --secondary --popover
-  --accent --border --input --foreground --muted-foreground --primary --ring --destructive`, plus
+--accent --border --input --foreground --muted-foreground --primary --ring --destructive`, plus
   `--surface-grain`, `--chart-*` and the 18 `--console-*` slots. The only place numbers live.
 - **Derived** (§04) — Minehut's `--mh-*` aliased straight off the triplets:
   `--mh-bg: hsl(var(--background))`, `--mh-line: hsl(var(--border))`, and so on. Drift is
@@ -66,7 +66,7 @@ dark cards on light tokens.
 
 Two hazards this creates:
 
-- **`& html` never matches.** It resolves to `:is(.dark) html`, and `.dark` sits *on* `<html>`.
+- **`& html` never matches.** It resolves to `:is(.dark) html`, and `.dark` sits _on_ `<html>`.
   Root-element styling is handled separately in §08 with `html.dark, html[data-theme="dark"]`.
 - **Bare declarations must not follow a nested rule** inside the gate — Chrome 112–129 predates
   `CSSNestedDeclarations` and drops them silently. This is why `--console-*` lives in §04a rather
@@ -79,12 +79,12 @@ Always write `&` explicitly; relaxed nesting is newer and fails silently on olde
 Permitted in exactly four cases, each carrying a same-line tag. **An untagged `!important` is a
 bug**, and the validator fails the file for it.
 
-| Tag | When |
-|---|---|
-| `!imp:token` | Overriding a custom property Minehut also declares — Next.js appends route CSS chunks on client navigation, so source order isn't safe for tokens. |
-| `!imp:dark-util` | Beating a `dark:` variant. Those compile to `.dark\:x:is(.dark *)` = (0,2,0), which *ties* our gated (0,2,0), and ties resolve on source order. |
-| `!imp:bang` | Beating a utility that ships `!important` itself — only `.mh-tabs > button.\!active`. |
-| `!imp:a11y` | §80/§90 must beat the whole file by construction. |
+| Tag              | When                                                                                                                                               |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `!imp:token`     | Overriding a custom property Minehut also declares — Next.js appends route CSS chunks on client navigation, so source order isn't safe for tokens. |
+| `!imp:dark-util` | Beating a `dark:` variant. Those compile to `.dark\:x:is(.dark *)` = (0,2,0), which _ties_ our gated (0,2,0), and ties resolve on source order.    |
+| `!imp:bang`      | Beating a utility that ships `!important` itself — only `.mh-tabs > button.\!active`.                                                              |
+| `!imp:a11y`      | §80/§90 must beat the whole file by construction.                                                                                                  |
 
 ## Selector conventions
 
@@ -128,10 +128,10 @@ a rule: **each section may only override sections above it.**
 what makes the `--og-speed` knob honest. §61 (literal-colour quarantine) is deliberately late
 because it must override §11. §80/§90 are last so they beat everything.
 
-The tail holds three *separate* degradation blocks — `@supports not (backdrop-filter)`,
+The tail holds three _separate_ degradation blocks — `@supports not (backdrop-filter)`,
 `prefers-reduced-transparency`, `prefers-reduced-motion`. Reduced transparency and reduced motion
 are distinct user needs; keep them separate. Any new blur or moved property must be registered
-there, and note that killing `transition-duration` alone leaves a transform applied *instantly* —
+there, and note that killing `transition-duration` alone leaves a transform applied _instantly_ —
 `translate`, `scale` and `transform` are each neutralised explicitly.
 
 ## Motion
@@ -153,11 +153,17 @@ repaint, and a shorthand with `!important` destroys it. Use the longhands only.
 - **`backdrop-filter` is restricted to the sidebar and overlays** — it repaints every scroll frame,
   so it never touches cards or lists.
 - **One desaturated accent.** Blue means interaction/focus/selection only; data and labels stay
-  neutral. Status colour always pairs with a dot *and* a label.
+  neutral. Status colour always pairs with a dot _and_ a label.
 - Contrast is measured, not eyeballed, and **every ratio names its reference surface**. On `--card`:
-  17.16 / 11.30 / 6.73 / 5.15 : 1 for the four ink tiers; focus ring 4.70–6.40 : 1 across all five
-  surfaces. v1.5.0's comments stated ratios against no stated surface and matched none of them —
-  recompute and update the comment if you change a value.
+  18.42 / 11.94 / 7.75 / 5.06 : 1 for the four ink tiers, evenly spaced at 1.54x; focus ring
+  5.17–7.58 : 1 across all five surfaces. `tools/check-palette.py` recomputes every claim from the
+  shipped CSS and **fails on any comment that disagrees** — don't hand-write a ratio.
+- **The palette is pure neutral (zero chroma).** Minehut puts every token at hue 35–45, which leaves
+  no neutral reference and makes small uppercase labels read brown. Chroma was trimmed twice before
+  removing it entirely. Don't reintroduce warmth to the greys.
+- **Never run prettier on the stylesheet** — it's in `.prettierignore`. Escaped classes contain
+  `c ` hex escapes where the trailing space is load-bearing; prettier wraps there and silently
+  converts a class selector into a descendant combinator.
 - **Spend the accent rarely.** v1.5.0 used one blue 38 times at one saturation with 16 glow
   declarations up to `0 0 28px`. v2 tiers it (strong / base / soft) and uses it ~12 times.
 - Radius scale 8 / 10 / 12 / 14 / 16 / pill, keyed to element size — not one value everywhere.
@@ -171,11 +177,11 @@ repaint, and a shorthand with `!important` destroys it. Use the longhands only.
 There is no build or test runner. Three scripts stand in, and all three must pass before shipping
 a selector change:
 
-| Check | What it catches |
-|---|---|
-| `audit-selectors.py` | What each `[class*=]` **actually** matches in Minehut's bundle. A pattern ships only if the hit set equals the intended set recorded in its `@risk` comment. |
-| `check-exact-classes.py` | Exact escaped selectors (`.bg-\[var\(--mh-brand\)\]`) that match nothing — a typo there fails silently. |
-| `check-css.js` | Brace/paren/comment balance, declarations outside any block, unknown at-rules, and untagged `!important`. |
+| Check                    | What it catches                                                                                                                                              |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `audit-selectors.py`     | What each `[class*=]` **actually** matches in Minehut's bundle. A pattern ships only if the hit set equals the intended set recorded in its `@risk` comment. |
+| `check-exact-classes.py` | Exact escaped selectors (`.bg-\[var\(--mh-brand\)\]`) that match nothing — a typo there fails silently.                                                      |
+| `check-css.js`           | Brace/paren/comment balance, declarations outside any block, unknown at-rules, and untagged `!important`.                                                    |
 
 All three strip comments before counting — otherwise documenting a removed selector re-reports it
 forever. The bundle itself is gitignored, so the audits read `tools/bundle-tokens.txt` when it's

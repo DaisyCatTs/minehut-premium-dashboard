@@ -15,3 +15,6 @@ Original Css from their next static/
 # Local render output from tools/build-fixture.js + the screenshot harness.
 tools/fixture.html
 tools/.shots/
+
+# npm
+node_modules/

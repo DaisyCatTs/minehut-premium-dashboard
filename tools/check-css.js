@@ -46,7 +46,9 @@ for (let i = 0; i < src.length; i++) {
     }
     if (c === quote) quote = null;
     else if (c === "\n") {
-      errors.push(`line ${line}: newline inside ${quote}-quoted string opened at line ${quoteStart}`);
+      errors.push(
+        `line ${line}: newline inside ${quote}-quoted string opened at line ${quoteStart}`
+      );
       quote = null;
     }
     continue;
@@ -90,9 +92,12 @@ for (let i = 0; i < src.length; i++) {
 
 if (inComment) errors.push(`unterminated /* comment opened at line ${commentStart}`);
 if (quote) errors.push(`unterminated ${quote}-quoted string opened at line ${quoteStart}`);
-if (paren !== 0) errors.push(`unbalanced parentheses: ${paren > 0 ? paren + " unclosed '('" : "extra ')'"}`);
+if (paren !== 0)
+  errors.push(`unbalanced parentheses: ${paren > 0 ? paren + " unclosed '('" : "extra ')'"}`);
 if (depth !== 0) {
-  errors.push(`unbalanced braces: ${depth} unclosed '{' (outermost opened at line ${braceStack[0]})`);
+  errors.push(
+    `unbalanced braces: ${depth} unclosed '{' (outermost opened at line ${braceStack[0]})`
+  );
 }
 
 // Strip comments/strings, then look for structural smells.
@@ -104,8 +109,19 @@ const bare = src
 // at-rules used, so a typo like @suports shows up
 const atRules = [...new Set([...bare.matchAll(/@([a-zA-Z-]+)/g)].map((m) => m[1]))];
 const known = new Set([
-  "-moz-document", "media", "supports", "keyframes", "font-face", "import",
-  "charset", "namespace", "page", "layer", "property", "container", "scope",
+  "-moz-document",
+  "media",
+  "supports",
+  "keyframes",
+  "font-face",
+  "import",
+  "charset",
+  "namespace",
+  "page",
+  "layer",
+  "property",
+  "container",
+  "scope",
 ]);
 for (const a of atRules) if (!known.has(a)) warn.push(`unknown at-rule: @${a}`);
 
@@ -119,8 +135,13 @@ for (let i = 0; i < bare.length; i++) {
   else if (c === "{") d++;
   else if (c === "}") d--;
   else if (c === ";" && d === 0) {
-    const seg = bare.slice(Math.max(0, i - 90), i).split(/[{}]/).pop().trim();
-    if (seg && !seg.startsWith("@")) warn.push(`line ~${ln}: declaration outside any block: "${seg.slice(0, 60)}"`);
+    const seg = bare
+      .slice(Math.max(0, i - 90), i)
+      .split(/[{}]/)
+      .pop()
+      .trim();
+    if (seg && !seg.startsWith("@"))
+      warn.push(`line ~${ln}: declaration outside any block: "${seg.slice(0, 60)}"`);
   }
 }
 
@@ -138,15 +159,21 @@ let untagged = 0;
 const codeLines = code.split("\n");
 const srcLines = src.split("\n");
 for (let i = 0; i < codeLines.length; i++) {
-  if (codeLines[i].includes("!important") && !/!imp:(token|dark-util|bang|a11y)/.test(srcLines[i])) {
+  if (
+    codeLines[i].includes("!important") &&
+    !/!imp:(token|dark-util|bang|a11y)/.test(srcLines[i])
+  ) {
     untagged++;
-    if (untagged <= 10) errors.push(`line ${i + 1}: untagged !important — ${srcLines[i].trim().slice(0, 70)}`);
+    if (untagged <= 10)
+      errors.push(`line ${i + 1}: untagged !important — ${srcLines[i].trim().slice(0, 70)}`);
   }
 }
 const tagged = imp - untagged;
 
 console.log(`${file}`);
-console.log(`  lines ${src.split("\n").length}   blocks ${rules}   :has() ${has}   [class*=] ${substr}`);
+console.log(
+  `  lines ${src.split("\n").length}   blocks ${rules}   :has() ${has}   [class*=] ${substr}`
+);
 console.log(`  !important ${imp}   tagged ${tagged}   @risk markers ${risk}`);
 if (warn.length) {
   console.log(`\n  warnings (${warn.length}):`);

@@ -47,16 +47,16 @@
 
 **1 · Get Stylus**
 
-| Browser | Link |
-|---|---|
-| Chrome · Brave · Opera · Vivaldi | [Chrome Web Store](https://chromewebstore.google.com/detail/stylus/clngdbkpkpeebahjckkjfobafhncgmne) |
-| Firefox | [Firefox Add-ons](https://addons.mozilla.org/en-US/firefox/addon/styl-us/) |
-| Firefox for Android | [Add-ons (Android)](https://addons.mozilla.org/en-US/android/addon/styl-us/) |
-| Edge | Install the [Chrome Web Store](https://chromewebstore.google.com/detail/stylus/clngdbkpkpeebahjckkjfobafhncgmne) version — Edge accepts Chrome extensions |
-| Safari | Stylus is unavailable; use **Cascadea** or **Userscripts** |
+| Browser                          | Link                                                                                                                                                      |
+| -------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Chrome · Brave · Opera · Vivaldi | [Chrome Web Store](https://chromewebstore.google.com/detail/stylus/clngdbkpkpeebahjckkjfobafhncgmne)                                                      |
+| Firefox                          | [Firefox Add-ons](https://addons.mozilla.org/en-US/firefox/addon/styl-us/)                                                                                |
+| Firefox for Android              | [Add-ons (Android)](https://addons.mozilla.org/en-US/android/addon/styl-us/)                                                                              |
+| Edge                             | Install the [Chrome Web Store](https://chromewebstore.google.com/detail/stylus/clngdbkpkpeebahjckkjfobafhncgmne) version — Edge accepts Chrome extensions |
+| Safari                           | Stylus is unavailable; use **Cascadea** or **Userscripts**                                                                                                |
 
-Install *Stylus*, not *Stylish* — [Stylish was pulled from both stores in 2018
-for harvesting browsing history](https://en.wikipedia.org/wiki/Stylish_(software)).
+Install _Stylus_, not _Stylish_ — [Stylish was pulled from both stores in 2018
+for harvesting browsing history](<https://en.wikipedia.org/wiki/Stylish_(software)>).
 Stylus is the GPL fork made in response, and collects nothing.
 
 **2 · Add the theme**
@@ -101,11 +101,11 @@ The theme has no Stylus settings panel — it carries no `@var` declarations, so
 there is no gear icon. Edit the three values in **§02 KNOBS**, at the top of the
 file (Stylus icon → **Manage** → the theme → **Edit**).
 
-| Knob | Default | Notes |
-|---|---|---|
-| `--og-accent` | `#5B93E8` | Every blue: focus ring, active nav, primary action, card rail, tab underline, selection, console keyword |
-| `--og-speed` | `1` | Unitless multiplier. `0` disables all motion; `1.5` lands the base step at 270ms, which starts to drag |
-| `--og-radius` | `0.625rem` | Control radius. Drives Minehut's own `rounded-sm/md/lg/xl` plus the sidebar items and server tiles |
+| Knob          | Default    | Notes                                                                                                    |
+| ------------- | ---------- | -------------------------------------------------------------------------------------------------------- |
+| `--og-accent` | `#5B93E8`  | Every blue: focus ring, active nav, primary action, card rail, tab underline, selection, console keyword |
+| `--og-speed`  | `1`        | Unitless multiplier. `0` disables all motion; `1.5` lands the base step at 270ms, which starts to drag   |
+| `--og-radius` | `0.625rem` | Control radius. Drives Minehut's own `rounded-sm/md/lg/xl` plus the sidebar items and server tiles       |
 
 A heavily saturated accent will fight the design: saturated colour on a
 near-black ground reads as though it is emitting light. Around 70–75% saturation
@@ -122,21 +122,27 @@ that depends on it and nothing can drift out of sync.
 ## Design
 
 **Elevation is lightness.** Shadows are nearly invisible on a dark ground, so
-depth comes from a five-rung surface ladder stepped by *measured* CIE L\* —
+depth comes from a five-rung surface ladder stepped by _measured_ CIE L\* —
 2.7 → 5.1 → 8.8 → 12.4 → 16.6 — not by nominal HSL lightness, which is not
 perceptually uniform. Hover raises a surface a rung instead of casting.
 
-**Warm-neutral, not blue-black.** The greys sit in the same hue family as
-Minehut's own (`oklch(… .008 55–60)`) at near-zero chroma, so the interface
-reads as a material rather than as a tint.
+**Pure neutral.** Zero chroma at every rung. Minehut puts every surface, border
+and text token at hue 35–45, which leaves the eye no neutral reference — and
+simultaneous contrast then pushes a faintly warm grey all the way to brown on
+small uppercase labels. Trimming chroma twice didn't fix it; removing it did.
 
 **Accent is earned.** One blue, spent in three tiers and used about a dozen
-times: focus, active navigation, the primary action, the card rail, the tab
-underline, selection. Data, labels and domains stay neutral, so blue always
-means something. No glow — a lit indicator is a 3px ring, not a 28px bloom.
+times: focus, active navigation, the primary action, the tab underline,
+selection. Data, labels and domains stay neutral, so blue always means
+something. No glow — a lit indicator is a 3px ring, not a 28px bloom.
+
+**Colour is split by job.** Success, warning and danger take the semantic trio
+that reads instantly. Minehut's own material hues stay where they carry
+distinctions those three can't: diamond marks a version, amethyst a plugin,
+teal an external server.
 
 **Colour carries state.** Emerald running, red pending deletion, amber warning,
-teal version. Each status pairs colour with a dot *and* a label, so it never
+teal version. Each status pairs colour with a dot _and_ a label, so it never
 depends on colour alone.
 
 **Glass is rare.** Sidebar, overlay panels and the modal scrim — three sites.
@@ -148,9 +154,10 @@ metrics with tabular figures, and Unbounded reserved for page titles. All three
 are already loaded by the page, so there is no extra request and no flash.
 Headings get real leading (1.15–1.35) rather than inheriting body's.
 
-**Measured, not guessed.** Four text tiers at 17.16 / 11.30 / 6.73 / 5.15 : 1
-**against the card surface** — every ratio in the file names the surface it was
-measured on. Focus ring 4.70–6.40 : 1 on all five surfaces it can appear over.
+**Measured, not guessed.** Four text tiers at 18.42 / 11.94 / 7.75 / 5.06 : 1
+**against the card surface**, evenly spaced at 1.54× per step — every ratio in
+the file names the surface it was measured on, and `check-palette.py` fails the
+build if a comment disagrees. Focus ring 5.17–7.58 : 1 on all five surfaces.
 
 ---
 
@@ -208,11 +215,11 @@ edit **§03** instead.
 
 ## Files
 
-| File | Purpose |
-|---|---|
-| `minehut-premium-dashboard.user.css` | The theme. §01 is the contract — read it before editing |
-| `Theme guide.md` | The design brief the theme is written against |
-| `tools/` | The verification gate, since there's no build step. See `tools/README.md` |
+| File                                 | Purpose                                                                   |
+| ------------------------------------ | ------------------------------------------------------------------------- |
+| `minehut-premium-dashboard.user.css` | The theme. §01 is the contract — read it before editing                   |
+| `Theme guide.md`                     | The design brief the theme is written against                             |
+| `tools/`                             | The verification gate, since there's no build step. See `tools/README.md` |
 
 ---
 
@@ -230,16 +237,22 @@ The short version of both:
    bordered element in the app with no selector at all.
 2. **Verify a hook in the DOM, not just in Minehut's CSS.** A whole section here
    once targeted `.mh-tabs` — which is compiled into their stylesheet and appears
-   *zero* times on the page it was written for.
+   _zero_ times on the page it was written for.
 
 Before opening a PR, run the gate — there is no build step, so this is it:
 
 ```sh
-node   tools/check-css.js minehut-premium-dashboard.user.css
-python tools/check-exact-classes.py
-python tools/audit-selectors.py
-python tools/check-palette.py      # if you touched a colour
+npm run check       # all four gates
+npm run format      # prettier — everything EXCEPT the stylesheet, see below
+npm run fixture     # then open tools/fixture.html
 ```
+
+**The stylesheet is excluded from prettier on purpose.** It selects on escaped
+Tailwind classes containing CSS hex escapes (`c `), where the trailing space
+terminates the escape and is part of the token. Prettier wraps the line there,
+consumes the space as a newline, and silently turns one class selector into a
+descendant combinator. `check-exact-classes.py` catches it, but the file is
+hand-formatted and machine-checked instead.
 
 Then render it locally — no Minehut account required:
 

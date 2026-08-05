@@ -1,0 +1,23 @@
+# Minehut's shipped CSS — not ours to format.
+Original Css from their next static/
+
+# Generated render output.
+tools/fixture.html
+tools/.shots/
+tools/bundle-tokens.txt
+
+# THE STYLESHEET IS DELIBERATELY EXCLUDED.
+#
+# It selects on escaped Tailwind classes containing CSS hex escapes, e.g.
+#   .shadow-\[0_1px_0_hsl\(var\(--foreground\)\/0\.08\)\2c 0_2px_0_hsl\(…\)\]
+# A hex escape (`\2c`) is terminated by exactly ONE whitespace character, so
+# that trailing space is part of the token, not formatting. Prettier wraps the
+# line there and consumes the space as a newline, which turns a single class
+# selector into a descendant combinator — the rule then silently matches
+# nothing. Verified: running prettier on this file breaks the tabs section and
+# check-exact-classes.py catches it.
+#
+# The file is hand-formatted and machine-checked instead:
+#   node tools/check-css.js  — brace/paren/comment balance, indentation,
+#                              declarations outside blocks, untagged !important
+minehut-premium-dashboard.user.css

@@ -37,17 +37,50 @@ const minehut = fs
 const themeSrc = fs.readFileSync(path.join(repo, "minehut-premium-dashboard.user.css"), "utf8");
 const open = themeSrc.indexOf("@-moz-document");
 const braceAt = themeSrc.indexOf("{", open);
-let depth = 0, end = -1, inComment = false, quote = null;
+let depth = 0,
+  end = -1,
+  inComment = false,
+  quote = null;
 for (let i = braceAt; i < themeSrc.length; i++) {
-  const c = themeSrc[i], n = themeSrc[i + 1];
-  if (inComment) { if (c === "*" && n === "/") { inComment = false; i++; } continue; }
-  if (quote) { if (c === "\\") { i++; continue; } if (c === quote) quote = null; continue; }
-  if (c === "/" && n === "*") { inComment = true; i++; continue; }
-  if (c === '"' || c === "'") { quote = c; continue; }
+  const c = themeSrc[i],
+    n = themeSrc[i + 1];
+  if (inComment) {
+    if (c === "*" && n === "/") {
+      inComment = false;
+      i++;
+    }
+    continue;
+  }
+  if (quote) {
+    if (c === "\\") {
+      i++;
+      continue;
+    }
+    if (c === quote) quote = null;
+    continue;
+  }
+  if (c === "/" && n === "*") {
+    inComment = true;
+    i++;
+    continue;
+  }
+  if (c === '"' || c === "'") {
+    quote = c;
+    continue;
+  }
   if (c === "{") depth++;
-  else if (c === "}") { depth--; if (depth === 0) { end = i; break; } }
+  else if (c === "}") {
+    depth--;
+    if (depth === 0) {
+      end = i;
+      break;
+    }
+  }
 }
-if (end < 0) { console.error("error: could not find the end of the @-moz-document block"); process.exit(1); }
+if (end < 0) {
+  console.error("error: could not find the end of the @-moz-document block");
+  process.exit(1);
+}
 const theme = themeSrc.slice(braceAt + 1, end);
 
 // Markup below is transcribed from tools/recon.js output on the live dashboard.
@@ -91,7 +124,10 @@ const tabBar = `
 <div class="mt-6 flex flex-wrap gap-2 border-b border-border pb-2 shadow-[0_1px_0_hsl(var(--foreground)/0.08),0_2px_0_hsl(var(--foreground)/0.2)]">
   <button class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-[13px] font-medium tracking-[-0.005em] transition-all duration-[120ms] ease-mh-out border h-9 px-3.5 py-2 border-input bg-card text-foreground">Console</button>
   ${["File Manager", "Settings", "Stats", "Backups", "Sub users", "Upgrade"]
-    .map((t) => `<a href="#" class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-[13px] font-medium tracking-[-0.005em] transition-all duration-[120ms] ease-mh-out border h-9 px-3.5 py-2 border-transparent text-muted-foreground">${t}</a>`)
+    .map(
+      (t) =>
+        `<a href="#" class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-[13px] font-medium tracking-[-0.005em] transition-all duration-[120ms] ease-mh-out border h-9 px-3.5 py-2 border-transparent text-muted-foreground">${t}</a>`
+    )
     .join("\n  ")}
 </div>`;
 
@@ -170,4 +206,4 @@ ${theme}
 const out = path.join(repo, "tools", "fixture.html");
 fs.writeFileSync(out, html, "utf8");
 console.log(`wrote ${out}  (${(html.length / 1024).toFixed(0)} KB)`);
-console.log("toggle light mode by removing class=\"dark\" from <html>");
+console.log('toggle light mode by removing class="dark" from <html>');

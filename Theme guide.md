@@ -20,12 +20,12 @@ Transform the Minehut dashboard into a world-class premium server management int
 
 The final experience should feel like a product designed by a senior UI/UX team, comparable to:
 
-* Linear
-* Vercel Dashboard
-* Stripe Dashboard
-* Apple system applications
-* Raycast
-* Arc Browser
+- Linear
+- Vercel Dashboard
+- Stripe Dashboard
+- Apple system applications
+- Raycast
+- Arc Browser
 
 The goal is not "dark mode".
 
@@ -45,14 +45,14 @@ The design must NOT look generated.
 
 Avoid:
 
-* random gradients
-* excessive glow
-* neon colours
-* cyberpunk aesthetics
-* excessive glass blur
-* giant rounded cards everywhere
-* rainbow accents
-* fake futuristic styling
+- random gradients
+- excessive glow
+- neon colours
+- cyberpunk aesthetics
+- excessive glass blur
+- giant rounded cards everywhere
+- rainbow accents
+- fake futuristic styling
 
 Premium software is usually restrained.
 
@@ -74,9 +74,9 @@ The application background.
 
 Feeling:
 
-* OLED black
-* calm
-* infinite space
+- OLED black
+- calm
+- infinite space
 
 Example:
 
@@ -92,15 +92,15 @@ Sidebar and persistent UI.
 
 Feeling:
 
-* slightly separated
-* stable
-* elegant
+- slightly separated
+- stable
+- elegant
 
 Use:
 
-* subtle transparency
-* subtle border
-* very light depth
+- subtle transparency
+- subtle border
+- very light depth
 
 ---
 
@@ -110,15 +110,15 @@ Server cards and primary containers.
 
 Feeling:
 
-* physical object
-* lifted from background
+- physical object
+- lifted from background
 
 Should have:
 
-* subtle gradient
-* soft internal highlight
-* controlled shadow
-* clean border
+- subtle gradient
+- soft internal highlight
+- controlled shadow
+- clean border
 
 ---
 
@@ -128,9 +128,9 @@ Buttons, dropdowns, inputs.
 
 Should feel:
 
-* tactile
-* responsive
-* closer to user
+- tactile
+- responsive
+- closer to user
 
 ---
 
@@ -176,9 +176,9 @@ Statuses should communicate information.
 
 Should feel:
 
-* alive
-* successful
-* active
+- alive
+- successful
+- active
 
 Use:
 emerald atmosphere
@@ -192,8 +192,8 @@ bright green box
 
 Should feel:
 
-* neutral
-* inactive
+- neutral
+- inactive
 
 ---
 
@@ -201,8 +201,8 @@ Should feel:
 
 Should feel:
 
-* important
-* controlled
+- important
+- controlled
 
 Not:
 large red warning blocks
@@ -215,9 +215,9 @@ Typography is one of the biggest differences between average and premium.
 
 Goals:
 
-* stronger hierarchy
-* cleaner spacing
-* better readability
+- stronger hierarchy
+- cleaner spacing
+- better readability
 
 Use:
 
@@ -253,13 +253,13 @@ Improve:
 
 Server name:
 
-* stronger
-* cleaner
-* more important
+- stronger
+- cleaner
+- more important
 
 Status:
 
-* elegant indicator
+- elegant indicator
 
 ---
 
@@ -274,9 +274,9 @@ random boxes everywhere.
 
 Use:
 
-* spacing
-* alignment
-* typography
+- spacing
+- alignment
+- typography
 
 ---
 
@@ -286,15 +286,15 @@ Hover should feel like touching a physical object.
 
 Effects:
 
-* tiny elevation
-* subtle border lighting
-* slight background shift
+- tiny elevation
+- subtle border lighting
+- slight background shift
 
 Avoid:
 
-* huge glow
-* movement
-* flashy animations
+- huge glow
+- movement
+- flashy animations
 
 ---
 
@@ -315,16 +315,16 @@ Slow:
 
 Use:
 
-* opacity
-* colour
-* shadow
-* transform
+- opacity
+- colour
+- shadow
+- transform
 
 Avoid:
 
-* bouncing
-* spinning
-* exaggerated movement
+- bouncing
+- spinning
+- exaggerated movement
 
 ---
 
@@ -336,17 +336,17 @@ Primary:
 
 Should have:
 
-* controlled accent background
-* subtle highlight
-* premium hover
+- controlled accent background
+- subtle highlight
+- premium hover
 
 Secondary:
 
 Should have:
 
-* material surface
-* clear border
-* good contrast
+- material surface
+- clear border
+- good contrast
 
 Danger:
 
@@ -363,10 +363,10 @@ Sidebar should feel like a premium application shell.
 
 Requirements:
 
-* clear active state
-* elegant indicator
-* smooth transitions
-* good spacing
+- clear active state
+- elegant indicator
+- smooth transitions
+- good spacing
 
 Active item:
 
@@ -380,16 +380,16 @@ Console should feel like a professional developer tool.
 
 Inspired by:
 
-* VS Code terminal
-* Linear logs
-* GitHub actions
+- VS Code terminal
+- Linear logs
+- GitHub actions
 
 Requirements:
 
-* readable colours
-* good contrast
-* elegant prompt
-* clear errors/warnings
+- readable colours
+- good contrast
+- elegant prompt
+- clear errors/warnings
 
 ---
 
@@ -397,10 +397,10 @@ Requirements:
 
 Must maintain:
 
-* WCAG contrast
-* keyboard focus
-* reduced motion support
-* readable text sizes
+- WCAG contrast
+- keyboard focus
+- reduced motion support
+- readable text sizes
 
 Premium design is accessible design.
 
@@ -422,13 +422,13 @@ Not:
 
 When rewriting the UserStyle:
 
-* Preserve Minehut functionality.
-* Do not break Tailwind classes.
-* Keep selectors maintainable.
-* Use CSS variables.
-* Remove redundant overrides.
-* Improve the existing system rather than replacing randomly.
-* Test every component.
+- Preserve Minehut functionality.
+- Do not break Tailwind classes.
+- Keep selectors maintainable.
+- Use CSS variables.
+- Remove redundant overrides.
+- Improve the existing system rather than replacing randomly.
+- Test every component.
 
 Before coding:
 

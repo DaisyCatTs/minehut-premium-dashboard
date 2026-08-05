@@ -1,0 +1,16 @@
+{
+  "name": "minehut-premium-dashboard",
+  "version": "3.0.0",
+  "private": true,
+  "description": "A premium dark theme for dashboard.minehut.com",
+  "license": "MIT",
+  "scripts": {
+    "format": "prettier --write \"**/*.{css,js,json,md}\"",
+    "format:check": "prettier --check \"**/*.{css,js,json,md}\"",
+    "check": "node tools/check-css.js minehut-premium-dashboard.user.css && python tools/check-exact-classes.py && python tools/audit-selectors.py && python tools/check-palette.py",
+    "fixture": "node tools/build-fixture.js"
+  },
+  "devDependencies": {
+    "prettier": "^3.3.0"
+  }
+}

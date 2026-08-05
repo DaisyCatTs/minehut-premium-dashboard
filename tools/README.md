@@ -11,17 +11,17 @@ dropped — 0 hits") re-reports it forever as a live dead rule.
 
 Minehut's shipped CSS lives in `Original Css from their next static/` and is
 **gitignored** — it is their copyrighted production output and does not belong in
-an MIT repo. Neither audit needs the CSS itself, only the list of class *names*,
+an MIT repo. Neither audit needs the CSS itself, only the list of class _names_,
 so that list is committed as **`bundle-tokens.txt`** (1096 entries) and both
 scripts fall back to it automatically when the folder is absent. A fresh clone can
 run the full gate with no downloads; results are identical either way.
 
-| Script | Catches |
-|---|---|
-| `audit-selectors.py` | What each `[class*=]` **actually** matches. A pattern may ship only if the hit set equals the intended set recorded in its `@risk` comment. |
-| `check-exact-classes.py` | Exact escaped selectors (`.bg-\[var\(--mh-brand\)\]`) that match nothing. A typo there fails silently — the rule just never applies. |
-| `check-css.js` | Brace/paren/comment/string balance, declarations outside any block, unknown at-rules, and **untagged `!important`** (a policy violation per §01). |
-| `check-palette.py` | Every colour claim in the stylesheet against its shipped value — resolves the authored triplets, recomputes each ratio, and fails on any comment that disagrees. Also enforces the AA floor on the material hues, 3:1 on the focus ring, and that exactly one accent is shipping. |
+| Script                   | Catches                                                                                                                                                                                                                                                                           |
+| ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `audit-selectors.py`     | What each `[class*=]` **actually** matches. A pattern may ship only if the hit set equals the intended set recorded in its `@risk` comment.                                                                                                                                       |
+| `check-exact-classes.py` | Exact escaped selectors (`.bg-\[var\(--mh-brand\)\]`) that match nothing. A typo there fails silently — the rule just never applies.                                                                                                                                              |
+| `check-css.js`           | Brace/paren/comment/string balance, declarations outside any block, unknown at-rules, and **untagged `!important`** (a policy violation per §01).                                                                                                                                 |
+| `check-palette.py`       | Every colour claim in the stylesheet against its shipped value — resolves the authored triplets, recomputes each ratio, and fails on any comment that disagrees. Also enforces the AA floor on the material hues, 3:1 on the focus ring, and that exactly one accent is shipping. |
 
 These three check the stylesheet against Minehut's CSS. They cannot tell you
 whether a rule reaches anything on a real page — `recon.js` and `audit-page.js`
@@ -44,7 +44,7 @@ Two scripts, and the distinction matters:
   authored triplets itself, recomputes every ratio, and diffs against the numbers
   written in the comments. Run it after any colour change.
 - **`ladder.py` designs.** It computes a ladder from hardcoded values, which is
-  useful when *choosing* one and verifies nothing — it never reads the stylesheet.
+  useful when _choosing_ one and verifies nothing — it never reads the stylesheet.
 
 That distinction was learned the hard way: `ladder.py` was treated as the
 verification story, so when the card colour was brightened, every contrast figure
@@ -58,7 +58,7 @@ python tools/ladder.py            # exploration only
 ## Seeing it render, without a Minehut login
 
 This is the one that closes the loop. Everything else verifies the stylesheet
-against the *bundle*; this verifies it against a *rendering*.
+against the _bundle_; this verifies it against a _rendering_.
 
 ```sh
 node tools/build-fixture.js          # writes tools/fixture.html
@@ -81,7 +81,7 @@ Paste it into the console on any route, in both themes. It reports:
 
 - **Unthemed colours** — every computed colour on the page that is not one of the
   theme's tokens. The mechanical version of "what did I miss".
-- **Contrast failures** — every visible text node against its real *composited*
+- **Contrast failures** — every visible text node against its real _composited_
   background, at the correct AA threshold for its size and weight.
 - **Component census** — which component families exist on this route.
 

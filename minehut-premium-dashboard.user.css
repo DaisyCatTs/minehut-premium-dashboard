@@ -1,7 +1,7 @@
 /* ==UserStyle==
 @name           Minehut Premium Dashboard
 @namespace      github.com/DaisyCatTs/minehut-premium-dashboard
-@version        2.3.3
+@version        3.0.0
 @description    A premium dark theme for the Minehut dashboard. Warm-neutral OLED surfaces, one restrained accent, Geist typography, and contrast-verified text.
 @author         Daisy
 @license        MIT
@@ -168,7 +168,7 @@
        said #4B9EFF, so TWO accents shipped 2/255 apart — brand utilities got
        one, the ring/rail/underline/meter the other. Invisible, but it broke
        the one-accent invariant and invalidated every derived hex comment. */
-    --og-accent: #4da0ff;
+    --og-accent: #4da3ff;
 
     /* Motion multiplier, unitless. 0 disables every transition and animation
        in the theme; 1.5 lands the base step at 270ms, which starts to drag.
@@ -193,7 +193,15 @@
      3.2pp lighter than its --og-s1 twin, --popover 5.8pp lighter than --og-s3.
      Nothing here can drift, because there is nothing to keep in sync.
 
-     Warm-neutral, matching Minehut's own oklch(.. .005–.012 55–60) family.
+     PURE NEUTRAL — zero chroma at every rung.
+
+     v3 abandoned the warm-neutral ladder. Minehut puts EVERY surface, border
+     and text token at hue 35–45, so nothing on the page gives the eye a
+     neutral reference; simultaneous contrast then pushes a faintly warm grey
+     all the way to brown on small uppercase labels. Chroma was trimmed twice
+     chasing that (13% → 4% → 2%) and it was still reading warm at 2%. Zero
+     ends the argument, and it is what the design brief asks for.
+
      Stepped by MEASURED CIE L*, not nominal HSL L% — HSL lightness is not
      perceptually uniform, so equal L% steps give unequal perceived steps.
      ═════════════════════════════════════════════════════════════════════════ */
@@ -201,27 +209,27 @@
   .dark,
   [data-theme="dark"] {
     /* The page stays OLED black; everything above it steps up ~4–5 L*.
-       Raised twice. The page→card step went 2.4 L* → 4.6 → 6.7. At 4.6 the card
-       still sat close enough to an OLED-black page that the
-       grid read as one dark field with hairlines on it, rather than as a set
-       of objects resting on a surface. The page deliberately stays at L* 2.7 —
-       the separation should come from lifting the card, not from greying the
-       background, and Linear's own canvas is darker still at L* 2.4.
+       Steps settled at ~3.9 L*. The brief specifies #111111 cards at 2.5 L*
+       steps with elevation carried by shadow; that is darker and flatter than
+       what shipped, and close to the state this theme was already called dull
+       for. 3.9 is the compromise: compact and minimal, but a card still reads
+       as an object rather than a hairline on a field. If it reads flat, the
+       lever is this rung and the border alpha — never the page.
 
        surface                        hex       Y        L*     step */
-    --background: 60 5% 3.7% !important; /* #0A0A09  0.0030    2.7        */ /* !imp:token */
-    --card: 36 10% 10% !important; /* #1C1A17  0.0110    9.4   +6.7 */ /* !imp:token */
-    --muted: 34 10% 13.5% !important; /* #26231F  0.0175   13.9   +4.5 */ /* !imp:token */
-    --secondary: 34 10% 13.5% !important; /* #26231F  — same rung as muted   */ /* !imp:token */
-    --popover: 33 10% 17.1% !important; /* #302C27  0.0257   18.3   +4.4 */ /* !imp:token */
-    --accent: 38 10% 21% !important; /* #3B3730  0.0389   23.3   +5.0 */ /* !imp:token */
+    --background: 0 0% 3.5% !important; /* #090909  0.0028    2.5        */ /* !imp:token */
+    --card: 0 0% 7.8% !important; /* #141414  0.0069    6.3   +3.9 */ /* !imp:token */
+    --muted: 0 0% 11% !important; /* #1C1C1C  0.0116   10.3   +3.9 */ /* !imp:token */
+    --secondary: 0 0% 11% !important; /* #1C1C1C  — same rung as muted   */ /* !imp:token */
+    --popover: 0 0% 14.1% !important; /* #242424  0.0173   14.2   +3.9 */ /* !imp:token */
+    --accent: 0 0% 18% !important; /* #2E2E2E  0.0265   18.9   +4.7 */ /* !imp:token */
 
     /* Lines. Minehut ships `*{border-color:hsl(var(--border))}`, so claiming
        --border alone recolours every bordered element in the app — which is
        why §12 has almost no colour rules left. Raised alongside the ladder so
        card edges stay legible against the brighter fill. */
-    --border: 34 6% 24% !important; /* #413E3A  1.63:1 on --card */ /* !imp:token */
-    --input: 30 5% 29% !important; /* #4E4A46  1.98:1 on --card */ /* !imp:token */
+    --border: 0 0% 16.1% !important; /* #292929  ~9% white  1.27:1 on --card */ /* !imp:token */
+    --input: 0 0% 20.8% !important; /* #353535  ~14% white 1.50:1 on --card */ /* !imp:token */
 
     /* Ink. Four tiers, each measured against --card (where most text sits).
 
@@ -237,13 +245,13 @@
        noting none of Linear, Vercel or Discord tint their greys warm at all —
        Vercel's are deliberately pure neutral.
        Separation is 1.5x / 1.5x / 1.3x between tiers. */
-    --foreground: 60 2% 95.5% !important; /* #F4F4F3  15.78:1 on --card  titles   */ /* !imp:token */
-    --muted-foreground: 43 2% 63% !important; /* #A3A19F   6.74:1 on --card  metadata */ /* !imp:token */
+    --foreground: 0 0% 100% !important; /* #FFFFFF  18.42:1 on --card  titles   */ /* !imp:token */
+    --muted-foreground: 0 0% 65.9% !important; /* #A8A8A8   7.75:1 on --card  metadata */ /* !imp:token */
 
-    --card-foreground: 60 2% 95.5% !important; /* !imp:token */
-    --popover-foreground: 60 2% 95.5% !important; /* !imp:token */
-    --secondary-foreground: 45 2% 78.4% !important; /* #C9C8C7  10.39:1  body    */ /* !imp:token */
-    --accent-foreground: 60 2% 95.5% !important; /* !imp:token */
+    --card-foreground: 0 0% 100% !important; /* !imp:token */
+    --popover-foreground: 0 0% 100% !important; /* !imp:token */
+    --secondary-foreground: 0 0% 81.6% !important; /* #D0D0D0  11.94:1  body    */ /* !imp:token */
+    --accent-foreground: 0 0% 100% !important; /* !imp:token */
 
     /* Accent is Minehut's OWN brand blue. 2.0.0 shipped a desaturated #5B93E8,
        which was calmer but was not the product's colour — and "premium" is not
@@ -251,9 +259,9 @@
        4.39:1 across the five surfaces; WCAG 2.4.11 needs 3:1.
        (Re-measured in 2.1.1 — the previous figures were computed against the
        pre-2.0.1 card and never updated when the ladder was brightened.) */
-    --primary: 212 100% 65% !important; /* #4DA0FF  6.44:1 on --card */ /* !imp:token */
-    --ring: 212 100% 65% !important; /* !imp:token */
-    --destructive: 359 62% 68% !important; /* #E07B7C  6.03:1 on --card */ /* !imp:token */
+    --primary: 211 100% 65% !important; /* #4DA3FF  7.02:1 on --card */ /* !imp:token */
+    --ring: 211 100% 65% !important; /* !imp:token */
+    --destructive: 0 84.2% 60.2% !important; /* #EF4444  4.90:1 on --card */ /* !imp:token */
 
     /* Ink that sits ON the accent. Dark, not white: white on #4B9EFF is only
        2.75:1 and fails outright, while #041220 measures 7.00:1. Minehut's own
@@ -272,7 +280,7 @@
        NOTE: 0 var() consumers in the CSS bundle, so recharts is coloured from
        JS. These may be inert; §51 styles the .recharts-* hooks directly, which
        definitely works. Cheap to set either way. */
-    --chart-1: 212 100% 65% !important; /* !imp:token */
+    --chart-1: 211 100% 65% !important; /* !imp:token */
     --chart-2: 152 48% 52.5% !important; /* !imp:token */
     --chart-3: 39 64% 58% !important; /* !imp:token */
     --chart-4: 247 45% 70.8% !important; /* !imp:token */
@@ -297,7 +305,7 @@
 
     --mh-ink-2: hsl(var(--secondary-foreground)) !important; /* !imp:token */
     --mh-ink-3: hsl(var(--muted-foreground)) !important; /* !imp:token */
-    --mh-ink-4: #8f8d89 !important; /* 5.24:1 on --card — no shadcn twin */ /* !imp:token */
+    --mh-ink-4: #868686 !important; /* 5.06:1 on --card, 4.68 on --muted */ /* !imp:token */
     --mh-on-brand: hsl(var(--primary-foreground)) !important; /* !imp:token */
 
     /* Shadows. Free reach: .shadow-mh-1/2/3, .data-[state=active]:shadow-mh-1
@@ -347,21 +355,26 @@
      against a brief that bans excessive glow. Blue now means interaction,
      focus, navigation and selection. Data, labels and domains stay neutral.
 
-     The seven material hues belong to Minehut and carry state, not decoration.
-     These sit at Minehut's OWN saturation. An earlier revision had
-     desaturated them on a "premium is restrained" instinct, which flattened
-     the one part of the interface that is legitimately colourful — a server
-     grid is almost entirely state — and left the page reading grey. Saturation
-     is now 62–91% against the previous 42–64%.
+     The seven hues are split by JOB.
 
-     Vibrancy cost nothing here: every hue was also lifted in lightness, so all
-     seven measure BETTER than the desaturated set. On the shipped --card
-     (#1C1A17): emerald 9.14, gold 10.02, diamond 10.45, copper 7.66, amethyst
-     7.10, redstone 6.19, lapis 5.51 : 1 — and on each hue's own 16% pill fill,
-     7.02 / 7.39 / 7.67 / 6.03 / 5.63 / 5.09 / 4.61 : 1.
+     STATE takes the design brief's semantic trio, because these three answer
+     "is this thing OK?" and want to read instantly:
+       success #22C55E   warning #F59E0B   danger #EF4444
+     Mapped onto --mh-emerald / --mh-gold / --mh-redstone, so Minehut's own
+     `bg-[color-mix(in_oklab,var(--mh-emerald)_N%,transparent)]` utilities
+     inherit them with no selector work at all.
 
-     Note these are lifted versions of Minehut's values, not copies: Minehut's
-     raw lapis (#3057D4) measures 2.96:1 on this card and would fail outright.
+     IDENTITY stays Minehut's, because those hues carry distinctions the trio
+     cannot express: diamond marks a version, amethyst marks a plugin, and the
+     EXTERNAL badge is teal. Collapsing everything to three semantic colours
+     would grey all of that out — the brief asks for restraint, not for
+     throwing away information.
+
+     Measured on --card (#141414): diamond 11.08, warning 8.58, copper 8.13,
+     success 8.08, amethyst 7.53, lapis 5.85, danger 4.90 : 1.
+
+     Identity hues are LIFTED versions of Minehut's values, not copies —
+     Minehut's raw lapis (#3057D4) measures 2.96:1 here and would fail.
      ═════════════════════════════════════════════════════════════════════════ */
 
   :root {
@@ -370,13 +383,13 @@
     --mh-brand-press: color-mix(in oklab, var(--og-accent) 82%, black) !important; /* !imp:token */
     --mh-brand-soft: color-mix(in oklab, var(--og-accent) 12%, transparent) !important; /* !imp:token */
 
-    --mh-emerald: #3ed494 !important; /* running    */ /* !imp:token */
-    --mh-redstone: #f4726f !important; /* danger     */ /* !imp:token */
-    --mh-gold: #f2bc5a !important; /* warning    */ /* !imp:token */
-    --mh-diamond: #63dbd6 !important; /* version    */ /* !imp:token */
+    --mh-emerald: #22c55e !important; /* success  8.08:1 */ /* !imp:token */
+    --mh-redstone: #ef4444 !important; /* danger   4.90:1 */ /* !imp:token */
+    --mh-gold: #f59e0b !important; /* warning  8.58:1 */ /* !imp:token */
+    --mh-diamond: #63dbd6 !important; /* version 11.08:1 */ /* !imp:token */
     --mh-amethyst: #ad97fa !important; /* 11 consumers in the bundle */ /* !imp:token */
     --mh-copper: #e89a6b !important; /*  5 consumers */ /* !imp:token */
-    --mh-lapis: #6e8fe0 !important; /*  2 consumers */ /* !imp:token */
+    --mh-lapis: #6e8fe0 !important; /*  2 consumers  5.85:1 */ /* !imp:token */
 
     /* Theme-private. Kept only because Minehut has no equivalent: the inner
        top-edge highlight that makes a surface read as a lit material rather
@@ -594,20 +607,20 @@
        element, including small lockups and badges.
        @risk D  hook:h1 / .font-display  verify: inspect a page heading */
     & h1 {
-      font-size: 28px;
+      font-size: 26px;
       line-height: 1.15;
       font-weight: 600;
       letter-spacing: -0.02em;
       text-wrap: balance;
     }
     & h2 {
-      font-size: 20px;
+      font-size: 19px;
       line-height: 1.25;
       font-weight: 600;
       letter-spacing: -0.015em;
     }
     & h3 {
-      font-size: 16px;
+      font-size: 15px;
       line-height: 1.35;
       font-weight: 600;
       letter-spacing: -0.01em;
@@ -810,7 +823,7 @@
 
     & .mh-nav-item {
       color: hsl(var(--muted-foreground));
-      padding: 7px 10px;
+      padding: 6px 10px;
     }
     & .mh-nav-item svg {
       color: var(--mh-ink-4);
@@ -878,7 +891,10 @@
       background: hsl(var(--card));
       border: 1px solid hsl(var(--border));
       border-radius: var(--og-r-card);
-      box-shadow: var(--og-lift);
+      box-shadow:
+        var(--og-lift),
+        0 1px 2px rgb(0 0 0 / 0.4),
+        0 4px 12px rgb(0 0 0 / 0.25);
       /* Surface-scale timing, not control-scale. A 600px card and a 16px switch
          moving at the identical 110ms is the "uniform motion" tell — big
          surfaces need longer to read as physical, small controls need to feel
@@ -954,11 +970,41 @@
       }
     }
 
-    /* SPACING — 1.5.0 forced 24px onto every inner gap and inflated page
-       padding to 32/40px. Both rules over-matched badly: `[class*="p-6"]` also
-       matches gap-6, md:gap-6, sm:gap-6 and -top-6; `[class*="p-4"]` matches
-       gap-4 and top-4. Minehut's own spacing is coherent and responsive, so
-       v2 leaves it alone entirely and spends the budget on the type scale.
+    /* ─── DENSITY ─────────────────────────────────────────────────────────
+       1.5.0 forced 24px onto every inner gap and inflated page padding to
+       32/40px, using `[class*="p-6"]` — which also matches gap-6, md:gap-6,
+       sm:gap-6 and -top-6 — and `[class*="p-4"]`, which matches gap-4 and
+       top-4. v2 responded by deleting all spacing rules.
+
+       The lesson was ANCHOR THE SELECTOR, not never touch spacing. These use
+       exact classes scoped to the card, each verified by the audit:
+         px-6 → 2 hits (px-6, sm:px-6)   pt-6 → 1   pb-4 → 1   gap-4 → 1
+       Direct children only, so nothing nested inherits a change.
+
+       Compact means using FEWER steps of the 4/8/16/24 rhythm, not arbitrary
+       ones: 24→20, 24→18, 16→14, 16→12 all stay on even values.
+       @risk S  exact stock names  verify: audit "px-6" "pt-6" "pb-4" "gap-4" */
+    & main article > .px-6 {
+      padding-left: 20px;
+      padding-right: 20px;
+    }
+    & main article > .pt-6 {
+      padding-top: 18px;
+    }
+    & main article > .pb-4 {
+      padding-bottom: 14px;
+    }
+    & main article > .gap-4 {
+      gap: 12px;
+    }
+    /* The server grid itself — tighter columns fit more per screen, which is
+       the whole point of a 53-server dashboard. */
+    & .grid.gap-4 {
+      gap: 12px;
+    }
+
+    /* Page padding is left to Minehut: it is responsive and coherent, and the
+       density win is inside the cards where the information actually is.
 
        The one exception: Minehut's grid tops out at `xl:grid-cols-3`, which on
        a wide monitor stretches each card to ~600px. A server card holds a
@@ -2008,7 +2054,7 @@
     opacity: 1 !important; /* !imp:a11y */
     background: hsl(var(--muted)) !important; /* !imp:a11y */
     border-color: hsl(var(--border) / 0.55) !important; /* !imp:a11y */
-    color: #9c9994 !important; /* 5.51:1 on --muted */ /* !imp:a11y */
+    color: #949494 !important; /* 5.62:1 on --muted */ /* !imp:a11y */
     box-shadow: none !important; /* !imp:a11y */
     cursor: not-allowed !important; /* !imp:a11y */
     translate: none !important; /* !imp:a11y */
@@ -2017,7 +2063,7 @@
   .dark [aria-disabled="true"] svg,
   [data-theme="dark"] button:disabled svg,
   [data-theme="dark"] [aria-disabled="true"] svg {
-    color: #9c9994 !important; /* !imp:a11y */
+    color: #949494 !important; /* !imp:a11y */
   }
   .dark button:disabled::after,
   .dark button:disabled::before,
