@@ -1,7 +1,7 @@
 /* ==UserStyle==
 @name           Minehut Premium Dashboard
 @namespace      github.com/DaisyCatTs/minehut-premium-dashboard
-@version        2.0.4
+@version        2.0.5
 @description    A premium dark theme for the Minehut dashboard. Warm-neutral OLED surfaces, one restrained accent, Geist typography, and contrast-verified text.
 @author         Daisy
 @license        MIT
@@ -238,7 +238,7 @@
 
     --mh-ink-2: hsl(var(--secondary-foreground)) !important; /* !imp:token */
     --mh-ink-3: hsl(var(--muted-foreground)) !important; /* !imp:token */
-    --mh-ink-4: #8d8c89 !important; /* 5.38:1 on --card — no shadcn twin */ /* !imp:token */
+    --mh-ink-4: #85837f !important; /* 4.78:1 on --card — no shadcn twin */ /* !imp:token */
     --mh-on-brand: hsl(var(--primary-foreground)) !important; /* !imp:token */
 
     /* Shadows. Free reach: .shadow-mh-1/2/3, .data-[state=active]:shadow-mh-1
@@ -248,7 +248,6 @@
     --mh-shadow-1: 0 1px 2px rgb(0 0 0 / 0.5), 0 0 0 1px rgb(255 255 255 / 0.03) !important; /* !imp:token */
     --mh-shadow-2: 0 4px 14px rgb(0 0 0 / 0.45), 0 0 0 1px rgb(255 255 255 / 0.04) !important; /* !imp:token */
     --mh-shadow-3: 0 16px 40px rgb(0 0 0 / 0.55), 0 0 0 1px rgb(255 255 255 / 0.05) !important; /* !imp:token */
-    --mh-glow-brand: 0 0 0 1px hsl(var(--primary) / 0.45) !important; /* !imp:token */
   }
 
   /* ═════════════════════════════════════════════════════════════════════════
@@ -267,15 +266,15 @@
     --console-ansi-1: #d9736f !important; /* red           */ /* !imp:token */
     --console-ansi-2: #4cc08a !important; /* green         */ /* !imp:token */
     --console-ansi-3: #d9a94f !important; /* yellow        */ /* !imp:token */
-    --console-ansi-4: #5b93e8 !important; /* blue          */ /* !imp:token */
+    --console-ansi-4: #4b9eff !important; /* blue   7.10:1 */ /* !imp:token */
     --console-ansi-5: #9b93d6 !important; /* magenta       */ /* !imp:token */
     --console-ansi-6: #6fc4c0 !important; /* cyan          */ /* !imp:token */
     --console-ansi-7: #d6d3ce !important; /* white         */ /* !imp:token */
-    --console-ansi-8: #736f69 !important; /* bright black  */ /* !imp:token */
+    --console-ansi-8: #8d8a83 !important; /* br-black 5.67:1 */ /* !imp:token */
     --console-ansi-9: #e8918d !important; /* !imp:token */
     --console-ansi-10: #6ed3a3 !important; /* !imp:token */
     --console-ansi-11: #e8c176 !important; /* !imp:token */
-    --console-ansi-12: #83aeef !important; /* !imp:token */
+    --console-ansi-12: #7fb4ff !important; /* !imp:token */
     --console-ansi-13: #b3ace4 !important; /* !imp:token */
     --console-ansi-14: #8fd7d3 !important; /* !imp:token */
     --console-ansi-15: #f5f4f2 !important; /* !imp:token */
@@ -787,60 +786,53 @@
       border: 1px solid hsl(var(--border));
       border-radius: var(--og-r-card);
       box-shadow: var(--og-lift);
+      /* Surface-scale timing, not control-scale. A 600px card and a 16px switch
+         moving at the identical 110ms is the "uniform motion" tell — big
+         surfaces need longer to read as physical, small controls need to feel
+         instant. Cards, dialogs and overlays get --mh-dur-base; buttons, tabs,
+         menu items and switches stay on --mh-dur-fast. */
       transition:
-        background-color var(--mh-dur-fast) var(--mh-ease-out),
-        border-color var(--mh-dur-fast) var(--mh-ease-out),
-        box-shadow var(--mh-dur-fast) var(--mh-ease-out),
-        translate var(--mh-dur-fast) var(--mh-ease-out);
+        background-color var(--mh-dur-base) var(--mh-ease-out),
+        border-color var(--mh-dur-base) var(--mh-ease-out),
+        box-shadow var(--mh-dur-base) var(--mh-ease-out);
 
-      /* Hover raises the surface one rung and lifts 1px. No glow, no scale.
-         `translate` (the independent property) rather than `transform`, so it
-         does not clobber Tailwind's --tw-translate-* machinery, which
-         data-[side=top]:-translate-y-1 depends on.
-         `will-change` is deliberately absent — 1.5.0 pinned it permanently,
-         holding a compositor layer per card for the whole session and never
-         releasing it under reduced motion. Both engines promote on demand. */
       /* Brand colour IS the elevation signal — nothing tinted at rest, brand on
          interaction. Borrowed from Supabase, whose "elevated" state is simply
          its green at 30% border opacity, and it lands on the same number
          Minehut's own border recipe uses (26–35%). This is where liveliness
          comes from without putting colour on screen at rest.
-         2.0.1 set `border-color: hsl(var(--border))` here — identical to the
-         resting value, so the hover did nothing at all to the edge. */
+
+         NO `translate` here. 2.0.1–2.0.4 lifted the card 1px on hover exactly
+         like the primary button does, which collapsed the one distinction the
+         rest of the system is careful about: physical lift means "this commits
+         an action". A card is a place you navigate INTO, so it raises its
+         surface and lights its edge and stays put. Secondary buttons, nav items
+         and table rows already follow that rule; the card was the outlier.
+
+         `will-change` is deliberately absent — 1.5.0 pinned it permanently,
+         holding a compositor layer per card for the whole session and never
+         releasing it under reduced motion. Both engines promote on demand. */
       &:hover {
         background: hsl(var(--muted));
         border-color: color-mix(in oklab, var(--mh-brand) 30%, transparent);
         box-shadow:
           var(--og-lift-2),
           var(--mh-shadow-2);
-        translate: 0 -1px;
       }
 
-      /* One neutral rail, not four coloured ones.
-         1.5.0 drove the rail from the card's status with six :has() rules —
-         on the one component that re-renders on a metric timer, so every tick
-         invalidated the ancestor, times twelve cards. State is carried by the
-         status pill's dot + label (§52), which the accessibility contract
-         requires anyway and which does not depend on colour alone.
-         Re-enabling coloured rails cheaply is possible — see §99. */
-      &::before {
-        content: "";
-        position: absolute;
-        left: 0;
-        top: 0;
-        bottom: 0;
-        width: 2px;
-        border-radius: 2px 0 0 2px;
-        background: hsl(var(--primary) / 0.35);
-        pointer-events: none;
-        transition: background var(--mh-dur-fast) var(--mh-ease-out);
-      }
-      &:hover::before {
-        background: hsl(var(--primary) / 0.7);
-      }
+      /* THE CARD RAIL IS GONE (2.0.5).
+         Every card carried a permanent 2px brand-blue left rail AND the fading
+         top bar in §72 — two always-on, non-semantic blue ornaments on the same
+         component, in the same colour, saying nothing the status pill does not
+         already say. Coloured-rail-plus-gradient-top-border is about the most
+         recognisable "AI dashboard" pairing there is, and Linear, Vercel and
+         Stripe cards have neither. The hover edge-tint above already supplies
+         the "lit" feedback the rail was reaching for, and it only appears when
+         you are actually pointing at something.
 
-      /* The server identity tile — 42×42, hand-written by Minehut, and
-         completely unstyled before 2.0.0 on a server-management dashboard. */
+         The top bar stays because it is Minehut's own DOM node and the owner
+         explicitly asked for it in brand blue — but one ornament, not two. */
+
       /* The server identity tile. In this product category brand lives in
          iconography rather than in chrome — Hypixel carries its identity on
          bespoke icons while keeping the frame neutral, and these tiles are
@@ -1642,6 +1634,49 @@
       background: hsl(var(--popover)) !important; /* !imp:a11y */
       backdrop-filter: none !important; /* !imp:a11y */
       -webkit-backdrop-filter: none !important; /* !imp:a11y */
+    }
+  }
+
+  /* Windows High Contrast / forced-colors. The OS replaces author colours with
+     its own palette and DISCARDS box-shadow and background-image outright —
+     which is exactly what several of this theme's state signals ride on:
+       · nav active      inset box-shadow rail          (§21)
+       · active tab      inset box-shadow underline     (§32)
+       · status pills    color-mix fill + border        (§52)
+       · card elevation  border tint on hover           (§30)
+     Without this block, "selected" nav, the active tab and every server status
+     collapse into the same undifferentiated cell. Each signal is re-expressed
+     with a border or an outline, which forced-colors keeps and maps to the
+     user's own system colours. */
+  @media (forced-colors: active) {
+    .dark .mh-nav-item[data-active="true"],
+    [data-theme="dark"] .mh-nav-item[data-active="true"] {
+      border-left: 3px solid Highlight !important; /* !imp:a11y */
+      forced-color-adjust: none;
+      color: Highlight !important; /* !imp:a11y */
+    }
+    .dark .shadow-\[0_1px_0_hsl\(var\(--foreground\)\/0\.08\)\2c 0_2px_0_hsl\(var\(--foreground\)\/0\.2\)\] > button.border-input.bg-card,
+    [data-theme="dark"] .shadow-\[0_1px_0_hsl\(var\(--foreground\)\/0\.08\)\2c 0_2px_0_hsl\(var\(--foreground\)\/0\.2\)\] > button.border-input.bg-card {
+      border-bottom: 3px solid Highlight !important; /* !imp:a11y */
+    }
+    /* Status must stay distinguishable, and it already pairs colour with a dot
+       AND a label — so the label carries it here and the chip just needs an edge. */
+    .dark [class*="bg-\[color-mix"],
+    [data-theme="dark"] [class*="bg-\[color-mix"] {
+      border: 1px solid CanvasText !important; /* !imp:a11y */
+    }
+    .dark main article,
+    [data-theme="dark"] main article {
+      border: 1px solid CanvasText !important; /* !imp:a11y */
+    }
+    .dark main article:hover,
+    [data-theme="dark"] main article:hover {
+      border-color: Highlight !important; /* !imp:a11y */
+    }
+    /* The focus ring is the one thing that must never be lost. */
+    :focus-visible {
+      outline: 3px solid Highlight !important; /* !imp:a11y */
+      outline-offset: 2px !important; /* !imp:a11y */
     }
   }
 

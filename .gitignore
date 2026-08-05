@@ -11,3 +11,7 @@
 #   python tools/audit-selectors.py --write-tokens
 # and update the @note bundle hash in section 01 of the stylesheet.
 Original Css from their next static/
+
+# Local render output from tools/build-fixture.js + the screenshot harness.
+tools/fixture.html
+tools/.shots/
