@@ -1,7 +1,7 @@
 /* ==UserStyle==
 @name           Minehut Premium Dashboard
 @namespace      github.com/DaisyCatTs/minehut-premium-dashboard
-@version        4.6.0
+@version        4.7.0
 @description    A premium dark theme for the Minehut dashboard. Warm-neutral OLED surfaces, one restrained accent, Geist typography, and contrast-verified text.
 @author         Daisy
 @license        MIT
@@ -11,14 +11,18 @@
 @preprocessor   default
 
 @var select accentHsl "Accent colour" {
+  "red:Red":         "0 100% 76.3%",
+  "amber:Amber":     "38 100% 47.3%",
+  "lime:Lime":       "78 100% 38.7%",
+  "emerald:Emerald": "150 100% 41.1%",
+  "teal:Teal":       "172 100% 39.9%",
+  "cyan:Cyan":       "192 100% 47.4%",
   "blue:Blue*":      "210 100% 69.8%",
-  "purple:Purple":   "267 100% 78.2%",
-  "violet:Violet":   "252 100% 80.2%",
-  "indigo:Indigo":   "230 100% 79.0%",
-  "cyan:Cyan":       "185 100% 42.9%",
-  "emerald:Emerald": "156 100% 41.4%",
-  "rose:Rose":       "354 100% 75.7%",
-  "amber:Amber":     "33 100% 50.0%"
+  "indigo:Indigo":   "232 100% 80.3%",
+  "violet:Violet":   "260 100% 80.1%",
+  "purple:Purple":   "285 100% 75.6%",
+  "fuchsia:Fuchsia": "312 100% 72.0%",
+  "rose:Rose":       "340 100% 75.1%"
 }
 ==/UserStyle== */
 
@@ -30,18 +34,35 @@
    POINTS AT, not what it is made of. Tinting the greys is also the exact
    mechanism that made this theme's labels read brown for three releases.
 
-   Every preset is contrast-verified on the shipped ladder. Measured on --card
-   (#141414) / worst-case focus ring across all five surfaces / best on-accent
+   Twelve presets, listed in hue order so the dropdown reads as a colour wheel.
+   Every one is contrast-verified on the shipped ladder. Measured on --card
+   (#141414) / worst-case focus ring across all five surfaces / dark on-accent
    ink — all clear WCAG AA, and dark ink wins on every one:
 
-     Blue    #65B2FF   8.22 / 6.06 / 8.4      Purple  #C290FF   7.66 / 5.64 / 7.9
-     Violet  #AF9AFF   7.80 / 5.75 / 8.0      Indigo  #94A5FF   7.97 / 5.88 / 8.2
-     Cyan    #00C9DB   9.10 / 6.71 / 9.3      Emerald #00D37D   9.31 / 6.86 / 10.0
-     Rose    #FF8390   7.81 / 5.76 / 8.0      Amber   #FF8E00   8.00 / 5.90 / 8.2
+     Red     #FF8686   7.90 / 5.82 / 8.10     Indigo  #9AA8FF   8.26 / 6.09 / 8.47
+     Amber   #F19900   8.16 / 6.01 / 8.36     Violet  #BB9AFF   8.05 / 5.94 / 8.25
+     Lime    #8AC500   8.83 / 6.51 / 9.05     Purple  #E083FF   7.77 / 5.73 / 7.96
+     Emerald #00D269   9.14 / 6.74 / 9.37     Fuchsia #FF70E2   7.60 / 5.61 / 7.79
+     Teal    #00CBB0   8.92 / 6.58 / 9.14     Rose    #FF80AA   7.83 / 5.77 / 8.02
+     Cyan    #00C1F2   8.69 / 6.41 / 8.91     Blue *  #65B2FF   8.22 / 6.06 / 8.42
 
-   All eight sit at the same perceptual lightness (OKLCH L 0.755) with chroma at
-   85% of the sRGB gamut maximum for their hue, so switching accent changes the
-   hue and not how loud the interface is.
+   The floor is 7.60 on --card and 5.61 for the focus ring, against WCAG minima
+   of 4.5 and 3.0 — so no preset is a compromise, and switching accent cannot
+   make the interface harder to read.
+
+   THE SPREAD IS THE POINT, and it is what 4.6.0 and earlier got wrong. Eight
+   presets sounds like choice, but three of them — indigo 230, violet 252,
+   purple 267 — sat inside a 37° band and were barely distinguishable from one
+   another, while 33° to 156° was a 123° hole with no red, no orange, no lime,
+   no green and no teal. Half the colour wheel was missing and a quarter of it
+   was served three times. The twelve are spread 18–40° apart with no
+   near-duplicates, so every entry in the list is a genuinely different choice.
+
+   All twelve sit at one perceptual lightness (OKLCH L 0.746–0.756, target
+   0.755) at the highest saturation that still reaches it, so switching accent
+   changes the hue and not how loud the interface is. That is measured, not
+   asserted: tools/check-palette.py recomputes every ratio above from the
+   shipped values and fails the file if a single one disagrees.
 
    Values are HSL TRIPLETS, not hex, because shadcn resolves hsl(var(--primary))
    and no CSS function can turn a colour into a bare triplet. §03 explains why
@@ -2202,8 +2223,19 @@
       text-decoration-color: hsl(var(--primary) / 0.4);
       transition: text-decoration-color var(--mh-dur-fast) var(--mh-ease-out);
     }
-    & main a[href]:not([class]):hover {
+    & main a[href]:not([class]):hover,
+    & main a[href].underline:hover {
       text-decoration-color: hsl(var(--primary));
+    }
+    /* An anchor that ships `class="underline"` is still a prose link, and
+       :not([class]) skips it — so it underlined at rest and did nothing at all
+       on hover. It gets the same decoration-colour response; the resting colour
+       is left to Minehut because a classed anchor may be deliberately neutral.
+       @risk S  hook:main a[href].underline */
+    & main a[href].underline {
+      text-decoration-color: hsl(var(--primary) / 0.4);
+      text-underline-offset: 2px;
+      transition: text-decoration-color var(--mh-dur-fast) var(--mh-ease-out);
     }
 
     /* Tailwind stock-palette utilities Minehut uses for warnings and badges.
@@ -2401,6 +2433,14 @@
     }
     & .hover\:text-primary:hover {
       color: hsl(var(--primary));
+    }
+    /* The server-card copy button ships TWO variants and both are in the
+       bundle: an older `hover:text-foreground` and the current
+       `hover:text-[var(--mh-brand)]`. 4.6.0 restated only the first, because
+       the fixture's captured card used it — the live card uses the second, so
+       the hover was still dead after the release that claimed to fix it. */
+    & .hover\:text-\[var\(--mh-brand\)\]:hover {
+      color: var(--mh-brand);
     }
     & .hover\:underline:hover {
       text-decoration-line: underline;
