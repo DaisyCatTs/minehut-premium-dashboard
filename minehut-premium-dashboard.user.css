@@ -1,7 +1,7 @@
 /* ==UserStyle==
 @name           Minehut Premium Dashboard
 @namespace      github.com/DaisyCatTs/minehut-premium-dashboard
-@version        2.2.0
+@version        2.3.0
 @description    A premium dark theme for the Minehut dashboard. Warm-neutral OLED surfaces, one restrained accent, Geist typography, and contrast-verified text.
 @author         Daisy
 @license        MIT
@@ -1451,6 +1451,38 @@
       background: color-mix(in oklab, var(--mh-copper) 16%, transparent);
       border-color: color-mix(in oklab, var(--mh-copper) 34%, transparent);
       color: var(--mh-copper);
+    }
+
+    /* ─── STATE BAR ───────────────────────────────────────────────────────
+       The card's top edge, coloured by the server's actual state.
+
+       2.0.5 removed a card rail for being decoration, and it was: the same
+       brand blue on every card regardless of status, saying nothing the pill
+       did not. A bar that changes with state is the opposite — it is the
+       fastest read on a grid of servers, and it is why a wall of cards scans
+       instantly instead of needing to be read.
+
+       Driven WITHOUT `:has()`. 1.5.0 needed six `:has()` rules on the card,
+       which meant ancestor invalidation on every metric tick times every card.
+       Here the pseudo-element hangs off the status PILL and resolves against
+       the card, because DOM recon confirmed the card is `position: relative`
+       and the pill is `position: static` with no insets — so this costs one
+       paint and zero selector matching against a re-rendering subtree.
+
+       Sits above §72's default brand bar, which stays for the neutral case.
+       @risk F  hook:pill hue classes  verify: recon "card position: relative" */
+    & main article .rounded-full[class^="bg-\[color-mix"]::after,
+    & main article .rounded-full[class*=" bg-\[color-mix"]::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 0;
+      height: 2px;
+      pointer-events: none;
+      z-index: 1;
+      background: currentColor;
+      opacity: 0.85;
     }
 
     /* The dot. No glow — 1.5.0 carried sixteen glow declarations, up to

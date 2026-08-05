@@ -128,8 +128,8 @@ ${theme}
 
     <div class="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
       ${card("Bleed", "bleed.minehut.gg", "Starter", "Today", "Hibernating", "bg-muted text-muted-foreground", "bg-muted-foreground")}
-      ${card("ExoticMines", "exoticmines.minehut.gg", "Starter", "1147 days ago", "Online", "bg-[color-mix(in_oklab,var(--mh-emerald)_16%,transparent)] text-[var(--mh-emerald)]", "bg-[var(--mh-emerald)]")}
-      ${card("TransNetwork", "transnetwork.minehut.gg", "Starter", "—", "Hibernating", "bg-muted text-muted-foreground", "bg-muted-foreground")}
+      ${card("ExoticMines", "exoticmines.minehut.gg", "Starter", "1147 days ago", "Online", "bg-[color-mix(in_oklab,var(--mh-emerald)_16%,transparent)] rounded-full text-[var(--mh-emerald)]", "bg-[var(--mh-emerald)]")}
+      ${card("TransNetwork", "transnetwork.minehut.gg", "Starter", "—", "Pending deletion", "bg-[color-mix(in_oklab,var(--mh-redstone)_16%,transparent)] rounded-full text-[var(--mh-redstone)]", "bg-[var(--mh-redstone)]")}
     </div>
 
     ${tabBar}
