@@ -262,6 +262,7 @@
     "[aria-selected]": "[aria-selected]",
     ".recharts-surface": ".recharts-surface",
     ".animate-pulse": ".animate-pulse",
+    ".animate-spin": ".animate-spin",
     ".mh-tabs": ".mh-tabs",
     ".mh-meter-track": ".mh-meter-track",
     ".mh-sc-icon": ".mh-sc-icon",

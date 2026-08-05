@@ -106,6 +106,64 @@ const bare = src
   .replace(/"(?:\\.|[^"\\])*"/g, '""')
   .replace(/'(?:\\.|[^'\\])*'/g, "''");
 
+// CSS nesting permits only nested STYLE rules and CONDITIONAL GROUP rules inside a
+// style rule. @keyframes and @font-face are invalid nested and the whole at-rule is
+// DISCARDED silently — the stylesheet still parses, the braces still balance, and the
+// declaration simply never exists. v4.1.0 shipped a @keyframes inside the dark gate
+// that did nothing at all, and every other gate passed it.
+{
+  const NESTABLE = new Set(["media", "supports", "layer", "container", "scope", "starting-style"]);
+  let d = 0,
+    ln = 1,
+    inC = false,
+    q = null;
+  for (let i = 0; i < src.length; i++) {
+    const ch = src[i],
+      nx = src[i + 1];
+    if (ch === "\n") ln++;
+    if (inC) {
+      if (ch === "*" && nx === "/") {
+        inC = false;
+        i++;
+      }
+      continue;
+    }
+    if (q) {
+      if (ch === "\\") {
+        i++;
+        continue;
+      }
+      if (ch === q) q = null;
+      continue;
+    }
+    if (ch === "/" && nx === "*") {
+      inC = true;
+      i++;
+      continue;
+    }
+    if (ch === '"' || ch === "'") {
+      q = ch;
+      continue;
+    }
+    if (ch === "\\") {
+      i++;
+      continue;
+    }
+    if (ch === "@") {
+      const m = /^@([a-zA-Z-]+)/.exec(src.slice(i));
+      // depth 1 == directly inside @-moz-document, which is this file's top level
+      if (m && d > 1 && !NESTABLE.has(m[1]) && m[1] !== "-moz-document") {
+        errors.push(
+          `line ${ln}: @${m[1]} is nested ${d} deep inside a style rule — invalid, ` +
+            `the whole at-rule is DISCARDED. Hoist it to depth 1.`
+        );
+      }
+    }
+    if (ch === "{") d++;
+    else if (ch === "}") d--;
+  }
+}
+
 // at-rules used, so a typo like @suports shows up
 const atRules = [...new Set([...bare.matchAll(/@([a-zA-Z-]+)/g)].map((m) => m[1]))];
 const known = new Set([

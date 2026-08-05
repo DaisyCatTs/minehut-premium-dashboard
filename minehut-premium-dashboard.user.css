@@ -1,7 +1,7 @@
 /* ==UserStyle==
 @name           Minehut Premium Dashboard
 @namespace      github.com/DaisyCatTs/minehut-premium-dashboard
-@version        4.1.0
+@version        4.1.1
 @description    A premium dark theme for the Minehut dashboard. Warm-neutral OLED surfaces, one restrained accent, Geist typography, and contrast-verified text.
 @author         Daisy
 @license        MIT
@@ -515,6 +515,47 @@
        bouncing, so it is flattened to a firm settle with no overshoot. */
     --mh-ease-spring: cubic-bezier(0.22, 0.9, 0.3, 1) !important; /* !imp:token */
 
+  }
+
+  /* Skeleton and spinner animations. Ungated and at depth 1, deliberately.
+     `--og-speed` is declared in :root, and §07's other motion claims are
+     ungated so they apply in light mode too; scoping these into the dark gate
+     would have left a light-mode spinner running at Tailwind's flat 1s while
+     the setting claimed to have stopped all motion.
+
+     `.animate-spin` was the last unclaimed motion regime — Minehut declares it
+     at a flat 1s, so `--og-speed: 0` did not in fact stop everything.
+     @risk S  hook:.animate-pulse/.animate-spin
+     verify: audit-page.js census reports .animate-pulse and .animate-spin;
+             duration is not machine-checkable, confirm with --og-speed: 0 */
+  .animate-pulse {
+    animation-duration: calc(var(--og-speed) * 1600ms);
+    animation-timing-function: var(--mh-ease-out);
+  }
+  .animate-spin {
+    animation-duration: calc(var(--og-speed) * 1000ms);
+  }
+
+  /* Tailwind's pulse dips to 50% opacity, which reads as blinking rather than
+     loading; 0.85 → 0.55 is calmer at the same tempo. Redefining the keyframe
+     BY NAME reaches every `.animate-pulse` in the app without a single selector.
+
+     MUST stay at depth 1. CSS nesting permits only nested style rules and
+     conditional group rules (@media, @supports, @layer, @container, @scope,
+     @starting-style) inside a style rule — `@keyframes` is invalid nested and
+     the whole at-rule is DISCARDED. v4.1.0 shipped it inside the dark gate,
+     where it silently did nothing; verified in a browser, only the upstream
+     definition survived parsing. `check-css.js` now fails the build on it.
+     A keyframe is never scoped by an ancestor anyway, so the gate could not
+     have restricted it to dark mode even if it had parsed. */
+  @keyframes pulse {
+    0%,
+    100% {
+      opacity: 0.85;
+    }
+    50% {
+      opacity: 0.55;
+    }
   }
 
   /* Retune Minehut's own timing utilities. Same reach as the old blanket
@@ -1802,33 +1843,9 @@
        so loading states were flat grey blocks on Tailwind's default pulse.
        ═══════════════════════════════════════════════════════════════════════ */
 
-    & .animate-pulse {
-      animation-duration: calc(var(--og-speed) * 1600ms);
-      animation-timing-function: var(--mh-ease-out);
-    }
-
-    /* `.animate-spin` was the last unclaimed motion regime. §07's contract says
-       no component may write a duration literal, because that is what makes
-       `--og-speed` honest — but a spinner Minehut declares at a flat 1s ignored
-       the setting entirely, so `--og-speed: 0` did not actually stop all motion.
-       @risk S  hook:.animate-spin  verify: audit "animate-spin" */
-    & .animate-spin {
-      animation-duration: calc(var(--og-speed) * 1000ms);
-    }
-
-    /* Tailwind's pulse dips to 50% opacity, which reads as blinking rather than
-       loading. A shallower 0.85 → 0.55 band is calmer at the same tempo, and
-       redefining the keyframe by name reaches every `.animate-pulse` in the app
-       without touching a single selector. */
-    @keyframes pulse {
-      0%,
-      100% {
-        opacity: 0.85;
-      }
-      50% {
-        opacity: 0.55;
-      }
-    }
+    /* Skeleton SURFACES are themed here; the animations that drive them live in
+       §07, ungated, because motion is not a dark-mode concern and `--og-speed`
+       is declared in :root. See the note there. */
     & .animate-pulse.bg-muted,
     & .animate-pulse .bg-muted {
       background: hsl(var(--muted));

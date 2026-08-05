@@ -159,11 +159,22 @@ const pill = (label, hue) =>
 // ── Components that exist in Minehut's bundle but live on routes nobody has
 //    opened. Every class string below is a real token from the shipped CSS
 //    (verified via `audit-selectors.py --tokens`), assembled into the shapes
-//    shadcn/Radix produce. This is not a mock of Minehut's markup — it is a
-//    harness that forces each component family to RENDER so audit-page.js can
-//    check it, instead of it being styled blind forever.
+//    shadcn/Radix produce. The three `recharts-*` classes are the exception:
+//    recharts injects those at runtime so they are absent from the bundle by
+//    design, and §51 targets them deliberately.
+//
+//    This is not a mock of Minehut's markup — it is a harness that forces each
+//    component family to RENDER so audit-page.js can check it, instead of it
+//    being styled blind forever.
+//
+//    CAVEAT, and it matters: the <table> below is hand-written. §99 settles
+//    "are §50's td/th rules inert?" with
+//        document.querySelectorAll('table, thead, tbody, td, th').length
+//    That check must be run against the LIVE File Manager route, never against
+//    this fixture — here it returns non-zero because of the harness, which
+//    would falsely close the question.
 const components = `
-<h2 class="mt-10">Components — routes not yet opened</h2>
+<h2 class="mt-12">Components — routes not yet opened</h2>
 
 <div class="mt-4 rounded-[10px] border border-border bg-card p-6">
   <p class="ds-label">Data grid (File Manager / Backups / Sub users)</p>
