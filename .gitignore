@@ -1,0 +1,13 @@
+# Minehut's shipped production CSS, kept locally as the reference for real class
+# names and token values. Deliberately NOT committed: it is their copyrighted
+# output and does not belong in an MIT-licensed repo.
+#
+# The audit gate does not need the CSS itself, only the list of class NAMES, which
+# is committed as tools/bundle-tokens.txt. Both audit scripts fall back to it
+# automatically when this folder is absent.
+#
+# To refresh: download the _next/static/css/*.css bundles from
+# dashboard.minehut.com into this folder, then run
+#   python tools/audit-selectors.py --write-tokens
+# and update the @note bundle hash in section 01 of the stylesheet.
+Original Css from their next static/

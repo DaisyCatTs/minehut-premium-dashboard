@@ -25,6 +25,7 @@ from pathlib import Path
 
 BUNDLE_GLOB = "Original Css from their next static/*.css"
 THEME_NAME = "minehut-premium-dashboard.user.css"
+TOKENS_NAME = "bundle-tokens.txt"
 
 
 def find_repo() -> Path:
@@ -60,18 +61,37 @@ PATTERN_RE = re.compile(r"\[class([*^~$])=\"([^\"]*)\"\]")
 
 
 def bundle_tokens(repo: Path) -> tuple[set[str], list[Path]]:
+    """Class tokens from Minehut's bundle, or from the checked-in token list.
+
+    The bundle itself is gitignored -- it is Minehut's copyrighted production CSS
+    and does not belong in an MIT repo. `tools/bundle-tokens.txt` is the extracted
+    list of class NAMES, which is all either audit actually needs, and carries no
+    meaningful copyright claim. Regenerate it with --write-tokens whenever the
+    bundle is refreshed.
+    """
     files = sorted(repo.glob(BUNDLE_GLOB))
-    if not files:
-        sys.exit(f"error: no bundle CSS found at {repo / BUNDLE_GLOB}")
-    tokens: set[str] = set()
-    for f in files:
-        css = f.read_text(encoding="utf-8", errors="replace")
-        for raw in CLASS_RE.findall(css):
-            tok = unescape(raw)
-            # CSS idents cannot start with a digit; this drops `375rem` from `.375rem`
-            if tok and not tok[0].isdigit():
-                tokens.add(tok)
-    return tokens, files
+    if files:
+        tokens: set[str] = set()
+        for f in files:
+            css = f.read_text(encoding="utf-8", errors="replace")
+            for raw in CLASS_RE.findall(css):
+                tok = unescape(raw)
+                # CSS idents cannot start with a digit; drops `375rem` from `.375rem`
+                if tok and not tok[0].isdigit():
+                    tokens.add(tok)
+        return tokens, files
+
+    cached = repo / "tools" / TOKENS_NAME
+    if cached.is_file():
+        toks = {l.strip() for l in cached.read_text(encoding="utf-8").splitlines() if l.strip()}
+        return toks, [cached]
+
+    sys.exit(
+        f"error: no bundle CSS at {repo / BUNDLE_GLOB}\n"
+        f"       and no cached token list at {cached}\n"
+        "       Fetch the bundle from dashboard.minehut.com's _next/static/, or\n"
+        "       restore tools/bundle-tokens.txt from git."
+    )
 
 
 def report(pattern: str, op: str, tokens: set[str], limit: int = 14) -> int:
@@ -117,6 +137,14 @@ def main() -> None:
     if args and args[0] == "--tokens":
         for t in sorted(tokens):
             print(t)
+        return
+
+    if args and args[0] == "--write-tokens":
+        out = repo / "tools" / TOKENS_NAME
+        if not sorted(repo.glob(BUNDLE_GLOB)):
+            sys.exit("error: refusing to regenerate from the cached list; fetch the bundle first.")
+        out.write_text("\n".join(sorted(tokens)) + "\n", encoding="utf-8")
+        print(f"wrote {len(tokens)} class tokens -> {out.relative_to(repo)}")
         return
 
     print(f"bundle: {', '.join(f.name for f in files)}")

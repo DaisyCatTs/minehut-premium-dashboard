@@ -11,7 +11,8 @@ package manager, build step, test runner, or linter — the deliverable *is*
 | Path | Role |
 |---|---|
 | `minehut-premium-dashboard.user.css` | The entire theme (~1580 lines, one `@-moz-document` block) |
-| `Original Css from their next static/` | Minehut's own shipped Next.js CSS bundles — the source of truth for real class names and token names, and what the audit scripts check against. Currently untracked; the audit gate is only reproducible if it stays available |
+| `Original Css from their next static/` | Minehut's own shipped Next.js CSS bundles — the reference for real class names and token values. **Gitignored** (their copyrighted output, not ours to redistribute). Keep a local copy when doing selector work |
+| `tools/` | The verification gate that stands in for the absent build step, plus `bundle-tokens.txt` — the extracted class-name list the audits fall back to when the bundle isn't present |
 | `Theme guide.md` | The design brief the theme is written against (restraint, elevation-by-lightness, no "AI UI") |
 | `docs/screenshots/` | README images |
 
@@ -177,8 +178,10 @@ a selector change:
 | `check-css.js` | Brace/paren/comment balance, declarations outside any block, unknown at-rules, and untagged `!important`. |
 
 All three strip comments before counting — otherwise documenting a removed selector re-reports it
-forever. Re-run the audit whenever `Original Css from their next static/` is refreshed; a new
-bundle invalidates every `@risk F` line.
+forever. The bundle itself is gitignored, so the audits read `tools/bundle-tokens.txt` when it's
+absent; results are identical. After refreshing the bundle, regenerate it with
+`python tools/audit-selectors.py --write-tokens`, update the `@note bundle` hash in §01, and
+re-audit — a new bundle invalidates every `@risk F` line.
 
 Then load in Stylus and hard-reload `dashboard.minehut.com`. Only **My Servers** and **Console** are
 visually verified — say so rather than claiming coverage. Check **both** themes: v2 gates to dark,

@@ -211,6 +211,7 @@ edit **§03** instead.
 | File | Purpose |
 |---|---|
 | `minehut-premium-dashboard.user.css` | The theme. §01 is the contract — read it before editing |
-| `Original Css from their next static/` | Minehut's shipped CSS bundles. The reference for real class names, and what the selector audit checks against |
+| `Theme guide.md` | The design brief the theme is written against |
+| `tools/` | Selector audit, exact-class check and structural validator — the verification gate, since there's no build step. See `tools/README.md` |
 
 Not affiliated with Minehut.

@@ -3,10 +3,18 @@
 Verification for a project with no build step. Run all three before shipping any
 selector change; they are the substitute for a linter and a test suite.
 
-Everything resolves paths from the repo root and reads Minehut's shipped CSS from
-`../Original Css from their next static/`. **All three strip comments before
+Everything resolves paths from the repo root. **All three strip comments before
 counting** — without that, documenting a removed selector ("`[class*="divider"]`
 dropped — 0 hits") re-reports it forever as a live dead rule.
+
+### Where the class names come from
+
+Minehut's shipped CSS lives in `Original Css from their next static/` and is
+**gitignored** — it is their copyrighted production output and does not belong in
+an MIT repo. Neither audit needs the CSS itself, only the list of class *names*,
+so that list is committed as **`bundle-tokens.txt`** (1096 entries) and both
+scripts fall back to it automatically when the folder is absent. A fresh clone can
+run the full gate with no downloads; results are identical either way.
 
 | Script | Catches |
 |---|---|
@@ -49,6 +57,18 @@ The first two gate real decisions — see §99 in the stylesheet.
 
 ## Refreshing the bundle
 
-When Minehut rebuilds, replace the files in `Original Css from their next static/`,
-update the `@note bundle` hash in §01, and re-run the audit. A new bundle
-invalidates every `@risk F` line.
+When Minehut rebuilds:
+
+```sh
+# 1. drop the new _next/static/css/*.css into the (gitignored) reference folder
+# 2. regenerate the committed class-name list
+python tools/audit-selectors.py --write-tokens
+# 3. update the @note bundle hash in section 01
+python tools/audit-selectors.py --hash
+# 4. re-audit — a new bundle invalidates every @risk F line
+python tools/audit-selectors.py
+python tools/check-exact-classes.py
+```
+
+`--write-tokens` refuses to run off the cached list, so it can never regenerate
+itself from stale data.

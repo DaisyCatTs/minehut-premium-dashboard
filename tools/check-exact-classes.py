@@ -50,21 +50,34 @@ for cand in (repo, *repo.parents):
 else:
     repo = Path.cwd()
 
+# The bundle is gitignored (Minehut's copyrighted CSS); tools/bundle-tokens.txt is
+# the extracted class-name list, which is all this check needs. Regenerate with
+# `python tools/audit-selectors.py --write-tokens`.
 tokens = set()
 files = sorted(glob.glob(str(repo / "Original Css from their next static" / "*.css")))
-if not files:
-    sys.exit("error: bundle CSS not found")
-for f in files:
-    css = open(f, encoding="utf-8", errors="replace").read()
-    for raw in CLASS_RE.findall(css):
-        t = unescape(raw)
-        if t and not t[0].isdigit():
-            tokens.add(t)
+if files:
+    for f in files:
+        css = open(f, encoding="utf-8", errors="replace").read()
+        for raw in CLASS_RE.findall(css):
+            t = unescape(raw)
+            if t and not t[0].isdigit():
+                tokens.add(t)
+    source = f"{len(files)} bundle file(s)"
+else:
+    cached = repo / "tools" / "bundle-tokens.txt"
+    if not cached.is_file():
+        sys.exit(
+            "error: no bundle CSS and no tools/bundle-tokens.txt\n"
+            "       Fetch the bundle from dashboard.minehut.com's _next/static/,\n"
+            "       or restore the token list from git."
+        )
+    tokens = {l.strip() for l in cached.read_text(encoding="utf-8").splitlines() if l.strip()}
+    source = "tools/bundle-tokens.txt"
 
 theme = blank_comments((repo / "minehut-premium-dashboard.user.css").read_text(encoding="utf-8"))
 used = {unescape(r) for r in CLASS_RE.findall(theme) if BS in r}
 
-print(f"bundle tokens: {len(tokens)}")
+print(f"bundle tokens: {len(tokens)}  (from {source})")
 print(f"escaped class selectors used by the theme: {len(used)}\n")
 
 missing = []
