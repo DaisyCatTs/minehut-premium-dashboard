@@ -73,30 +73,13 @@ css = (repo / THEME).read_text(encoding="utf-8")
 # /*[[name]]*/ placeholders that Stylus substitutes at save time. Resolve each
 # one to its DEFAULT (the option marked with *) so the gate can verify the raw
 # file exactly as it would ship out of the box.
-_vars = {}
-for m in re.finditer(r'@var\s+select\s+(\w+)\s+"[^"]*"\s*\[([^\]]*)\]', css):
-    name, body = m.group(1), m.group(2)
-    opts = [o.strip().strip('"') for o in body.split(",")]
-    default = next((o for o in opts if o.endswith("*")), opts[0] if opts else "")
-    _vars[name] = default.rstrip("*").split(":")[0]
-for name, val in _vars.items():
-    css = css.replace(f"/*[[{name}]]*/", val)
-if _vars:
-    print("resolved @var defaults: " + ", ".join(f"{k}={v}" for k, v in _vars.items()))
-
-# --primary now names one of the --accent-* presets; resolve that indirection so
-# every downstream check still sees a real triplet.
-_alias = re.search(r"--primary:\s*var\(--(accent-[\w-]+)\)", css)
-if _alias:
-    _v = re.search(rf"--{_alias.group(1)}:\s*([\d.]+\s+[\d.]+%\s+[\d.]+%)", css)
-    if _v:
-        css = css.replace(f"var(--{_alias.group(1)})", _v.group(1))
-
-# --ring / --chart-1 alias --primary rather than restating it; resolve the
-# indirection so every downstream check still sees a real triplet.
-_prim = re.search(r"--primary:\s*([\d.]+\s+[\d.]+%\s+[\d.]+%)", css)
-if _prim:
-    css = re.sub(r"(--(?:ring|chart-1):\s*)var\(--primary\)", r"\g<1>" + _prim.group(1), css)
+# The stylesheet is plain CSS now — Stylus injects :root{--accentHsl: <chosen>}
+# above it rather than templating the file. Resolve --primary through its
+# fallback so the gate verifies exactly what ships with no setting applied.
+_m = re.search(r"--primary:\s*var\(--accentHsl,\s*([\d.]+\s+[\d.]+%\s+[\d.]+%)\s*\)", css)
+if _m:
+    css = re.sub(r"--primary:\s*var\([^)]*\)", "--primary: " + _m.group(1), css)
+    print("resolved --primary from its @var fallback: " + _m.group(1))
 
 # ── resolve every authored triplet and raw colour token from the CSS itself ──
 triplets, colours = {}, {}

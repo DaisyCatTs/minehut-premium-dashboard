@@ -8,9 +8,7 @@ const repo = "C:/Users/Daisy/Desktop/minehut-premium-dashboard";
 const BS = String.fromCharCode(92);
 const SQ = String.fromCharCode(39);
 
-let css = fs
-  .readFileSync(repo + "/minehut-premium-dashboard.user.css", "utf8")
-  .replace(/\/\*\[\[accent\]\]\*\//g, process.env.ACCENT || "blue");
+let css = fs.readFileSync(repo + "/minehut-premium-dashboard.user.css", "utf8"); // plain CSS now — no placeholder to substitute
 
 // unwrap @-moz-document
 const open = css.indexOf("@-moz-document");
@@ -62,8 +60,14 @@ const body = css.slice(b + 1, end);
   const p = await br.newPage();
   const errs = [];
   p.on("pageerror", (e) => errs.push(e.message));
+  // Reproduce exactly what Stylus does: @preprocessor default injects the chosen
+  // @var value as a :root declaration ABOVE the sheet. It does not template the
+  // file. Override to preview another accent:
+  //   ACCENT="255 92% 76.3%" node tools/browser-parse-check.js
+  const injected = ":root{--accentHsl:" + (process.env.ACCENT || "211 100% 65.1%") + "}";
   await p.setContent(
     '<style id="t">' +
+      injected +
       body +
       "</style>" +
       '<div class="dark"><article class="rounded-[10px] bg-card">' +

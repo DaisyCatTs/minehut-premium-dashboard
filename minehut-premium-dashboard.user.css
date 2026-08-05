@@ -1,7 +1,7 @@
 /* ==UserStyle==
 @name           Minehut Premium Dashboard
 @namespace      github.com/DaisyCatTs/minehut-premium-dashboard
-@version        4.2.0
+@version        4.3.0
 @description    A premium dark theme for the Minehut dashboard. Warm-neutral OLED surfaces, one restrained accent, Geist typography, and contrast-verified text.
 @author         Daisy
 @license        MIT
@@ -10,7 +10,16 @@
 @updateURL      https://raw.githubusercontent.com/DaisyCatTs/minehut-premium-dashboard/main/minehut-premium-dashboard.user.css
 @preprocessor   default
 
-@var select accent "Accent colour" ["blue:Blue*", "purple:Purple", "violet:Violet", "indigo:Indigo", "cyan:Cyan", "emerald:Emerald", "rose:Rose", "amber:Amber"]
+@var select accentHsl "Accent colour" {
+  "blue:Blue*":      "211 100% 65.1%",
+  "purple:Purple":   "255 92% 76.3%",
+  "violet:Violet":   "246 86% 72.9%",
+  "indigo:Indigo":   "234 89% 73.9%",
+  "cyan:Cyan":       "188 86% 53.3%",
+  "emerald:Emerald": "158 64% 51.6%",
+  "rose:Rose":       "351 95% 71.4%",
+  "amber:Amber":     "43 96% 56.3%"
+}
 ==/UserStyle== */
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -34,16 +43,14 @@
    and no CSS function can turn a colour into a bare triplet. §03 explains why
    that constraint drives the whole token architecture.
 
-   NOTE FOR CONTRIBUTORS: @preprocessor makes this file a TEMPLATE. The raw
-   source carries an [[accent]] placeholder (wrapped in comment delimiters at
-   its use site) and is not valid CSS until Stylus substitutes it.
-   `tools/build-fixture.js` and `tools/check-palette.py` both substitute the
-   default first, so the local gate still works on the raw file.
-
-   NEVER write that placeholder in full inside a comment. Its closing delimiter
-   terminates the ENCLOSING comment, and every line after it becomes live CSS.
-   That shipped in 4.1.0 and broke the entire stylesheet; check-css.js now fails
-   the build on a comment-open sequence appearing inside a comment.
+   NOTE ON @var: this file is PLAIN VALID CSS. `@preprocessor default` does not
+   template anything — it simply injects `:root { --accentHsl: <chosen> }` above
+   the sheet, and §03 reads that variable with a fallback. Earlier versions used
+   a comment-wrapped [[…]] placeholder, which only the `uso` preprocessor
+   substitutes, so it silently resolved to nothing; and writing that
+   placeholder with its delimiters inside a
+   comment terminated the enclosing block and broke the whole stylesheet.
+   Both failure modes are gone with the placeholder itself.
    ═══════════════════════════════════════════════════════════════════════════ */
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -247,22 +254,13 @@
      perceptually uniform, so equal L% steps give unequal perceived steps.
      ═════════════════════════════════════════════════════════════════════════ */
 
-  /* ACCENT PRESETS — every option in the Stylus dropdown, as HSL triplets.
-     Contrast-verified on the shipped ladder; each figure is measured on --card
-     (#141414) / worst-case focus ring across all five surfaces:
+  /* ACCENT PRESETS live in the @var block at the top of the file, because
+     Stylus substitutes the CHOSEN VALUE into `--accentHsl` directly. Measured
+     on --card (#141414) / worst-case focus ring across all five surfaces:
        blue 7.02/5.17 · purple 6.77/4.99 · violet 5.66/4.17 · indigo 6.18/4.55
        cyan 10.19/7.51 · emerald 9.58/7.06 · rose 6.84/5.05 · amber 11.04/8.13
-     All clear AA, and dark ink wins on every one. */
-  :root {
-    --accent-blue: 211 100% 65.1%;
-    --accent-purple: 255 92% 76.3%;
-    --accent-violet: 246 86% 72.9%;
-    --accent-indigo: 234 89% 73.9%;
-    --accent-cyan: 188 86% 53.3%;
-    --accent-emerald: 158 64% 51.6%;
-    --accent-rose: 351 95% 71.4%;
-    --accent-amber: 43 96% 56.3%;
-  }
+     All clear AA, and dark ink wins on every one. The fallback in --primary
+     keeps the sheet correct if Stylus is not doing the injection at all. */
 
   .dark,
   [data-theme="dark"] {
@@ -317,12 +315,14 @@
        4.39:1 across the five surfaces; WCAG 2.4.11 needs 3:1.
        (Re-measured in 2.1.1 — the previous figures were computed against the
        pre-2.0.1 card and never updated when the ladder was brightened.) */
-    /* The Stylus setting substitutes a bare identifier (blue, purple, …) which
-       names one of the presets above. Nothing containing a space or a percent
-       sign passes through the preprocessor — v4.1.x substituted the triplet
-       directly and Stylus would neither register the dropdown nor save a
-       selection. */
-    --primary: var(--accent-/*[[accent]]*/) !important; /* !imp:token */
+    /* `@preprocessor default` injects `:root { --accentHsl: <chosen value> }`
+       at the top of the sheet. That is ALL it does — it performs no
+       comment-placeholder substitution whatsoever; only `uso` does that. v4.1.x
+       and v4.2.0 relied on substitution here, so this resolved to `var(--accent- )`,
+       an undefined property, and took --primary and --ring down with it.
+       Reading the injected variable directly needs no substitution at all,
+       which is also why this file is plain valid CSS again. */
+    --primary: var(--accentHsl, 211 100% 65.1%) !important; /* !imp:token */
     --ring: var(--primary) !important; /* !imp:token */
     --destructive: 0 84.2% 60.2% !important; /* #EF4444  4.90:1 on --card */ /* !imp:token */
 

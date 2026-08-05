@@ -44,16 +44,21 @@ const wanted =
   (process.argv.find((a) => a.startsWith("--accent=")) || "").split("=")[1] ||
   process.argv[process.argv.indexOf("--accent") + 1] ||
   "";
-for (const m of themeSrc.matchAll(/@var\s+select\s+(\w+)\s+"[^"]*"\s*\[([^\]]*)\]/g)) {
-  const opts = m[2].split(",").map((o) => o.trim().replace(/^"|"$/g, ""));
+
+// The stylesheet no longer templates itself — Stylus injects the chosen value as
+// :root { --accentHsl: … } above the sheet. Reproduce that here so the fixture
+// renders what a real install renders, and so --accent still previews a theme.
+let injected = "";
+const meta = /@var\s+select\s+accentHsl\s+"[^"]*"\s*\{([\s\S]*?)\}/.exec(themeSrc);
+if (meta) {
+  const opts = [...meta[1].matchAll(/"([^"]+)"\s*:\s*"([^"]+)"/g)].map((m) => [m[1], m[2]]);
   const pick =
-    opts.find((o) => o.replace(/\*$/, "").split(":")[0].toLowerCase() === wanted.toLowerCase()) ||
-    opts.find((o) => o.endsWith("*")) ||
+    opts.find(([k]) => k.replace(/\*$/, "").split(":")[0].toLowerCase() === wanted.toLowerCase()) ||
+    opts.find(([k]) => k.endsWith("*")) ||
     opts[0];
   if (pick) {
-    const id = pick.replace(/\*$/, "").split(":")[0];
-    themeSrc = themeSrc.split(`/*[[${m[1]}]]*/`).join(id);
-    console.log(`  ${m[1]} = ${id}`);
+    injected = `:root { --accentHsl: ${pick[1]}; }`;
+    console.log(`  accentHsl = ${pick[0].replace(/\*$/, "").split(":")[0]} (${pick[1]})`);
   }
 }
 
@@ -275,7 +280,8 @@ const html = `<!doctype html>
 <style>/* ── Minehut's shipped CSS ── */
 ${minehut}
 </style>
-<style>/* ── theme, @-moz-document unwrapped ── */
+<style>${injected}
+/* ── theme, @-moz-document unwrapped ── */
 ${theme}
 </style>
 </head>
