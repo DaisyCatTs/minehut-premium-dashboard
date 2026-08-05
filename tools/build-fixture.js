@@ -181,6 +181,21 @@ const pill = (label, hue) =>
 //    this fixture — here it returns non-zero because of the harness, which
 //    would falsely close the question.
 const components = `
+<!-- SIDEBAR. Never in the fixture before, which is why no gate ever covered
+     the nav hover the owner reported. Markup reconstructed from Minehut's own
+     rules: .mh-nav-item is a flex row with a lucide icon, a label and an
+     optional .mh-nav-count pill; hover is theirs (background: hsl(var(--muted)))
+     and [data-active=true] is the one accent the sidebar spends. -->
+<aside style="width:232px;padding:12px;position:relative">
+  <div style="padding:8px 10px 16px;font-weight:600;font-size:13px">Minehut</div>
+  <div class="mh-nav-item" data-active="true"><svg class="lucide lucide-layout-dashboard" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>Dashboard</div>
+  <div class="mh-nav-item"><svg class="lucide lucide-server" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="8" x="2" y="2" rx="2"/><rect width="20" height="8" x="2" y="14" rx="2"/></svg>My Servers<span class="mh-nav-count">3</span></div>
+  <div class="mh-nav-item"><svg class="lucide lucide-terminal" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"/><line x1="12" x2="20" y1="19" y2="19"/></svg>Console</div>
+  <div class="mh-nav-item"><svg class="lucide lucide-folder" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>File Manager</div>
+  <div class="mh-nav-item"><svg class="lucide lucide-settings" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/></svg>Settings<span class="mh-nav-count">12</span></div>
+  <div class="mh-sc-icon" style="margin-top:12px">MC</div>
+</aside>
+
 <h2 class="mt-12">Components — routes not yet opened</h2>
 
 <div class="mt-4 rounded-[10px] border border-border bg-card p-6">
@@ -219,7 +234,7 @@ const components = `
        Real captured markup. Shipped 4.4.0 filled the checked one with the
        accent and made every word inside it unreadable, so it lives here now. -->
   <div class="mt-6 grid grid-cols-3 gap-4" role="radiogroup">
-    <button type="button" role="radio" aria-checked="false" data-state="unchecked" class="relative cursor-pointer rounded-lg border border-border bg-card p-4 text-left shadow-mh-1 flex flex-col gap-3">
+    <button type="button" role="radio" aria-checked="false" data-state="unchecked" class="relative cursor-pointer rounded-lg border border-border bg-card p-4 text-left shadow-mh-1 transition-all duration-[120ms] ease-mh-out hover:border-[color-mix(in_oklab,var(--mh-brand)_50%,transparent)] flex flex-col gap-3">
       <div class="flex items-center gap-3">
         <span class="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">S</span>
         <div class="min-w-0">
@@ -230,7 +245,7 @@ const components = `
       <p class="text-[13px] text-muted-foreground">A standalone server hosted on Minehut.</p>
       <div class="mt-auto flex items-center gap-1.5 border-t border-dashed border-border pt-3 font-mono text-[11px] text-muted-foreground">Free &amp; paid plans</div>
     </button>
-    <button type="button" role="radio" aria-checked="true" data-state="checked" class="relative cursor-pointer rounded-lg border border-border bg-card p-4 text-left shadow-mh-1 data-[state=checked]:border-[var(--mh-brand)] flex flex-col gap-3">
+    <button type="button" role="radio" aria-checked="true" data-state="checked" class="relative cursor-pointer rounded-lg border border-border bg-card p-4 text-left shadow-mh-1 transition-all duration-[120ms] ease-mh-out hover:border-[color-mix(in_oklab,var(--mh-brand)_50%,transparent)] data-[state=checked]:border-[var(--mh-brand)] flex flex-col gap-3">
       <div class="flex items-center gap-3">
         <span class="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">E</span>
         <div class="min-w-0">

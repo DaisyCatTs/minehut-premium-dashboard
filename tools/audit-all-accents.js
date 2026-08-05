@@ -72,8 +72,11 @@ const presets = [...meta[1].matchAll(/"([^"]+)"\s*:\s*"([^"]+)"/g)].map((m) => (
     // and the disabled tier. Raised from 2 to 4 when the wizard radio-cards
     // joined the fixture: they add two more bg-primary/10 tiles, and one of
     // them sits on the tinted checked-card surface so it composites to a
-    // second distinct hex. Contrast failures remain the real gate at 0.
-    const bad = fails > 0 || ubg > 4 || ufg > 2 || errs.length > 0;
+    // second distinct hex. Raised again to 5 when the sidebar joined the
+    // fixture: the active .mh-nav-item is hsl(var(--primary)/0.1) over the
+    // sidebar, which composites to #121A22. Contrast failures remain the real
+    // gate at 0.
+    const bad = fails > 0 || ubg > 5 || ufg > 2 || errs.length > 0;
     if (bad) failures++;
 
     console.log(
