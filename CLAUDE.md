@@ -167,7 +167,7 @@ repaint, and a shorthand with `!important` destroys it. Use the longhands only.
   the sheet. So there is no `[[…]]` token anywhere, and there must never be one — writing
   `/*[[accent]]*/` inside a comment in 4.1.0 terminated the enclosing comment and turned the rest of
   the file into live CSS while every gate still reported OK. Only `@preprocessor uso` substitutes.
-  The twelve presets are read via `var(--accentHsl, 210 100% 69.8%)`, so the fallback keeps the file
+  The thirteen presets are read via `var(--accentHsl, 210 100% 69.8%)`, so the fallback keeps the file
   correct even if Stylus injects nothing. `build-fixture.js --accent Purple` previews another theme
   by injecting the same declaration a browser would.
 - **`--og-accent` is derived, never authored** — `hsl(var(--primary))`. There is exactly one place an

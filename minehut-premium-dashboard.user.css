@@ -1,7 +1,7 @@
 /* ==UserStyle==
 @name           Minehut Premium Dashboard
 @namespace      github.com/DaisyCatTs/minehut-premium-dashboard
-@version        4.7.0
+@version        4.7.1
 @description    A premium dark theme for the Minehut dashboard. Warm-neutral OLED surfaces, one restrained accent, Geist typography, and contrast-verified text.
 @author         Daisy
 @license        MIT
@@ -12,6 +12,7 @@
 
 @var select accentHsl "Accent colour" {
   "red:Red":         "0 100% 76.3%",
+  "orange:Orange":   "20 100% 66.1%",
   "amber:Amber":     "38 100% 47.3%",
   "lime:Lime":       "78 100% 38.7%",
   "emerald:Emerald": "150 100% 41.1%",
@@ -20,7 +21,7 @@
   "blue:Blue*":      "210 100% 69.8%",
   "indigo:Indigo":   "232 100% 80.3%",
   "violet:Violet":   "260 100% 80.1%",
-  "purple:Purple":   "285 100% 75.6%",
+  "purple:Purple":   "282 85% 75.8%",
   "fuchsia:Fuchsia": "312 100% 72.0%",
   "rose:Rose":       "340 100% 75.1%"
 }
@@ -34,17 +35,18 @@
    POINTS AT, not what it is made of. Tinting the greys is also the exact
    mechanism that made this theme's labels read brown for three releases.
 
-   Twelve presets, listed in hue order so the dropdown reads as a colour wheel.
+   Thirteen presets, listed in hue order so the dropdown reads as a colour wheel.
    Every one is contrast-verified on the shipped ladder. Measured on --card
    (#141414) / worst-case focus ring across all five surfaces / dark on-accent
    ink — all clear WCAG AA, and dark ink wins on every one:
 
      Red     #FF8686   7.90 / 5.82 / 8.10     Indigo  #9AA8FF   8.26 / 6.09 / 8.47
-     Amber   #F19900   8.16 / 6.01 / 8.36     Violet  #BB9AFF   8.05 / 5.94 / 8.25
-     Lime    #8AC500   8.83 / 6.51 / 9.05     Purple  #E083FF   7.77 / 5.73 / 7.96
-     Emerald #00D269   9.14 / 6.74 / 9.37     Fuchsia #FF70E2   7.60 / 5.61 / 7.79
-     Teal    #00CBB0   8.92 / 6.58 / 9.14     Rose    #FF80AA   7.83 / 5.77 / 8.02
-     Cyan    #00C1F2   8.69 / 6.41 / 8.91     Blue *  #65B2FF   8.22 / 6.06 / 8.42
+     Orange  #FF8C52   8.01 / 5.90 / 8.20     Violet  #BB9AFF   8.05 / 5.94 / 8.25
+     Amber   #F19900   8.16 / 6.01 / 8.36     Purple  #D68DF6   7.90 / 5.82 / 8.09
+     Lime    #8AC500   8.83 / 6.51 / 9.05     Fuchsia #FF70E2   7.60 / 5.61 / 7.79
+     Emerald #00D269   9.14 / 6.74 / 9.37     Rose    #FF80AA   7.83 / 5.77 / 8.02
+     Teal    #00CBB0   8.92 / 6.58 / 9.14     Blue *  #65B2FF   8.22 / 6.06 / 8.42
+     Cyan    #00C1F2   8.69 / 6.41 / 8.91
 
    The floor is 7.60 on --card and 5.61 for the focus ring, against WCAG minima
    of 4.5 and 3.0 — so no preset is a compromise, and switching accent cannot
@@ -55,14 +57,34 @@
    purple 267 — sat inside a 37° band and were barely distinguishable from one
    another, while 33° to 156° was a 123° hole with no red, no orange, no lime,
    no green and no teal. Half the colour wheel was missing and a quarter of it
-   was served three times. The twelve are spread 18–40° apart with no
-   near-duplicates, so every entry in the list is a genuinely different choice.
+   was served three times.
 
-   All twelve sit at one perceptual lightness (OKLCH L 0.746–0.756, target
-   0.755) at the highest saturation that still reaches it, so switching accent
-   changes the hue and not how loud the interface is. That is measured, not
-   asserted: tools/check-palette.py recomputes every ratio above from the
-   shipped values and fails the file if a single one disagrees.
+   Judge the spread in OKLCH hue, NOT in the HSL degrees above — HSL hue is
+   badly non-uniform and reading it leads to the wrong fix. Lime 78 to Emerald
+   150 looks like a 72° hole begging for a green in the middle; perceptually the
+   two are only 23° apart and that green would be the near-duplicate this
+   paragraph exists to prevent. Measured OKLCH gaps run 17–59°, tightest at
+   Violet→Purple and widest at Amber→Lime. That widest one cannot be filled:
+   at full chroma yellow's natural lightness is far above the ladder's target,
+   so pulling it down to L 0.755 lands on #CAAF00 — a dark gold indistinguishable
+   from Amber. Red→Amber (48°) was the one genuine hole and 4.7.1 filled it:
+   Orange lands at OKLCH h 46.0, splitting it 24.8/23.2, and duplicates nothing.
+   Teal→Cyan is also 46°, but that one wants a true aqua, which sits far closer
+   to Teal than Orange ever sat to Red — left open deliberately.
+
+   All thirteen sit at one perceptual lightness (OKLCH L 0.746–0.756, target
+   0.755), so switching accent changes the hue and not how loud the interface
+   is. Twelve reach it at full saturation. PURPLE IS THE EXCEPTION, at 85%,
+   and equal lightness is exactly why: the Helmholtz–Kohlrausch effect makes a
+   highly chromatic magenta read brighter than its measured lightness, so 285
+   100% (OKLCH C 0.193, third-loudest in the set, against a 0.155 median) looked
+   both brighter and pinker than its neighbours even though the meter said it
+   matched. Trimming chroma to 0.163 is what fixes that; dropping the hue alone
+   does not, and there is nowhere for it to go — a true purple between Violet
+   297.9 and Fuchsia 336.1 crowds one of them whatever you pick.
+
+   That is measured, not asserted: tools/check-palette.py recomputes every ratio
+   above from the shipped values and fails the file if a single one disagrees.
 
    Values are HSL TRIPLETS, not hex, because shadcn resolves hsl(var(--primary))
    and no CSS function can turn a colour into a bare triplet. §03 explains why

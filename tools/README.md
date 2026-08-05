@@ -64,7 +64,7 @@ node tools/check-light-mode.js
 node tools/check-accent-leak.js
 node tools/check-hover.js
 node tools/audit-all-accents.js
-ACCENT="285 100% 75.6%" node tools/browser-parse-check.js   # does it parse at all?
+ACCENT="282 85% 75.8%" node tools/browser-parse-check.js   # does it parse at all?
 ```
 
 They need `playwright`. `check-hover.js` resolves colours by painting them to a

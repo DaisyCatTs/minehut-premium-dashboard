@@ -2,7 +2,7 @@
 
 <p align="center">
   A premium dark theme for <a href="https://dashboard.minehut.com">dashboard.minehut.com</a><br>
-  <sub>Pure-neutral OLED surfaces · elevation by measured lightness · twelve accents · Geist typography</sub>
+  <sub>Pure-neutral OLED surfaces · elevation by measured lightness · thirteen accents · Geist typography</sub>
 </p>
 
 <p align="center">
@@ -131,7 +131,7 @@ Now refresh the page. Done.
 
 # Pick a colour
 
-The theme ships **twelve** accent colours. Blue is the default.
+The theme ships **thirteen** accent colours. Blue is the default.
 
 ## How to change it
 
@@ -147,7 +147,7 @@ The theme ships **twelve** accent colours. Blue is the default.
 > If the Stylus icon isn't visible, click the puzzle-piece 🧩 icon in your
 > toolbar and pin Stylus so it stays there.
 
-## The twelve
+## All thirteen
 
 Only the accent moves. Surfaces stay the same dark neutral in every one, and
 status colours stay meaningful — green still means running, red still means
@@ -169,8 +169,14 @@ stopped.
 | :-----------------------------------------------------------------------------------------: | :-------------------------------------------------------------------------------------------: | :-------------------------------------------------------------------------------------: |
 | <img alt="Purple accent — My Servers" src="docs/screenshots/Purple/server.png" width="290"> | <img alt="Fuchsia accent — My Servers" src="docs/screenshots/Fuchsia/server.png" width="290"> | <img alt="Rose accent — My Servers" src="docs/screenshots/Rose/server.png" width="290"> |
 
+> [!NOTE]
+> Twelve pictured, thirteen shipped. **Orange** is new in 4.7.1 and hasn't been
+> photographed yet — its exact colour is in the swatch table further down. The
+> **Purple** shot above also predates 4.7.1, which softened that accent; the one
+> you install is a little less pink than the picture.
+
 <details>
-<summary><b>See the console in all twelve</b></summary>
+<summary><b>See the console in every accent</b></summary>
 <br>
 
 <p align="center"><sub><b>Red</b></sub><br><img alt="Red accent — server console" src="docs/screenshots/Red/Console.png" width="90%"></p>
@@ -248,12 +254,13 @@ else in the file derives from that block, so nothing can drift out of sync.
 </details>
 
 <details>
-<summary><b>The colour system — measured contrast for all twelve</b></summary>
+<summary><b>The colour system — measured contrast for all thirteen</b></summary>
 <br>
 
 |                                                                       | Accent               | Hex       | On `--card` | As focus ring | Dark ink on it |
 | :-------------------------------------------------------------------: | -------------------- | --------- | ----------- | ------------- | -------------- |
 | ![](https://img.shields.io/badge/-%23FF8686-FF8686?style=flat-square) | **Red**              | `#FF8686` | 7.90 : 1    | 5.82 : 1      | 8.10 : 1       |
+| ![](https://img.shields.io/badge/-%23FF8C52-FF8C52?style=flat-square) | **Orange**           | `#FF8C52` | 8.01 : 1    | 5.90 : 1      | 8.20 : 1       |
 | ![](https://img.shields.io/badge/-%23F19900-F19900?style=flat-square) | **Amber**            | `#F19900` | 8.16 : 1    | 6.01 : 1      | 8.36 : 1       |
 | ![](https://img.shields.io/badge/-%238AC500-8AC500?style=flat-square) | **Lime**             | `#8AC500` | 8.83 : 1    | 6.51 : 1      | 9.05 : 1       |
 | ![](https://img.shields.io/badge/-%2300D269-00D269?style=flat-square) | **Emerald**          | `#00D269` | 9.14 : 1    | 6.74 : 1      | 9.37 : 1       |
@@ -262,7 +269,7 @@ else in the file derives from that block, so nothing can drift out of sync.
 | ![](https://img.shields.io/badge/-%2365B2FF-65B2FF?style=flat-square) | **Blue** _(default)_ | `#65B2FF` | 8.22 : 1    | 6.06 : 1      | 8.42 : 1       |
 | ![](https://img.shields.io/badge/-%239BA8FF-9BA8FF?style=flat-square) | **Indigo**           | `#9BA8FF` | 8.26 : 1    | 6.09 : 1      | 8.47 : 1       |
 | ![](https://img.shields.io/badge/-%23BB9AFF-BB9AFF?style=flat-square) | **Violet**           | `#BB9AFF` | 8.05 : 1    | 5.94 : 1      | 8.25 : 1       |
-| ![](https://img.shields.io/badge/-%23E083FF-E083FF?style=flat-square) | **Purple**           | `#E083FF` | 7.77 : 1    | 5.73 : 1      | 7.96 : 1       |
+| ![](https://img.shields.io/badge/-%23D68DF6-D68DF6?style=flat-square) | **Purple**           | `#D68DF6` | 7.90 : 1    | 5.82 : 1      | 8.09 : 1       |
 | ![](https://img.shields.io/badge/-%23FF70E2-FF70E2?style=flat-square) | **Fuchsia**          | `#FF70E2` | 7.60 : 1    | 5.61 : 1      | 7.79 : 1       |
 | ![](https://img.shields.io/badge/-%23FF80AA-FF80AA?style=flat-square) | **Rose**             | `#FF80AA` | 7.83 : 1    | 5.77 : 1      | 8.02 : 1       |
 
@@ -273,16 +280,30 @@ recomputed from the shipped file by `tools/check-palette.py`, which fails if a
 single one disagrees.
 
 **They are a system, not colours picked one at a time.** Each is solved for the
-same perceptual lightness — OKLCH L 0.746–0.756 against a 0.755 target — at the
-highest saturation that still reaches it. Every accent therefore carries the same
-visual _weight_: switching changes the hue, not how loud the interface is.
+same perceptual lightness — OKLCH L 0.746–0.756 against a 0.755 target — so every
+accent carries the same visual _weight_: switching changes the hue, not how loud
+the interface is. Eleven reach that lightness at full saturation. Purple is the
+one exception, at 85%: the Helmholtz–Kohlrausch effect makes a highly chromatic
+magenta look brighter than it measures, so at full chroma it read brighter and
+pinker than its neighbours even though the meter said it matched. Trimming its
+chroma is what fixed that.
 
 **The spread is the point.** Until 4.7.0 there were eight, and three of them —
 indigo, violet and purple — sat inside a 37° band and were barely distinguishable
 from one another, while 33° to 156° was a 123° hole with no red, no orange, no
 lime, no green and no teal. Half the colour wheel was missing and a quarter of it
-was served three times. The twelve are spread 18–40° apart with no
+was served three times. The thirteen are 17–59° apart in _OKLCH_ hue with no
 near-duplicates, so every entry in the list is a genuinely different choice.
+
+Judge that spread in OKLCH, not in the HSL degrees the file is written in — HSL
+hue is badly non-uniform and reading it produces the wrong fix. Lime→Emerald
+looks like a 72° hole wanting a green in the middle; perceptually those two are
+**23°** apart and that green would be the near-duplicate this paragraph exists to
+prevent. Amber→Lime is the genuinely widest gap at 59°, and it cannot be filled:
+yellow's natural lightness sits far above the ladder's target, so pulling it down
+to L 0.755 lands on `#CAAF00`, a dark gold indistinguishable from Amber. The one
+hole that _was_ real — Red→Amber, 48° — is what Orange fills in 4.7.1, landing at
+OKLCH h 46 and splitting it almost exactly in half.
 
 Equal _contrast_ would have been the wrong target. Forcing an intrinsically light
 hue down to a blue's luminance turns amber into a muddy olive — that set was
@@ -339,6 +360,12 @@ if a comment disagrees. Focus ring 6.06–8.88 : 1 across all five surfaces.
 <details>
 <summary><b>Upgrading from an older version</b></summary>
 <br>
+
+**From 4.7.0 — purple moved, and Orange is new.** Purple sat at hue 285 on full
+saturation, which read brighter and pinker than the rest of the set; it is now a
+softer orchid at 282 and 85% saturation. Orange fills the one measured gap in
+the wheel, between Red and Amber. Nothing else changed — if you are not on
+Purple, you will not see a difference until you go looking for Orange.
 
 **From 4.6 or earlier — three accents moved.** Indigo, violet and purple were
 re-solved onto the even hue spread, so they are noticeably different colours now.
@@ -403,7 +430,7 @@ npm run fixture       # then open tools/fixture.html
 
 `check:visual` catches what a static read cannot: that light mode stays stock,
 that every value follows the accent, that every interactive element still reacts
-to hover and stays legible, and that all twelve accents render with zero contrast
+to hover and stays legible, and that all thirteen accents render with zero contrast
 failures. Each of those four exists because a release shipped without it and
 broke something.
 
