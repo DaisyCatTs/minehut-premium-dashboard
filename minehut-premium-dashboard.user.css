@@ -1,7 +1,7 @@
 /* ==UserStyle==
 @name           Minehut Premium Dashboard
 @namespace      github.com/DaisyCatTs/minehut-premium-dashboard
-@version        2.3.1
+@version        2.3.2
 @description    A premium dark theme for the Minehut dashboard. Warm-neutral OLED surfaces, one restrained accent, Geist typography, and contrast-verified text.
 @author         Daisy
 @license        MIT
@@ -153,25 +153,28 @@
   .dark,
   [data-theme="dark"] {
     /* The page stays OLED black; everything above it steps up ~4–5 L*.
-       2.0.1 raised every rung above the page. At the previous card value the
-       page→card step was only 2.4 L*, so cards read as faint outlines rather
-       than objects — the "gloomy, no life" complaint was largely this one
-       number. Now 4.6, with even steps the rest of the way up.
+       Raised twice. 2.0.1 took the page→card step from 2.4 L* to 4.6 because
+       cards read as faint outlines rather than objects. 2.3.2 takes it to 6.7:
+       at 4.6 the card still sat close enough to an OLED-black page that the
+       grid read as one dark field with hairlines on it, rather than as a set
+       of objects resting on a surface. The page deliberately stays at L* 2.7 —
+       the separation should come from lifting the card, not from greying the
+       background, and Linear's own canvas is darker still at L* 2.4.
 
        surface                        hex       Y        L*     step */
     --background: 60 5% 3.7% !important; /* #0A0A09  0.0030    2.7        */ /* !imp:token */
-    --card: 40 7% 8.4% !important; /* #171614  0.0089    7.3   +4.6 */ /* !imp:token */
-    --muted: 36 8% 11.6% !important; /* #201E1B  0.0141   11.4   +4.1 */ /* !imp:token */
-    --secondary: 36 8% 11.6% !important; /* #201E1B  — same rung as muted   */ /* !imp:token */
-    --popover: 30 8% 15.3% !important; /* #2A2724  0.0212   15.9   +4.5 */ /* !imp:token */
-    --accent: 37 8% 19.2% !important; /* #35322D  0.0316   20.9   +5.1 */ /* !imp:token */
+    --card: 36 10% 10% !important; /* #1C1A17  0.0110    9.4   +6.7 */ /* !imp:token */
+    --muted: 34 10% 13.5% !important; /* #26231F  0.0175   13.9   +4.5 */ /* !imp:token */
+    --secondary: 34 10% 13.5% !important; /* #26231F  — same rung as muted   */ /* !imp:token */
+    --popover: 33 10% 17.1% !important; /* #302C27  0.0257   18.3   +4.4 */ /* !imp:token */
+    --accent: 38 10% 21% !important; /* #3B3730  0.0389   23.3   +5.0 */ /* !imp:token */
 
     /* Lines. Minehut ships `*{border-color:hsl(var(--border))}`, so claiming
        --border alone recolours every bordered element in the app — which is
        why §12 has almost no colour rules left. Raised alongside the ladder so
        card edges stay legible against the brighter fill. */
-    --border: 34 6% 21.4% !important; /* #3A3733  1.53:1 on --card */ /* !imp:token */
-    --input: 30 4% 26.7% !important; /* #474441  1.87:1 on --card */ /* !imp:token */
+    --border: 34 6% 24% !important; /* #413E3A  1.63:1 on --card */ /* !imp:token */
+    --input: 30 5% 29% !important; /* #4E4A46  1.98:1 on --card */ /* !imp:token */
 
     /* Ink. Four tiers, each measured against --card (where most text sits).
 
@@ -187,23 +190,23 @@
        noting none of Linear, Vercel or Discord tint their greys warm at all —
        Vercel's are deliberately pure neutral.
        Separation is 1.5x / 1.5x / 1.3x between tiers. */
-    --foreground: 60 2% 95.5% !important; /* #F4F4F3  16.43:1 on --card  titles   */ /* !imp:token */
-    --muted-foreground: 43 2% 63% !important; /* #A3A19F   7.02:1 on --card  metadata */ /* !imp:token */
+    --foreground: 60 2% 95.5% !important; /* #F4F4F3  15.78:1 on --card  titles   */ /* !imp:token */
+    --muted-foreground: 43 2% 63% !important; /* #A3A19F   6.74:1 on --card  metadata */ /* !imp:token */
 
     --card-foreground: 60 2% 95.5% !important; /* !imp:token */
     --popover-foreground: 60 2% 95.5% !important; /* !imp:token */
-    --secondary-foreground: 45 2% 78.4% !important; /* #C9C8C7  10.82:1  body    */ /* !imp:token */
+    --secondary-foreground: 45 2% 78.4% !important; /* #C9C8C7  10.39:1  body    */ /* !imp:token */
     --accent-foreground: 60 2% 95.5% !important; /* !imp:token */
 
     /* Accent is Minehut's OWN brand blue. 2.0.0 shipped a desaturated #5B93E8,
        which was calmer but was not the product's colour — and "premium" is not
-       a reason to be off-brand. Ring measures 7.35 / 6.71 / 6.17 / 5.51 /
-       4.73:1 across the five surfaces; WCAG 2.4.11 needs 3:1.
+       a reason to be off-brand. Ring measures 7.35 / 6.44 / 5.80 / 5.14 /
+       4.39:1 across the five surfaces; WCAG 2.4.11 needs 3:1.
        (Re-measured in 2.1.1 — the previous figures were computed against the
        pre-2.0.1 card and never updated when the ladder was brightened.) */
-    --primary: 212 100% 65% !important; /* #4DA0FF  6.71:1 on --card */ /* !imp:token */
+    --primary: 212 100% 65% !important; /* #4DA0FF  6.44:1 on --card */ /* !imp:token */
     --ring: 212 100% 65% !important; /* !imp:token */
-    --destructive: 359 62% 68% !important; /* #E07B7C  6.28:1 on --card */ /* !imp:token */
+    --destructive: 359 62% 68% !important; /* #E07B7C  6.03:1 on --card */ /* !imp:token */
 
     /* Ink that sits ON the accent. Dark, not white: white on #4B9EFF is only
        2.75:1 and fails outright, while #041220 measures 7.00:1. Minehut's own
@@ -247,7 +250,7 @@
 
     --mh-ink-2: hsl(var(--secondary-foreground)) !important; /* !imp:token */
     --mh-ink-3: hsl(var(--muted-foreground)) !important; /* !imp:token */
-    --mh-ink-4: #85837f !important; /* 4.78:1 on --card — no shadcn twin */ /* !imp:token */
+    --mh-ink-4: #8f8d89 !important; /* 5.24:1 on --card — no shadcn twin */ /* !imp:token */
     --mh-on-brand: hsl(var(--primary-foreground)) !important; /* !imp:token */
 
     /* Shadows. Free reach: .shadow-mh-1/2/3, .data-[state=active]:shadow-mh-1
@@ -306,8 +309,8 @@
 
      Vibrancy cost nothing here: every hue was also lifted in lightness, so all
      seven measure BETTER than the desaturated set. On the shipped --card
-     (#171614): emerald 9.52, gold 10.43, diamond 10.88, copper 7.98, amethyst
-     7.39, redstone 6.44, lapis 5.74 : 1 — and on each hue's own 16% pill fill,
+     (#1C1A17): emerald 9.14, gold 10.02, diamond 10.45, copper 7.66, amethyst
+     7.10, redstone 6.19, lapis 5.51 : 1 — and on each hue's own 16% pill fill,
      7.02 / 7.39 / 7.67 / 6.03 / 5.63 / 5.09 / 4.61 : 1.
 
      Note these are lifted versions of Minehut's values, not copies: Minehut's
@@ -1128,13 +1131,30 @@
        and `focus:text-destructive`, so a ghost button that merely turns red on
        hover wore a permanent red skin.
        @risk S  hook:.bg-destructive .bg-destructive\/10  verify: audit "destructive" */
-    & button.bg-destructive,
+    /* Minehut ships TWO destructive variants and they mean different things:
+       a solid `bg-destructive` and a 10% `bg-destructive/10`. Until 2.3.2 the
+       theme flattened both to the tint, which quietly demoted the loud one —
+       "Stop server" is exactly the action whose weight should match its
+       consequence, and it was rendering as a ghost. Solid stays solid. */
+    & button.bg-destructive {
+      background: hsl(var(--destructive));
+      border: 1px solid hsl(var(--destructive));
+      color: hsl(var(--destructive-foreground));
+      font-weight: 550;
+    }
+    & button.bg-destructive:hover {
+      background: color-mix(in oklab, hsl(var(--destructive)) 88%, white);
+      border-color: color-mix(in oklab, hsl(var(--destructive)) 88%, white);
+    }
+    & button.bg-destructive svg {
+      color: hsl(var(--destructive-foreground));
+    }
+    /* The ghost variant keeps the restrained treatment. */
     & button.bg-destructive\/10 {
       background: hsl(var(--destructive) / 0.1);
       border: 1px solid hsl(var(--destructive) / 0.28);
       color: hsl(var(--destructive));
     }
-    & button.bg-destructive:hover,
     & button.bg-destructive\/10:hover {
       background: hsl(var(--destructive) / 0.16);
       border-color: hsl(var(--destructive) / 0.45);
@@ -1945,7 +1965,7 @@
     opacity: 1 !important; /* !imp:a11y */
     background: hsl(var(--muted)) !important; /* !imp:a11y */
     border-color: hsl(var(--border) / 0.55) !important; /* !imp:a11y */
-    color: #97948e !important; /* 5.50:1 on --muted */ /* !imp:a11y */
+    color: #9c9994 !important; /* 5.51:1 on --muted */ /* !imp:a11y */
     box-shadow: none !important; /* !imp:a11y */
     cursor: not-allowed !important; /* !imp:a11y */
     translate: none !important; /* !imp:a11y */
@@ -1954,7 +1974,7 @@
   .dark [aria-disabled="true"] svg,
   [data-theme="dark"] button:disabled svg,
   [data-theme="dark"] [aria-disabled="true"] svg {
-    color: #97948e !important; /* !imp:a11y */
+    color: #9c9994 !important; /* !imp:a11y */
   }
   .dark button:disabled::after,
   .dark button:disabled::before,

@@ -143,7 +143,8 @@ ${theme}
       <div class="mt-4 flex gap-2">
         <button class="inline-flex h-9 items-center rounded-md bg-[var(--mh-brand)] px-3.5 text-[13px] font-medium">Primary</button>
         <button class="inline-flex h-9 items-center rounded-md border border-input bg-card px-3.5 text-[13px] font-medium text-foreground">Secondary</button>
-        <button class="inline-flex h-9 items-center rounded-md bg-destructive/10 px-3.5 text-[13px] font-medium">Danger</button>
+        <button class="inline-flex h-9 items-center rounded-md bg-destructive px-3.5 text-[13px] font-medium">Stop server</button>
+        <button class="inline-flex h-9 items-center rounded-md bg-destructive/10 px-3.5 text-[13px] font-medium">Danger ghost</button>
         <button class="inline-flex h-9 items-center rounded-md border border-input bg-card px-3.5 text-[13px] font-medium" disabled>Disabled</button>
       </div>
       <div class="mt-4 max-w-md">
