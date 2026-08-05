@@ -1,7 +1,7 @@
 /* ==UserStyle==
 @name           Minehut Premium Dashboard
 @namespace      github.com/DaisyCatTs/minehut-premium-dashboard
-@version        2.1.1
+@version        2.2.0
 @description    A premium dark theme for the Minehut dashboard. Warm-neutral OLED surfaces, one restrained accent, Geist typography, and contrast-verified text.
 @author         Daisy
 @license        MIT
@@ -688,9 +688,9 @@
        over Tailwind's existing 9999px — a no-op on a near-universal match.
        ═══════════════════════════════════════════════════════════════════════ */
 
-    & input,
-    & select,
-    & textarea {
+    & input:not(.rounded-full),
+    & select:not(.rounded-full),
+    & textarea:not(.rounded-full) {
       border-radius: calc(var(--radius) - 2px);
     }
     & [role="menu"],
@@ -701,6 +701,12 @@
     }
     & [role="dialog"] {
       border-radius: var(--og-r-modal);
+    }
+    /* A Radix Popover renders role="dialog" inside the popper wrapper, so it
+       matched both rules at (0,2,0) and the later one won — popovers were
+       getting the 16px modal radius instead of the 12px dropdown radius. */
+    & [data-radix-popper-content-wrapper] > [role="dialog"] {
+      border-radius: var(--og-r-drop);
     }
 
     /* ═══════════════════════════════════════════════════════════════════════
@@ -1322,9 +1328,18 @@
     & tbody tr:hover {
       background: hsl(var(--muted) / 0.6);
     }
-    /* Metrics in a grid are compared down the column, so they must align. */
+    /* Metrics in a grid are compared down the column, so they must align.
+       The `td`/`th` half is kept but is probably inert: the evidence says
+       Minehut's wide grids are CSS Grid divs (`grid-cols-[44px_36px_1fr_auto_
+       auto_auto]`, `[&:not(:last-child)]:border-r`, `divide-x`), not tables —
+       so tabular figures, the one thing this was really buying, never applied.
+       Both forms are listed rather than swapped, because a `.table` utility
+       does exist and one of the unsampled routes may use it.
+       @risk S  verify: document.querySelectorAll('table, td, th').length */
     & td,
-    & th {
+    & th,
+    & .min-w-\[1040px\],
+    & .min-w-\[760px\] {
       font-variant-numeric: tabular-nums;
     }
 
@@ -1353,8 +1368,8 @@
     & .recharts-default-tooltip {
       background: var(--og-glass) !important; /* !imp:dark-util */
       border: 1px solid hsl(var(--border)) !important; /* !imp:dark-util */
-      border-radius: var(--og-r-drop) !important; /* !imp:dark-util */
-      box-shadow: var(--mh-shadow-2) !important; /* !imp:dark-util */
+      border-radius: var(--og-r-drop);
+      box-shadow: var(--mh-shadow-2);
     }
     /* Tooltip rows and legend labels carry INLINE per-series colours straight
        from recharts, so a class rule loses to them without !important. These
@@ -1510,9 +1525,86 @@
     & .bg-\[var\(--console-bg\)\] > form {
       background: transparent;
     }
+    & .bg-\[var\(--console-bg\)\]::selection,
     & .bg-\[var\(--console-bg\)\] ::selection {
       background: hsl(var(--primary) / 0.32);
       color: hsl(var(--foreground));
+    }
+
+    /* ═══════════════════════════════════════════════════════════════════════
+       §62  MONACO — the File Manager's code editor.
+
+       Minehut ships a whole stylesheet for it (`.editor-classic .monaco-editor
+       .view-line`) and the theme had nothing, so the editor sat directly beside
+       §60's carefully retuned console in an unrelated palette — the most
+       jarring inconsistency left in the product.
+
+       Monaco picks its token colours in JS via `defineTheme`, which CSS cannot
+       reach. But its CHROME — background, gutter, line numbers, current-line
+       highlight, scrollbar, whitespace — is plain DOM, and these class names
+       are Monaco's long-standing public surface rather than anything Minehut
+       generates, so they survive both a Minehut rebuild and a Monaco upgrade.
+       Syntax colours stay Monaco's; everything framing them becomes ours.
+       @risk D  hook:monaco library classes  verify: File Manager -> edit a file */
+    & .monaco-editor,
+    & .monaco-editor-background,
+    & .monaco-editor .margin {
+      background-color: var(--console-bg) !important; /* !imp:dark-util */
+    }
+    & .monaco-editor .line-numbers {
+      color: var(--console-ansi-8) !important; /* !imp:dark-util */
+    }
+    & .monaco-editor .current-line {
+      border-color: hsl(var(--border)) !important; /* !imp:dark-util */
+    }
+    & .monaco-editor .cursor {
+      background-color: hsl(var(--primary)) !important; /* !imp:dark-util */
+      border-color: hsl(var(--primary)) !important; /* !imp:dark-util */
+    }
+    & .monaco-editor .selected-text {
+      background-color: hsl(var(--primary) / 0.28) !important; /* !imp:dark-util */
+    }
+    & .monaco-editor .indent-guide {
+      border-left-color: hsl(var(--border) / 0.55) !important; /* !imp:dark-util */
+    }
+    & .monaco-scrollable-element > .scrollbar > .slider {
+      background: hsl(var(--input)) !important; /* !imp:dark-util */
+      border-radius: 999px !important; /* !imp:dark-util */
+    }
+    & .monaco-scrollable-element > .scrollbar > .slider:hover {
+      background: hsl(var(--muted-foreground) / 0.5) !important; /* !imp:dark-util */
+    }
+
+    /* ═══════════════════════════════════════════════════════════════════════
+       §63  TOASTS
+
+       No toast library ships CSS here, but the primitives are unmistakable:
+       `translate-y-[calc(100%+1.5rem)]` for the off-screen enter/exit, pinned
+       `fixed bottom-4 right-4 z-50 max-w-[360px] flex-col-reverse`. They landed
+       on token-correct surfaces but with none of §41's glass, shadow or radius
+       language, so they read as a different product than the dialogs and menus
+       beside them — on every route that mutates state.
+       @risk S  hook:.fixed.bottom-4.right-4.z-50  verify: stop a server */
+    & .fixed.bottom-4.right-4.z-50 > *,
+    & .fixed.bottom-4.right-4 > .pointer-events-auto,
+    & .translate-y-\[calc\(100\%\+1\.5rem\)\] {
+      background: var(--og-glass);
+      backdrop-filter: blur(20px) saturate(150%);
+      -webkit-backdrop-filter: blur(20px) saturate(150%);
+      border: 1px solid hsl(var(--border));
+      border-radius: var(--og-r-drop);
+      box-shadow: var(--mh-shadow-3);
+    }
+
+    /* shadcn Tabs on routes we have not sampled. §32 covers the server page's
+       hand-rolled tab bar, which has no ARIA at all; these three utilities are
+       the generated shadcn Tabs component, and without this it renders the
+       filled pill §32 exists to forbid.
+       @risk S  hook:data-[state=active] utilities  verify: audit "data-[state=active]" */
+    & .data-\[state\=active\]\:bg-muted[data-state="active"],
+    & .data-\[state\=active\]\:shadow-mh-1[data-state="active"] {
+      background: transparent;
+      box-shadow: inset 0 -2px 0 hsl(var(--primary));
     }
 
     /* ═══════════════════════════════════════════════════════════════════════
@@ -1624,44 +1716,70 @@
        @risk S  stock names  verify: audit "yellow-500" "amber-500" "emerald-500" */
     & .text-yellow-500,
     & .text-yellow-400,
+    & .text-yellow-600,
+    & .text-yellow-200,
     & .text-amber-500,
-    & .dark\:text-amber-400 {
+    & .text-amber-600,
+    & .text-amber-700,
+    & .text-orange-400 {
+      color: var(--mh-gold);
+    }
+    /* These two ARE dark: variants — `.dark\:x:is(.dark *)` is (0,2,0), an exact
+       tie with our gated (0,2,0), and ties resolve on injection order. */
+    & .dark\:text-amber-400,
+    & .dark\:text-yellow-500 {
       color: var(--mh-gold) !important; /* !imp:dark-util */
     }
     & .text-emerald-500,
+    & .text-emerald-600,
+    & .text-emerald-700,
     & .text-green-400,
-    & .text-green-500,
+    & .text-green-500 {
+      color: var(--mh-emerald);
+    }
     & .dark\:text-emerald-400 {
       color: var(--mh-emerald) !important; /* !imp:dark-util */
     }
     & .text-red-400,
     & .text-rose-500 {
-      color: var(--mh-redstone) !important; /* !imp:dark-util */
+      color: var(--mh-redstone);
+    }
+    & .text-gray-400 {
+      color: hsl(var(--muted-foreground));
     }
     & .text-blue-400 {
-      color: hsl(var(--primary)) !important; /* !imp:dark-util */
+      color: hsl(var(--primary));
     }
     & .text-purple-400 {
-      color: var(--mh-amethyst) !important; /* !imp:dark-util */
+      color: var(--mh-amethyst);
     }
+    & .border-yellow-500,
     & .border-yellow-500\/30,
     & .border-yellow-500\/40,
     & .border-yellow-500\/50,
     & .border-amber-500\/40,
     & .border-amber-500\/50 {
-      border-color: color-mix(in oklab, var(--mh-gold) 35%, transparent) !important; /* !imp:dark-util */
+      border-color: color-mix(in oklab, var(--mh-gold) 35%, transparent);
+    }
+    & .border-emerald-500\/40,
+    & .border-emerald-500\/50 {
+      border-color: color-mix(in oklab, var(--mh-emerald) 35%, transparent);
     }
     & .bg-yellow-500\/5,
     & .bg-yellow-500\/10,
     & .bg-amber-500\/10 {
-      background: color-mix(in oklab, var(--mh-gold) 10%, transparent) !important; /* !imp:dark-util */
+      background: color-mix(in oklab, var(--mh-gold) 10%, transparent);
+    }
+    & .bg-yellow-500,
+    & .bg-orange-400 {
+      background: var(--mh-gold);
     }
     & .bg-emerald-500\/10,
     & .bg-green-500\/20 {
-      background: color-mix(in oklab, var(--mh-emerald) 12%, transparent) !important; /* !imp:dark-util */
+      background: color-mix(in oklab, var(--mh-emerald) 12%, transparent);
     }
     & .bg-red-500\/20 {
-      background: color-mix(in oklab, var(--mh-redstone) 12%, transparent) !important; /* !imp:dark-util */
+      background: color-mix(in oklab, var(--mh-redstone) 12%, transparent);
     }
 
     /* ═══════════════════════════════════════════════════════════════════════
@@ -1976,34 +2094,34 @@
      IS known; `tools/audit-page.js` pasted into the console on those routes
      would close most of this in one pass.
 
-     · MONACO EDITOR. Minehut ships a whole stylesheet for it (`.editor-classic
-       .monaco-editor`) and the theme has zero rules. Monaco themes itself from
-       JS, so the File Manager's editor sits next to §60's carefully retuned
-       console in an unrelated palette. CSS does reach its chrome —
-       `.monaco-editor-background`, `.margin`, `.line-numbers`, `.current-line`,
-       `.monaco-scrollable-element > .scrollbar > .slider`. Needs the DOM first.
+     · MONACO — ADDRESSED in §62, but unverified. Monaco's chrome classes are
+       its long-standing public surface, so the selectors are safe; what cannot
+       be confirmed without the route is whether Minehut wraps it in
+       `.editor-classic` in a way that changes nesting, and Monaco still picks
+       its SYNTAX colours in JS, which no CSS can reach. Expect the frame to
+       match the console and the token colours not to.
 
-     · RECHARTS SERIES. §51 styles grid, axes, ticks, tooltip and legend. The
-       marks themselves — `.recharts-curve`, `.recharts-area-area`,
-       `.recharts-rectangle`, `.recharts-sector` — are still recharts' own
-       saturated defaults, and `--chart-1..5` have zero var() consumers so the
-       token block cannot reach them. Series colour comes from JS.
+     · TOASTS — ADDRESSED in §63, but unverified. The container selectors are
+       inferred from the primitives (`fixed bottom-4 right-4 z-50`,
+       `translate-y-[calc(100%+1.5rem)]`); if the real markup nests differently
+       the glass lands on the wrong node. Worst case it simply does not match.
+       Verify by stopping a server and watching the toast.
 
-     · TOAST SURFACE. No toast library ships CSS here, but the primitives are
-       unmistakable: `translate-y-[calc(100%+1.5rem)]`, `fixed bottom-4 right-4
-       z-50 max-w-[360px] flex-col-reverse`. Toasts land on token-correct
-       surfaces but with none of §41's glass/shadow/radius language, so they
-       read as a different product than the dialogs beside them.
+     · RECHARTS SERIES — DELIBERATELY NOT ADDRESSED. §51 styles grid, axes,
+       ticks, tooltip and legend. The marks themselves (`.recharts-curve`,
+       `.recharts-area-area`, `.recharts-rectangle`, `.recharts-sector`) carry
+       DATA meaning, and their colour comes from JS — `--chart-1..5` have zero
+       var() consumers. Recolouring them blind would mean guessing series order
+       and could make two series indistinguishable. Needs the Stats route.
 
-     · §50's `thead/tbody/td/th` RULES ARE PROBABLY DEAD. The evidence says
-       Minehut's wide grids are CSS Grid divs (`grid-cols-[44px_36px_1fr_auto_
-       auto_auto]`, `[&:not(:last-child)]:border-r`, `divide-x`), not tables.
-       Nothing looks broken — Minehut's own row hovers are token-backed — but
-       `font-variant-numeric: tabular-nums`, the one thing that section was
-       really buying, then never applies and grid numbers do not align.
+     · §50's `td`/`th` RULES ARE PROBABLY INERT. The evidence says Minehut's
+       wide grids are CSS Grid divs (`grid-cols-[44px_36px_1fr_auto_auto_auto]`,
+       `[&:not(:last-child)]:border-r`, `divide-x`), not tables. Rather than
+       remove them, §50 now ALSO applies tabular figures to the grid containers
+       themselves, so the numbers align either way.
        Verify: document.querySelectorAll('table, thead, tbody, td, th').length
 
-     · THE BROWN LITERAL FAMILY. Ten hardcoded classes — `bg-[rgba(42,22,7,…)]`,
+     · THE BROWN LITERAL FAMILY — DELIBERATELY NOT ADDRESSED. Ten hardcoded classes — `bg-[rgba(42,22,7,…)]`,
        `text-[rgba(42,22,7,0.72)]`, `hover:bg-[#3D2210]`, `hover:text-[#2A1607]`,
        `hover:text-[#FFF3E2]` — with NO `dark:` counterpart, so they render
        identically in both themes. Almost certainly the credits / Plus upsell
