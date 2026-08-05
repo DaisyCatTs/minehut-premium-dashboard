@@ -6,6 +6,35 @@
 </p>
 
 <p align="center">
+  <a href="https://raw.githubusercontent.com/DaisyCatTs/minehut-premium-dashboard/main/minehut-premium-dashboard.user.css">
+    <img alt="Add to Stylus" src="https://img.shields.io/badge/%E2%9C%A6%20Add%20to%20Stylus-Install%20the%20theme-5A97E2?style=for-the-badge&labelColor=15171A">
+  </a>
+</p>
+
+<p align="center">
+  <sub><b>Need Stylus first?</b> It's a free extension — grab it for your browser:</sub>
+</p>
+
+<p align="center">
+  <a href="https://chromewebstore.google.com/detail/stylus/clngdbkpkpeebahjckkjfobafhncgmne">
+    <img alt="Stylus for Chrome" src="https://img.shields.io/badge/Chrome-Get%20Stylus-1D2025?style=for-the-badge&logo=googlechrome&logoColor=8AB4F8">
+  </a>
+  <a href="https://chromewebstore.google.com/detail/stylus/clngdbkpkpeebahjckkjfobafhncgmne">
+    <img alt="Stylus for Edge" src="https://img.shields.io/badge/Edge-Get%20Stylus-1D2025?style=for-the-badge&logo=microsoftedge&logoColor=4CC2FF">
+  </a>
+  <a href="https://addons.mozilla.org/en-US/firefox/addon/styl-us/">
+    <img alt="Stylus for Firefox" src="https://img.shields.io/badge/Firefox-Get%20Stylus-1D2025?style=for-the-badge&logo=firefoxbrowser&logoColor=FF9500">
+  </a>
+  <a href="https://addons.mozilla.org/en-US/android/addon/styl-us/">
+    <img alt="Stylus for Android" src="https://img.shields.io/badge/Android-Get%20Stylus-1D2025?style=for-the-badge&logo=android&logoColor=3DDC84">
+  </a>
+</p>
+
+<p align="center">
+  <sub>Brave · Opera · Vivaldi → use the Chrome button &nbsp;·&nbsp; <a href="#install--3-steps-about-a-minute">full step-by-step ↓</a></sub>
+</p>
+
+<p align="center">
   <img alt="MIT" src="https://img.shields.io/badge/license-MIT-1D2025?style=flat-square">
   <img alt="by Daisy" src="https://img.shields.io/badge/by-Daisy-1D2025?style=flat-square">
   <img alt="free" src="https://img.shields.io/badge/price-free-1D2025?style=flat-square">

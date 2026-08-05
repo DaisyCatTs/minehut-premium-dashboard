@@ -1,11 +1,22 @@
 # tools/
 
-Verification for a project with no build step. Run all three before shipping any
-selector change; they are the substitute for a linter and a test suite.
+Verification for a project with no build step. These are the substitute for a
+linter and a test suite, and they split into two groups:
 
-Everything resolves paths from the repo root. **All three strip comments before
-counting** — without that, documenting a removed selector ("`[class*="divider"]`
-dropped — 0 hits") re-reports it forever as a live dead rule.
+```sh
+npm run check          # STATIC — reads the stylesheet and Minehut's class list
+npm run check:visual   # VISUAL — renders the theme in a real browser
+```
+
+Run both before shipping. The split matters: the static gates cannot tell you
+whether a rule reaches anything, and every bug in this file's recent history got
+past them. The visual gates exist because a release shipped without each one and
+broke something.
+
+Everything resolves paths from the repo root. **The static gates strip comments
+before counting** — without that, documenting a removed selector
+("`[class*="divider"]` dropped — 0 hits") re-reports it forever as a live dead
+rule.
 
 ### Where the class names come from
 
@@ -23,9 +34,9 @@ run the full gate with no downloads; results are identical either way.
 | `check-css.js`           | Brace/paren/comment/string balance, declarations outside any block, unknown at-rules, and **untagged `!important`** (a policy violation per §01).                                                                                                                                 |
 | `check-palette.py`       | Every colour claim in the stylesheet against its shipped value — resolves the authored triplets, recomputes each ratio, and fails on any comment that disagrees. Also enforces the AA floor on the material hues, 3:1 on the focus ring, and that exactly one accent is shipping. |
 
-These three check the stylesheet against Minehut's CSS. They cannot tell you
-whether a rule reaches anything on a real page — `recon.js` and `audit-page.js`
-below do that, and both have caught bugs these three passed.
+These four check the stylesheet against Minehut's CSS. They cannot tell you
+whether a rule reaches anything on a real page — the visual gates below do that,
+and every one of them has caught a bug these four passed.
 
 ```sh
 python tools/audit-selectors.py                 # audit every pattern in the theme
@@ -35,6 +46,38 @@ python tools/audit-selectors.py --hash          # bundle hashes, for the @note l
 python tools/check-exact-classes.py
 node   tools/check-css.js minehut-premium-dashboard.user.css
 ```
+
+## Visual gates — `npm run check:visual`
+
+Four checks that render the theme and inspect the result. Each was written after
+a release shipped the bug it now catches.
+
+| Script                 | Catches                                                                                                                                                                                                                                                        |
+| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `check-light-mode.js`  | The dark theme leaking into light mode. Strips `.dark` from the fixture and diffs the theme enabled against disabled. Exactly one property may differ — `--mh-r-md`'s radius, which repairs a Minehut bug and is documented in the sheet as the one exception. |
+| `check-accent-leak.js` | Values that do not follow the accent. Renders under blue and amber and reports anything that stayed blue. `--mh-amethyst` is allowlisted: identity hues and chart series are accent-independent by design.                                                     |
+| `check-hover.js`       | Hovers that do nothing, and hovers that make something illegible. Both failure modes shipped.                                                                                                                                                                  |
+| `audit-all-accents.js` | Renders the fixture once per accent and runs the contrast and unthemed-colour checks against each. Reads the presets from the `@var` block, so there is one source of truth.                                                                                   |
+
+```sh
+node tools/check-light-mode.js
+node tools/check-accent-leak.js
+node tools/check-hover.js
+node tools/audit-all-accents.js
+ACCENT="285 100% 75.6%" node tools/browser-parse-check.js   # does it parse at all?
+```
+
+They need `playwright`. `check-hover.js` resolves colours by painting them to a
+canvas and reading the pixel back, so `oklab()` and `color-mix()` work — an
+earlier regex version understood only `rgb()` and reported four working buttons
+as broken.
+
+**A dead-hover exemption is a claim about intent, not a way to silence the gate.**
+`check-hover.js` skips elements that are covered, disabled, already in a settled
+state, or that delegate their feedback to an ancestor — but never one that ships
+its own `hover:` utility, because that hover is intended and must work. Widening
+an exemption to make the gate pass is how it produced a false negative once
+already.
 
 ## Palette
 
