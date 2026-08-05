@@ -1259,6 +1259,30 @@
       border-color: hsl(var(--destructive) / 0.45);
     }
 
+    /* EXCEPT on a server card, where Minehut uses the ghost variant for Stop.
+       That is the one button on the page that halts a live server, and it was
+       rendering lighter than the Activate button beside it — weight inverted
+       against consequence. The console header already renders the solid
+       variant, so a card's Stop and a server page's Stop looked unrelated.
+
+       A deliberate deviation from Minehut's own choice, scoped to the card so
+       genuine ghost destructives elsewhere keep their restraint.
+       @risk S  hook:main article button.bg-destructive\/10
+                verify: audit "bg-destructive" + a running server */
+    & main article button.bg-destructive\/10 {
+      background: hsl(var(--destructive));
+      border-color: hsl(var(--destructive));
+      color: hsl(var(--destructive-foreground));
+      font-weight: 550;
+    }
+    & main article button.bg-destructive\/10:hover {
+      background: color-mix(in oklab, hsl(var(--destructive)) 88%, white);
+      border-color: color-mix(in oklab, hsl(var(--destructive)) 88%, white);
+    }
+    & main article button.bg-destructive\/10 svg {
+      color: hsl(var(--destructive-foreground));
+    }
+
     /* ═══════════════════════════════════════════════════════════════════════
        §40  FORMS
        ═══════════════════════════════════════════════════════════════════════ */
@@ -1632,43 +1656,31 @@
       opacity: 0.85;
     }
 
-    /* The dot. No glow — 1.5.0 carried sixteen glow declarations, up to
-       0 0 28px on a card rail, against a brief that bans exactly that. A 1px
-       ring reads as a lit indicator without the bloom. */
+    /* The dot. ONE rule, not eight.
+       `.bg-current` IS `background-color: currentColor`, so the dot already
+       inherits whatever colour the pill above sets — emerald on a running
+       server, neutral on a hibernating one, with no help from us. Everything
+       that needs adding is the ring.
+
+       v3 and earlier carried seven hue-specific rules of the shape
+         [class*="mh-emerald"] span.bg-current { background: var(--mh-emerald) }
+       which were both redundant AND actively wrong. `[class*=]` is unanchored
+       and here it sits in ANCESTOR position, so `[class*="mh-brand"]` matched
+       any forebear carrying the string anywhere in its class attribute —
+       including `hover:bg-[color-mix(in_oklab,var(--mh-brand)_12%,transparent)]`
+       — and recoloured every dot beneath it. That is why hibernating servers
+       showed a blue dot on the live site and read as faintly active.
+
+       The lesson generalises: a substring match is dangerous as a descendant
+       selector in a way it is not as a target. `[class*=]` in ancestor position
+       is now treated as a defect wherever it appears.
+
+       No glow: 1.5.0 carried sixteen glow declarations, up to 0 0 28px on a
+       card rail, against a brief that bans exactly that. A ring reads as a lit
+       indicator without the bloom. */
     & span.bg-current {
       opacity: 1;
-      box-shadow: none;
-    }
-    & [class*="mh-emerald"] span.bg-current {
-      background: var(--mh-emerald);
-      box-shadow: 0 0 0 3px color-mix(in oklab, var(--mh-emerald) 18%, transparent);
-    }
-    & [class*="mh-redstone"] span.bg-current {
-      background: var(--mh-redstone);
-      box-shadow: 0 0 0 3px color-mix(in oklab, var(--mh-redstone) 18%, transparent);
-    }
-    & [class*="mh-gold"] span.bg-current {
-      background: var(--mh-gold);
-      box-shadow: 0 0 0 3px color-mix(in oklab, var(--mh-gold) 18%, transparent);
-    }
-    & [class*="mh-diamond"] span.bg-current {
-      background: var(--mh-diamond);
-      box-shadow: 0 0 0 3px color-mix(in oklab, var(--mh-diamond) 18%, transparent);
-    }
-    /* `span.bg-current { box-shadow: none }` above strips the ring from every
-       dot, so each hue has to put one back. Amethyst, copper and brand pills
-       all exist in the bundle and were losing theirs. */
-    & [class*="mh-amethyst"] span.bg-current {
-      background: var(--mh-amethyst);
-      box-shadow: 0 0 0 3px color-mix(in oklab, var(--mh-amethyst) 18%, transparent);
-    }
-    & [class*="mh-copper"] span.bg-current {
-      background: var(--mh-copper);
-      box-shadow: 0 0 0 3px color-mix(in oklab, var(--mh-copper) 18%, transparent);
-    }
-    & [class*="mh-brand"] span.bg-current {
-      background: var(--mh-brand);
-      box-shadow: 0 0 0 3px color-mix(in oklab, var(--mh-brand) 18%, transparent);
+      box-shadow: 0 0 0 3px color-mix(in oklab, currentColor 18%, transparent);
     }
 
     /* ═══════════════════════════════════════════════════════════════════════
