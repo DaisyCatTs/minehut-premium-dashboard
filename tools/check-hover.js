@@ -130,7 +130,16 @@ const SEL = [
               const p = n.parentElement;
               const pc = p && typeof p.className === "string" ? p.className : "";
               const inTabStrip = pc.includes("border-b") && pc.includes("shadow-[0_1px_0");
-              return inTabStrip && c.includes("border-input") && c.includes("bg-card");
+              if (inTabStrip && c.includes("border-input") && c.includes("bg-card")) return true;
+              // A link that is ALREADY underlined at rest cannot be changed by
+              // hover:underline. That is Minehut's markup being redundant, not
+              // the theme suppressing anything.
+              const hovers = c.split(/\s+/).filter((x) => x.startsWith("hover:"));
+              return (
+                c.split(/\s+/).includes("underline") &&
+                hovers.length > 0 &&
+                hovers.every((x) => x === "hover:underline")
+              );
             })(),
           back,
           // the signature a hover is allowed to change
@@ -156,12 +165,26 @@ const SEL = [
             cs.textUnderlineOffset,
             svg ? getComputedStyle(svg).color : "",
           ].join("|"),
+          // Does the element ship its own hover: utility? If so its hover is
+          // INTENDED and must work, whatever its ancestors do. Without this the
+          // delegated-feedback exemption below swallows the very bug this gate
+          // exists for: the server-card copy button carries
+          // hover:text-[var(--mh-brand)] but lives inside an <article> that
+          // lifts on hover, so it was exempted while its own hover was dead.
+          ownsHover: (typeof n.className === "string" ? n.className : "")
+            .split(/\s+/)
+            .some((c) => c.startsWith("hover:")),
           text: resolve(cs.color),
           hasText: (n.textContent || "").trim().length > 0,
           icon: svg ? resolve(getComputedStyle(svg).color) : null,
         };
       });
 
+    // Elements below the fold reported as "covered" and were silently skipped,
+    // which hid a genuinely dead hover on the server-card copy button. Bring
+    // each one into view before judging it.
+    await el.scrollIntoViewIfNeeded().catch(() => {});
+    await page.waitForTimeout(20);
     const before = await snap();
     if (before.zero || before.disabled || before.covered || before.settled) continue;
     // Signature of the nearest card ancestor, so a control that delegates its
@@ -191,8 +214,8 @@ const SEL = [
 
     const ancAfter = await ancestor();
     const tag = `<${after.cls || after.label}> "${after.label}"`;
-    if (before.sig === after.sig && (ancBefore === null || ancBefore === ancAfter))
-      dead.push(`  ${tag}`);
+    const delegated = !before.ownsHover && ancBefore !== null && ancBefore !== ancAfter;
+    if (before.sig === after.sig && !delegated) dead.push(`  ${tag}`);
 
     const cr = (c, b) => {
       const f = (x) => {
