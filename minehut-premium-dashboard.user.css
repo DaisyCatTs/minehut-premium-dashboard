@@ -1,7 +1,7 @@
 /* ==UserStyle==
 @name           Minehut Premium Dashboard
 @namespace      github.com/DaisyCatTs/minehut-premium-dashboard
-@version        2.0.1
+@version        2.0.2
 @description    A premium dark theme for the Minehut dashboard. Warm-neutral OLED surfaces, one restrained accent, Geist typography, and contrast-verified text.
 @author         Daisy
 @license        MIT
@@ -159,17 +159,26 @@
     --input: 30 4% 26.7% !important; /* #474441  1.87:1 on --card */ /* !imp:token */
 
     /* Ink. Four tiers, each measured against --card (where most text sits).
-       Chroma pulled to ~4% in 2.0.1: at 13%/8%/5% the lower tiers rendered
-       visibly BROWN on small uppercase labels (PLAN, LAST ONLINE, DASHBOARD),
-       which read as muddy rather than warm. Surfaces stay warm; ink goes
-       near-neutral. Separation is 1.5x / 1.6x / 1.3x between tiers. */
-    --foreground: 60 4% 95.5% !important; /* #F4F4F3  16.43:1 on --card  titles   */ /* !imp:token */
-    --muted-foreground: 43 4% 62.5% !important; /* #A3A19C   7.01:1 on --card  metadata */ /* !imp:token */
 
-    --card-foreground: 60 4% 95.5% !important; /* !imp:token */
-    --popover-foreground: 60 4% 95.5% !important; /* !imp:token */
-    --secondary-foreground: 45 4% 78.4% !important; /* #CAC9C6  10.92:1  body    */ /* !imp:token */
-    --accent-foreground: 60 4% 95.5% !important; /* !imp:token */
+       Chroma pulled from 13/8/5% to 2%. Minehut's own tokens put EVERY
+       surface, border and text value at hue 35–45, so there is no cool or
+       neutral reference anywhere on the page for the eye to normalise
+       against; simultaneous contrast then pushes a slightly warm grey all the
+       way to brown, which is why the small uppercase labels (PLAN, LAST
+       ONLINE, DASHBOARD) read as muddy. Near-black only needs 2–4 degrees of
+       hue rotation to register as warm — 36 is roughly ten times that.
+
+       Surfaces keep their warmth as a ground; ink goes near-neutral. Worth
+       noting none of Linear, Vercel or Discord tint their greys warm at all —
+       Vercel's are deliberately pure neutral.
+       Separation is 1.5x / 1.5x / 1.3x between tiers. */
+    --foreground: 60 2% 95.5% !important; /* #F4F4F3  16.43:1 on --card  titles   */ /* !imp:token */
+    --muted-foreground: 43 2% 63% !important; /* #A3A19F   7.02:1 on --card  metadata */ /* !imp:token */
+
+    --card-foreground: 60 2% 95.5% !important; /* !imp:token */
+    --popover-foreground: 60 2% 95.5% !important; /* !imp:token */
+    --secondary-foreground: 45 2% 78.4% !important; /* #C9C8C7  10.82:1  body    */ /* !imp:token */
+    --accent-foreground: 60 2% 95.5% !important; /* !imp:token */
 
     /* Accent is Minehut's OWN brand blue. 2.0.0 shipped a desaturated #5B93E8,
        which was calmer but was not the product's colour — and "premium" is not
@@ -221,7 +230,7 @@
 
     --mh-ink-2: hsl(var(--secondary-foreground)) !important; /* !imp:token */
     --mh-ink-3: hsl(var(--muted-foreground)) !important; /* !imp:token */
-    --mh-ink-4: #8e8b85 !important; /* 5.32:1 on --card — no shadcn twin */ /* !imp:token */
+    --mh-ink-4: #8d8c89 !important; /* 5.38:1 on --card — no shadcn twin */ /* !imp:token */
     --mh-on-brand: hsl(var(--primary-foreground)) !important; /* !imp:token */
 
     /* Shadows. Free reach: .shadow-mh-1/2/3, .data-[state=active]:shadow-mh-1
@@ -559,6 +568,17 @@
       font-weight: 500;
     }
 
+    /* Positive tracking on small text is counter-intuitive but it is what
+       Raycast does, and it is the cheapest fix available for dark UI feeling
+       heavy: light-on-dark text optically thickens and closes up, so a little
+       air restores legibility. Applied only to the small uppercase labels,
+       where the effect is strongest and Minehut's own tracking is already
+       loose. Titles keep their negative tracking. */
+    & .ds-label,
+    & .uppercase {
+      letter-spacing: 0.06em;
+    }
+
     /* Numbers read as data, not prose. */
     & .font-mono,
     & .tabular-nums {
@@ -775,9 +795,16 @@
          `will-change` is deliberately absent — 1.5.0 pinned it permanently,
          holding a compositor layer per card for the whole session and never
          releasing it under reduced motion. Both engines promote on demand. */
+      /* Brand colour IS the elevation signal — nothing tinted at rest, brand on
+         interaction. Borrowed from Supabase, whose "elevated" state is simply
+         its green at 30% border opacity, and it lands on the same number
+         Minehut's own border recipe uses (26–35%). This is where liveliness
+         comes from without putting colour on screen at rest.
+         2.0.1 set `border-color: hsl(var(--border))` here — identical to the
+         resting value, so the hover did nothing at all to the edge. */
       &:hover {
         background: hsl(var(--muted));
-        border-color: hsl(var(--border));
+        border-color: color-mix(in oklab, var(--mh-brand) 30%, transparent);
         box-shadow:
           var(--og-lift-2),
           var(--mh-shadow-2);
@@ -809,12 +836,20 @@
 
       /* The server identity tile — 42×42, hand-written by Minehut, and
          completely unstyled before 2.0.0 on a server-management dashboard. */
+      /* The server identity tile. In this product category brand lives in
+         iconography rather than in chrome — Hypixel carries its identity on
+         bespoke icons while keeping the frame neutral, and these tiles are
+         Minehut's equivalent. A crisp 1px ring and a contact shadow give them
+         presence without a gradient or a coloured glow behind them. */
       & .mh-sc-icon {
         box-shadow:
-          var(--og-lift),
+          inset 0 0 0 1px rgb(255 255 255 / 0.08),
           var(--mh-shadow-1);
         font-weight: 650;
         letter-spacing: -0.02em;
+      }
+      & .mh-sc-icon img {
+        image-rendering: pixelated;
       }
     }
 
