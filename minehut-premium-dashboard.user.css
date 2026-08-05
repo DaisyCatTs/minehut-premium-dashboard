@@ -1,7 +1,7 @@
 /* ==UserStyle==
 @name           Minehut Premium Dashboard
 @namespace      github.com/DaisyCatTs/minehut-premium-dashboard
-@version        4.4.0
+@version        4.5.0
 @description    A premium dark theme for the Minehut dashboard. Warm-neutral OLED surfaces, one restrained accent, Geist typography, and contrast-verified text.
 @author         Daisy
 @license        MIT
@@ -34,10 +34,14 @@
    (#141414) / worst-case focus ring across all five surfaces / best on-accent
    ink — all clear WCAG AA, and dark ink wins on every one:
 
-     Blue    #4DA3FF   7.02 / 5.17 / 7.2      Purple  #A78BFA   6.77 / 4.99 / 6.9
-     Violet  #8B7FF5   5.66 / 4.17 / 5.8      Indigo  #818CF8   6.18 / 4.55 / 6.3
-     Cyan    #22D3EE  10.19 / 7.51 / 10.5     Emerald #34D399   9.58 / 7.06 / 9.8
-     Rose    #FB7185   6.84 / 5.05 / 7.0      Amber   #FBBF24  11.04 / 8.13 / 11.3
+     Blue    #65B2FF   8.22 / 6.06 / 8.4      Purple  #C290FF   7.66 / 5.64 / 7.9
+     Violet  #AF9AFF   7.80 / 5.75 / 8.0      Indigo  #94A5FF   7.97 / 5.88 / 8.2
+     Cyan    #00C9DB   9.10 / 6.71 / 9.3      Emerald #00D37D   9.31 / 6.86 / 10.0
+     Rose    #FF8390   7.81 / 5.76 / 8.0      Amber   #FF8E00   8.00 / 5.90 / 8.2
+
+   All eight sit at the same perceptual lightness (OKLCH L 0.755) with chroma at
+   85% of the sRGB gamut maximum for their hue, so switching accent changes the
+   hue and not how loud the interface is.
 
    Values are HSL TRIPLETS, not hex, because shadcn resolves hsl(var(--primary))
    and no CSS function can turn a colour into a bare triplet. §03 explains why
@@ -202,22 +206,12 @@
   :root {
     /* Accent — Minehut's own brand blue. Every blue: focus ring, active nav,
        primary action, card rail, tab underline, selection, console keyword.
-       Kept as shipped rather than desaturated: this is the product's colour,
-       and a theme that quietly rebrands it is worse than one that is slightly
-       louder than a design-system purist would pick.
-
-       #4DA0FF, not #4B9EFF: `--primary: 212 100% 65%` in section 03 is the
-       authored source of truth and resolves to #4DA0FF. Until 2.1.0 the knob
-       said #4B9EFF, so TWO accents shipped 2/255 apart — brand utilities got
-       one, the ring/rail/underline/meter the other. Invisible, but it broke
-       the one-accent invariant and invalidated every derived hex comment. */
-    /* Derived, never authored. Until v4 this was a hand-written hex that had to
-       be kept equal to the --primary triplet, and check-palette.py existed
-       partly to police that — they had already drifted apart once, shipping two
-       accents 2/255 apart. Deriving it makes the invariant structural: there is
-       now exactly one place an accent is chosen, and it is the Stylus setting. */
-    --og-accent: hsl(var(--primary));
-
+       The DEFAULT is Minehut-adjacent blue, but the accent is user-selectable
+       from §00's `@var` block and every consumer derives from --primary, so
+       nothing here may hardcode a blue. Two things did and both were bugs: a
+       hand-written --og-accent hex that drifted from the triplet and shipped
+       two accents at once, and the console's ansi-4/12, which left every
+       non-blue theme with a console still speaking blue. */
     /* Motion multiplier, unitless. 0 disables every transition and animation
        in the theme; 1.5 lands the base step at 270ms, which starts to drag.
        This is honest now — in 1.5.0 the cards, rail and primary button
@@ -338,6 +332,20 @@
        Reading the injected variable directly needs no substitution at all,
        which is also why this file is plain valid CSS again. */
     --primary: var(--accentHsl, 210 100% 69.8%) !important; /* !imp:token */
+
+    /* Derived, never authored. Until v4 this was a hand-written hex that had to
+       be kept equal to the --primary triplet, and check-palette.py existed
+       partly to police that — they had already drifted apart once, shipping two
+       accents 2/255 apart. Deriving it makes the invariant structural: there is
+       now exactly one place an accent is chosen, and it is the Stylus setting.
+
+       Declared HERE, beside --primary, rather than at :root. A custom property
+       resolves against the element it is declared on, so `hsl(var(--primary))`
+       at :root only produced a colour because `.dark` happens to sit on <html>,
+       making :root and the gate the same element. Put the dark class anywhere
+       else and --og-accent — and every --mh-brand* below it — silently computed
+       to nothing. Co-declaring removes the coincidence. */
+    --og-accent: hsl(var(--primary));
     --ring: var(--primary) !important; /* !imp:token */
     --destructive: 0 84.2% 60.2% !important; /* #EF4444  4.90:1 on --card */ /* !imp:token */
 
@@ -354,15 +362,34 @@
 
     /* Charts. Minehut ships these identical in light and dark at 68–100%
        saturation — the loudest colour on the page, and 1.5.0 never touched
-       them. Pulled into the palette; chart-1 is the accent.
+       them.
+
+       DELIBERATELY INDEPENDENT OF THE ACCENT. Until 4.5.0 chart-1 was
+       `var(--primary)`, which read as a nice touch on the default blue and was
+       a defect everywhere else: series colour carries DATA, and tying one
+       series to a user-selectable hue meant the accent could land on top of a
+       neighbour. On the emerald preset chart-1 sat 4° from chart-2, and on cyan
+       8° from the old chart-5 — two series rendered indistinguishable, which is
+       a correctness bug in a chart, not a styling preference. A series sharing
+       the accent's hue is harmless; two series sharing EACH OTHER'S is not.
+
+       The five are now fixed, 58° apart at the closest pair, held at one
+       perceptual lightness (OKLCH L 0.755) so no series reads louder than
+       another, and kept at 50–66% saturation so a chart never turns neon.
+       All clear 8:1 on --card.
+
+         chart-1 #86B4E3  8.47:1     chart-2 #5AC895  8.89:1
+         chart-3 #D9A646  8.33:1     chart-4 #C29EE0  8.12:1
+         chart-5 #E293BB  8.00:1
+
        NOTE: 0 var() consumers in the CSS bundle, so recharts is coloured from
        JS. These may be inert; §51 styles the .recharts-* hooks directly, which
        definitely works. Cheap to set either way. */
-    --chart-1: var(--primary) !important; /* !imp:token */
-    --chart-2: 152 48% 52.5% !important; /* !imp:token */
-    --chart-3: 39 64% 58% !important; /* !imp:token */
-    --chart-4: 247 45% 70.8% !important; /* !imp:token */
-    --chart-5: 177 42% 60.2% !important; /* !imp:token */
+    --chart-1: 210 62% 70.7% !important; /* !imp:token */
+    --chart-2: 152 50% 56.9% !important; /* !imp:token */
+    --chart-3: 39 66% 56.4% !important; /* !imp:token */
+    --chart-4: 272 52% 75.0% !important; /* !imp:token */
+    --chart-5: 330 58% 73.2% !important; /* !imp:token */
   }
 
   /* ═════════════════════════════════════════════════════════════════════════
@@ -409,7 +436,13 @@
      replace it wholesale with an IDE palette drawn from the theme's own.
 
      Kept in lockstep with §05 deliberately: ansi-1/2/3 ARE the danger, success
-     and warning hues, ansi-4 is the accent, ansi-5/6 are amethyst and diamond.
+     and warning hues, ansi-5/6 are amethyst and diamond.
+
+     ansi-4 and ansi-12 DERIVE from --primary rather than being hardcoded, so
+     the console's keyword colour follows whichever accent is selected. They
+     were literal hex until 4.5.0, which meant every non-blue theme left the
+     console still speaking blue — the most visible place an accent can fail to
+     propagate, since a console is mostly coloured text.
      A log line that says "error" should be the same red as a card that says
      PENDING DELETION. The runtime page audit caught this drifting once already
      — the console had been left on the pre-v3 palette while everything else
@@ -428,7 +461,7 @@
     --console-ansi-1: #ef4444 !important; /* red      5.16:1 */ /* !imp:token */
     --console-ansi-2: #22c55e !important; /* green    8.53:1 */ /* !imp:token */
     --console-ansi-3: #f59e0b !important; /* yellow   9.05:1 */ /* !imp:token */
-    --console-ansi-4: #4da3ff !important; /* blue     7.40:1 */ /* !imp:token */
+    --console-ansi-4: hsl(var(--primary)) !important; /* follows the accent */ /* !imp:token */
     --console-ansi-5: #ad97fa !important; /* magenta  7.94:1 */ /* !imp:token */
     --console-ansi-6: #63dbd6 !important; /* cyan    11.69:1 */ /* !imp:token */
     --console-ansi-7: #d0d0d0 !important; /* white   12.60:1 */ /* !imp:token */
@@ -436,7 +469,7 @@
     --console-ansi-9: #f87171 !important; /* !imp:token */
     --console-ansi-10: #4ade80 !important; /* !imp:token */
     --console-ansi-11: #fbbf24 !important; /* !imp:token */
-    --console-ansi-12: #7fbfff !important; /* !imp:token */
+    --console-ansi-12: color-mix(in oklab, hsl(var(--primary)) 78%, white) !important; /* !imp:token */
     --console-ansi-13: #c4b5fd !important; /* !imp:token */
     --console-ansi-14: #8de6e2 !important; /* !imp:token */
     --console-ansi-15: #ffffff !important; /* !imp:token */
@@ -472,7 +505,13 @@
      Minehut's raw lapis (#3057D4) measures 2.96:1 here and would fail.
      ═════════════════════════════════════════════════════════════════════════ */
 
-  :root {
+  /* Gated, not :root. These were unconditional until 4.5.0, so every one of
+     them repainted Minehut's LIGHT theme as well — measurably: 23 elements
+     shifted, and the state hues below are contrast-verified against #141414
+     only, so the ratios in these comments were simply false on a white page.
+     The theme's standing promise is that light mode stays stock Minehut. */
+  .dark,
+  [data-theme="dark"] {
     --mh-brand: var(--og-accent) !important; /* !imp:token */
     --mh-brand-hover: color-mix(in oklab, var(--og-accent) 82%, white) !important; /* !imp:token */
     --mh-brand-press: color-mix(in oklab, var(--og-accent) 82%, black) !important; /* !imp:token */
@@ -509,7 +548,16 @@
 
     /* Minehut ships `.rounded-[var(--mh-r-md)]{border-radius:var(--mh-r-md)}`
        but declares --mh-r-md nowhere, so it resolves invalid and those corners
-       are square today. Declaring it fixes a Minehut bug for free. */
+       are square today. Declaring it fixes a Minehut bug for free.
+
+       THE ONE DELIBERATE LIGHT-MODE EXCEPTION. It is ungated, so it applies to
+       Minehut's light theme as well — the only thing in the file that does now
+       that 4.5.0 moved the brand and state hues behind the dark gate. Kept
+       ungated on purpose: it is geometry rather than colour, it repairs their
+       bug rather than restyling anything, and a square corner in light mode is
+       their defect, not a look worth preserving. Verified by
+       tools/lightleak: light mode differs by this one property and nothing
+       else. */
     --mh-r-md: 10px !important; /* !imp:token */
 
     --og-r-card: 14px;
@@ -1386,6 +1434,26 @@
       color: hsl(var(--primary-foreground));
     }
 
+    /* WHITE INK ON THE BRAND FILL — a genuine contrast failure in Minehut's own
+       markup, not a theming choice. The wizard's "Selected" badge ships
+       `bg-[var(--mh-brand)] ... text-white` on a <span>, and every rule above is
+       qualified to button/a, so nothing reached it. Measured white-on-accent:
+
+         blue 2.24 · purple 2.41 · violet 2.37 · indigo 2.29
+         cyan 2.02 · emerald 1.98 · rose 2.36 · amber 2.33 : 1
+
+       All eight fail AA badly. The presets are normalised to OKLCH L 0.755, so
+       they are light by construction and white can never work on them — dark
+       ink is the only correct answer, and --primary-foreground clears 7:1 on
+       every preset. Deliberately NOT qualified to an element type: the point of
+       the defect is that the badge was not a button.
+       @risk F  hook:.bg-\[var\(--mh-brand\)\].text-white
+       verify: the wizard's "Selected" badge reads dark-on-accent */
+    & .bg-\[var\(--mh-brand\)\].text-white,
+    & .bg-\[var\(--mh-brand\)\].text-white svg {
+      color: var(--mh-on-brand);
+    }
+
     /* Secondary — a material surface, not a tinted one.
        @risk S  stock utility chain  verify: audit "border-border" "border-input" */
     & button.border-border.bg-card.text-foreground,
@@ -1637,21 +1705,49 @@
        @risk D  hook:[data-state=checked]  verify: force the state in DevTools
        ═══════════════════════════════════════════════════════════════════════ */
 
-    & [role="checkbox"],
-    & [role="switch"],
-    & [role="radio"] {
+    /* SURFACE-BEARING CONTROLS ARE EXCLUDED. `role="radio"` is not only the
+       small dot: Minehut's server-setup wizard puts it on a whole selectable
+       CARD (`<button role="radio" class="... bg-card p-4 ...">` holding a
+       heading, a badge, body copy and a footer). Until 4.5.0 the checked rule
+       below filled that entire card with the accent and repainted its text to
+       --primary-foreground, so on the rose preset the selected card was a
+       block of pink with unreadable copy inside it.
+
+       The guard is exact classes, never `[class*="bg-"]` — a substring in
+       TARGET position matches `hover:bg-[color-mix(...)]` and would silently
+       disable the rule for real controls too. A control that ships its own
+       surface utility is asking to keep it; only bare ones get painted.
+       @risk D  hook:[role=radio][data-state=checked]
+       verify: the wizard's selected card keeps bg-card and readable text */
+    & [role="checkbox"]:not(.bg-card):not(.bg-background):not(.bg-muted):not(.bg-popover),
+    & [role="switch"]:not(.bg-card):not(.bg-background):not(.bg-muted):not(.bg-popover),
+    & [role="radio"]:not(.bg-card):not(.bg-background):not(.bg-muted):not(.bg-popover) {
       border-color: hsl(var(--input));
       background: hsl(var(--muted));
       transition:
         background-color var(--mh-dur-fast) var(--mh-ease-out),
         border-color var(--mh-dur-fast) var(--mh-ease-out);
     }
-    & [role="checkbox"][data-state="checked"],
-    & [role="switch"][data-state="checked"],
-    & [role="radio"][data-state="checked"] {
+    & [role="checkbox"][data-state="checked"]:not(.bg-card):not(.bg-background):not(.bg-muted):not(.bg-popover),
+    & [role="switch"][data-state="checked"]:not(.bg-card):not(.bg-background):not(.bg-muted):not(.bg-popover),
+    & [role="radio"][data-state="checked"]:not(.bg-card):not(.bg-background):not(.bg-muted):not(.bg-popover) {
       background: hsl(var(--primary));
       border-color: hsl(var(--primary));
       color: hsl(var(--primary-foreground));
+    }
+
+    /* The card variant, selected. Minehut's own intent is border + ring and
+       nothing else — `data-[state=checked]:border-[var(--mh-brand)]` plus a 20%
+       ring — which is correct but reads weakly against a near-black page. It
+       gets a tinted surface instead of a filled one: the accent at 7% keeps the
+       card a card, so every foreground token inside it stays valid and the copy
+       stays readable on all eight presets. */
+    & [role="radio"][data-state="checked"]:is(.bg-card, .bg-background, .bg-muted, .bg-popover) {
+      background: color-mix(in oklab, hsl(var(--primary)) 7%, hsl(var(--card)));
+      border-color: color-mix(in oklab, hsl(var(--primary)) 55%, transparent);
+      box-shadow:
+        inset 0 0 0 1px color-mix(in oklab, hsl(var(--primary)) 22%, transparent),
+        var(--mh-shadow-1, 0 1px 2px rgb(0 0 0 / 0.35));
     }
 
     /* ═══════════════════════════════════════════════════════════════════════
@@ -2533,12 +2629,32 @@
        the glass lands on the wrong node. Worst case it simply does not match.
        Verify by stopping a server and watching the toast.
 
+     · CLOSED IN 4.5.0 — THE ACCENT NOW REACHES EVERYTHING IT SHOULD.
+       Four defects, all found by rendering every preset rather than just blue:
+         - the console spoke blue on all eight themes (ansi-4/12 were literal
+           hex); they now derive from --primary, 8.08:1 worst case on
+           --console-bg.
+         - --chart-1 was var(--primary), so the emerald preset put series 1
+           four degrees from series 2. The five series are now fixed and 58°
+           apart at the closest pair — series colour is data, not decoration.
+         - the brand and state hues were declared at :root and so repainted
+           Minehut's LIGHT theme too, with ratios verified only against
+           #141414. Now gated; light mode differs by one radius property.
+         - `role="radio"` is also a whole CARD in the setup wizard, and the
+           checked rule filled it edge-to-edge and rewrote its text colour.
+           Surface-bearing controls are excluded and get a 7% tint instead.
+       The wizard cards and Minehut's white-on-brand "Selected" badge — a real
+       AA failure at 1.98–2.41:1 across the presets — are now in the fixture, so
+       neither can regress silently.
+
      · RECHARTS SERIES — DELIBERATELY NOT ADDRESSED. §51 styles grid, axes,
        ticks, tooltip and legend. The marks themselves (`.recharts-curve`,
        `.recharts-area-area`, `.recharts-rectangle`, `.recharts-sector`) carry
        DATA meaning, and their colour comes from JS — `--chart-1..5` have zero
        var() consumers. Recolouring them blind would mean guessing series order
        and could make two series indistinguishable. Needs the Stats route.
+       The token block itself is now accent-independent and mutually distinct
+       (§03), so if recharts DOES read it, no preset can collide two series.
 
      · §50's `td`/`th` RULES ARE PROBABLY INERT. The evidence says Minehut's
        wide grids are CSS Grid divs (`grid-cols-[44px_36px_1fr_auto_auto_auto]`,
