@@ -1,0 +1,20 @@
+# Normalise line endings so git and prettier stop fighting.
+#
+# Without this, git checks files out as CRLF on Windows while prettier defaults
+# to endOfLine: "lf" — so `npm run format` rewrites every file to LF, git
+# immediately reports them all as modified with an empty diff, and the next
+# checkout converts them straight back. `format:check` then fails on a clean
+# tree, which trains everyone to ignore it.
+#
+# Store and check out LF everywhere. The stylesheet especially: it selects on
+# escaped Tailwind classes where whitespace is load-bearing, and it is the one
+# file prettier is not allowed to touch (see .prettierignore).
+* text=auto eol=lf
+
+# Belt and braces — never let these be treated as text.
+*.png binary
+*.jpg binary
+*.gif binary
+*.ico binary
+*.woff binary
+*.woff2 binary
