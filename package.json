@@ -8,7 +8,8 @@
     "format": "prettier --write \"**/*.{css,js,json,md}\"",
     "format:check": "prettier --check \"**/*.{css,js,json,md}\"",
     "check": "node tools/check-css.js minehut-premium-dashboard.user.css && python tools/check-exact-classes.py && python tools/audit-selectors.py && python tools/check-palette.py",
-    "fixture": "node tools/build-fixture.js"
+    "fixture": "node tools/build-fixture.js",
+    "check:visual": "node tools/build-fixture.js && node tools/check-light-mode.js && node tools/check-accent-leak.js && node tools/audit-all-accents.js"
   },
   "devDependencies": {
     "prettier": "^3.3.0"
