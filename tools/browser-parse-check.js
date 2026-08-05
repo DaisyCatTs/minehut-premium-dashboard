@@ -10,7 +10,7 @@ const SQ = String.fromCharCode(39);
 
 let css = fs
   .readFileSync(repo + "/minehut-premium-dashboard.user.css", "utf8")
-  .replace(/\/\*\[\[accent\]\]\*\//g, "211 100% 65.1%");
+  .replace(/\/\*\[\[accent\]\]\*\//g, process.env.ACCENT || "blue");
 
 // unwrap @-moz-document
 const open = css.indexOf("@-moz-document");
@@ -71,15 +71,23 @@ const body = css.slice(b + 1, end);
   );
   const r = await p.evaluate(() => {
     const sheet = document.getElementById("t").sheet;
-    const cs = getComputedStyle(document.documentElement);
+    // Tokens are declared on `.dark`, not on :root — read them where they live.
+    const cs = getComputedStyle(document.querySelector(".dark"));
     const art = document.querySelector("article");
     const tok = (n) => cs.getPropertyValue(n).trim() || "(EMPTY)";
+    // Resolve the accent all the way to a painted colour, which is the only
+    // thing that proves the @var indirection survived substitution.
+    const probe = document.createElement("div");
+    probe.style.color = "hsl(var(--primary))";
+    document.querySelector(".dark").appendChild(probe);
+    const painted = getComputedStyle(probe).color;
     return {
       rules: sheet.cssRules.length,
       primary: tok("--primary"),
       card: tok("--card"),
       ogAccent: tok("--og-accent"),
       mhBrand: tok("--mh-brand"),
+      accentPainted: painted,
       cardBg: getComputedStyle(art).backgroundColor,
       // did the keyframe retune actually land?
       pulse: [...sheet.cssRules]
@@ -92,6 +100,7 @@ const body = css.slice(b + 1, end);
   console.log("  --card           :", r.card);
   console.log("  --og-accent      :", r.ogAccent);
   console.log("  --mh-brand       :", r.mhBrand);
+  console.log("  accent painted   :", r.accentPainted, "(expect rgb(77,163,255) for blue)");
   console.log("  article bg       :", r.cardBg, "(expect rgb(20,20,20))");
   console.log("  @keyframes pulse :", r.pulse.length ? r.pulse[0] : "(none — retune missing)");
   if (errs.length) console.log("  PAGE ERRORS      :", errs.join(" | "));

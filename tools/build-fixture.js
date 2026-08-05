@@ -44,17 +44,19 @@ const wanted =
   (process.argv.find((a) => a.startsWith("--accent=")) || "").split("=")[1] ||
   process.argv[process.argv.indexOf("--accent") + 1] ||
   "";
-for (const m of themeSrc.matchAll(/@var\s+select\s+(\w+)\s+"[^"]*"\s*\{([^}]*)\}/g)) {
-  const opts = [...m[2].matchAll(/"([^"]+)"\s*:\s*"([^"]+)"/g)].map((o) => [o[1], o[2]]);
-  const picked =
-    opts.find(([k]) => k.replace(/\*$/, "").toLowerCase() === wanted.toLowerCase()) ||
-    opts.find(([k]) => k.endsWith("*")) ||
+for (const m of themeSrc.matchAll(/@var\s+select\s+(\w+)\s+"[^"]*"\s*\[([^\]]*)\]/g)) {
+  const opts = m[2].split(",").map((o) => o.trim().replace(/^"|"$/g, ""));
+  const pick =
+    opts.find((o) => o.replace(/\*$/, "").split(":")[0].toLowerCase() === wanted.toLowerCase()) ||
+    opts.find((o) => o.endsWith("*")) ||
     opts[0];
-  if (picked) {
-    themeSrc = themeSrc.split(`/*[[${m[1]}]]*/`).join(picked[1]);
-    console.log(`  ${m[1]} = ${picked[0].replace(/\*$/, "")} (${picked[1]})`);
+  if (pick) {
+    const id = pick.replace(/\*$/, "").split(":")[0];
+    themeSrc = themeSrc.split(`/*[[${m[1]}]]*/`).join(id);
+    console.log(`  ${m[1]} = ${id}`);
   }
 }
+
 const open = themeSrc.indexOf("@-moz-document");
 const braceAt = themeSrc.indexOf("{", open);
 let depth = 0,
