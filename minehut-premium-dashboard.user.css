@@ -1,7 +1,7 @@
 /* ==UserStyle==
 @name           Minehut Premium Dashboard
 @namespace      github.com/DaisyCatTs/minehut-premium-dashboard
-@version        2.3.0
+@version        2.3.1
 @description    A premium dark theme for the Minehut dashboard. Warm-neutral OLED surfaces, one restrained accent, Geist typography, and contrast-verified text.
 @author         Daisy
 @license        MIT
@@ -298,10 +298,20 @@
      focus, navigation and selection. Data, labels and domains stay neutral.
 
      The seven material hues belong to Minehut and carry state, not decoration.
-     Each is measured on the SHIPPED --card (#171614): emerald 7.93, gold
-     8.39, diamond 8.90, amethyst 6.49, copper 6.30, redstone 5.71, lapis
-     4.54 : 1. Note lapis clears the 4.5 floor by 0.04 — it appears only in
-     gradient stops, never as text, but do not darken it.
+     2.3.1 pulled these back toward Minehut's OWN saturation. 2.0.0 had
+     desaturated them on a "premium is restrained" instinct, which flattened
+     the one part of the interface that is legitimately colourful — a server
+     grid is almost entirely state — and left the page reading grey. Saturation
+     is now 62–91% against the previous 42–64%.
+
+     Vibrancy cost nothing here: every hue was also lifted in lightness, so all
+     seven measure BETTER than the desaturated set. On the shipped --card
+     (#171614): emerald 9.52, gold 10.43, diamond 10.88, copper 7.98, amethyst
+     7.39, redstone 6.44, lapis 5.74 : 1 — and on each hue's own 16% pill fill,
+     7.02 / 7.39 / 7.67 / 6.03 / 5.63 / 5.09 / 4.61 : 1.
+
+     Note these are lifted versions of Minehut's values, not copies: Minehut's
+     raw lapis (#3057D4) measures 2.96:1 on this card and would fail outright.
      ═════════════════════════════════════════════════════════════════════════ */
 
   :root {
@@ -310,13 +320,13 @@
     --mh-brand-press: color-mix(in oklab, var(--og-accent) 82%, black) !important; /* !imp:token */
     --mh-brand-soft: color-mix(in oklab, var(--og-accent) 12%, transparent) !important; /* !imp:token */
 
-    --mh-emerald: #4cc08a !important; /* running    */ /* !imp:token */
-    --mh-redstone: #d9736f !important; /* danger     */ /* !imp:token */
-    --mh-gold: #d9a94f !important; /* warning    */ /* !imp:token */
-    --mh-diamond: #6fc4c0 !important; /* version    */ /* !imp:token */
-    --mh-amethyst: #9b93d6 !important; /* 11 consumers in the bundle */ /* !imp:token */
-    --mh-copper: #c98a66 !important; /*  5 consumers */ /* !imp:token */
-    --mh-lapis: #5a7fc4 !important; /*  2 consumers */ /* !imp:token */
+    --mh-emerald: #3ed494 !important; /* running    */ /* !imp:token */
+    --mh-redstone: #f4726f !important; /* danger     */ /* !imp:token */
+    --mh-gold: #f2bc5a !important; /* warning    */ /* !imp:token */
+    --mh-diamond: #63dbd6 !important; /* version    */ /* !imp:token */
+    --mh-amethyst: #ad97fa !important; /* 11 consumers in the bundle */ /* !imp:token */
+    --mh-copper: #e89a6b !important; /*  5 consumers */ /* !imp:token */
+    --mh-lapis: #6e8fe0 !important; /*  2 consumers */ /* !imp:token */
 
     /* Theme-private. Kept only because Minehut has no equivalent: the inner
        top-edge highlight that makes a surface read as a lit material rather
@@ -572,6 +582,24 @@
     }
     & .text-muted-foreground {
       color: hsl(var(--muted-foreground));
+    }
+
+    /* A heading always outranks the muted class, even when Minehut puts both on
+       the same element — which it does on the server card title:
+         <h3 class="… font-semibold … text-muted-foreground">Bleed</h3>
+       The rule above is (0,2,0); the heading rule is only (0,1,1), so class
+       count decided it and the CARD'S SUBJECT rendered at the metadata tier —
+       7.02:1 where it should be 16.43:1. That single collision is most of why
+       the grid read as dull and the names as hard to read: the brightest thing
+       on each card was its plan name, not the server.
+       Qualified to (0,2,1) so intent wins over arithmetic. */
+    & h1.text-muted-foreground,
+    & h2.text-muted-foreground,
+    & h3.text-muted-foreground,
+    & h4.text-muted-foreground,
+    & h5.text-muted-foreground,
+    & h6.text-muted-foreground {
+      color: hsl(var(--foreground));
     }
 
     /* Minehut's own micro-label component. 1.5.0 reimplemented it with three
